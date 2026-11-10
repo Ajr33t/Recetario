@@ -40,4 +40,30 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 2] — 10/11/2026 — Sistema de temas (12 × 3) + Liquid Glass
+
+### Agregado
+- `app/src/themes/palettes.js`: 12 temas (Océano, Bosque, Atardecer, Lavanda, Menta, Cereza, Ámbar, Ciberpunk, Sakura, Café, Aurora, Monocromo) con paletas claro/oscuro explícitas + generador de modo alto contraste (AAA) por tono.
+- `app/src/themes/engine.js`: `applyTheme()` inyecta variables CSS en canales RGB vía `<style id="theme-vars">` y marca `data-theme`/`data-mode` en `<html>`.
+- `ThemeSelector`: modal ARIA con vista previa en vivo, cancelación (Esc/fondo) que restaura, devolución de foco; acceso desde cabecera y Ajustes.
+- `themeStore` sin parpadeo: aplica al crear el módulo y al rehidratar; 3 modos (claro/oscuro/alto-contraste) con persistencia.
+- `scripts/verificar-contraste.mjs` → `docs/evidencias/contraste-36.md` (**36/36 combinaciones cumplen WCAG**: AA 4.5, AAA 7 en alto contraste, borde UI 3 en claro).
+- `scripts/capturas.cjs` (Electron) → `docs/evidencias/galeria-36-temas.png` + 4 capturas reales de la app.
+- Liquid Glass refinado: brillo interior `inset`, bordes de 2px en alto contraste, foco amarillo AAA.
+- Scripts npm: `verificar:contraste`, `capturas`.
+
+### Cambiado
+- `main.jsx`: `BrowserRouter` → **`HashRouter`** (compatibilidad `file://` para Electron).
+- `AppHeader`: toggle de 2 modos → botón selector + toggle de 3 modos.
+- `Ajustes`: 2 radios de modo → 3 modos + selector completo + indicador AA/AAA.
+- ESLint: bloque Node ampliado a `scripts/**/*`.
+
+### Resuelto
+- Capturas de la app en blanco → Vite usaba rutas absolutas; **`base: './'`** (requisito también para el `.exe`, Fase 8).
+- `UnknownVizError` en `capturePage` → `disableHardwareAcceleration` + reintento visible.
+- Galería en blanco → CSS emitido como texto, faltaba envolver en `<style>`.
+- Falsa alarma visual de la galería → verificación por decodificación de píxeles PNG (colores exactos confirmados).
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

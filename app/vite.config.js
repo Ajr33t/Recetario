@@ -17,6 +17,8 @@ export default defineConfig({
   preview: {
     port: 5173,
   },
+  // Rutas relativas: imprescindible para cargar desde file:// (Electron .exe)
+  base: './',
   build: {
     outDir: 'dist',
   },

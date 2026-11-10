@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SkipLink from './components/layout/SkipLink.jsx';
 import AppHeader from './components/layout/AppHeader.jsx';
 import AppSidebar from './components/layout/AppSidebar.jsx';
 import AppFooter from './components/layout/AppFooter.jsx';
-import { useThemeStore } from './store/themeStore.js';
+import ThemeSelector from './components/theme/ThemeSelector.jsx';
 import Home from './pages/Home.jsx';
 import Buscar from './pages/Buscar.jsx';
 import RecetaDetalle from './pages/RecetaDetalle.jsx';
@@ -15,14 +15,7 @@ import Login from './pages/Login.jsx';
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const theme = useThemeStore((s) => s.theme);
-  const mode = useThemeStore((s) => s.mode);
-
-  // Aplica tema/modo como atributos en <html> (36 combinaciones en Fase 2)
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.dataset.mode = mode;
-  }, [theme, mode]);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -30,6 +23,7 @@ export default function App() {
       <AppHeader
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((open) => !open)}
+        onOpenTheme={() => setThemeOpen(true)}
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6">
@@ -50,6 +44,9 @@ export default function App() {
       </div>
 
       <AppFooter />
+
+      {/* Selector de tema/modo (12 × 3 = 36 combinaciones) */}
+      <ThemeSelector open={themeOpen} onClose={() => setThemeOpen(false)} />
     </div>
   );
 }

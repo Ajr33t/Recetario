@@ -33,8 +33,8 @@ export default [
     },
   },
   {
-    // Backend y proceso principal de Electron (Node.js)
-    files: ['server/**/*.js', 'desktop/*.js'],
+    // Backend, proceso principal de Electron y scripts de verificación (Node.js)
+    files: ['server/**/*.js', 'desktop/*.js', 'scripts/**/*.{js,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

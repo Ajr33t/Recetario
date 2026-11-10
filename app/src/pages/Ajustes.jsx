@@ -1,12 +1,24 @@
+import { useState } from 'react';
 import { useThemeStore } from '../store/themeStore.js';
+import { THEMES } from '../themes/palettes.js';
+import ThemeSelector from '../components/theme/ThemeSelector.jsx';
+
+const MODOS = [
+  { id: 'claro', label: 'Claro', icon: 'fa-sun' },
+  { id: 'oscuro', label: 'Oscuro', icon: 'fa-moon' },
+  { id: 'alto-contraste', label: 'Alto contraste', icon: 'fa-circle-half-stroke' },
+];
 
 /**
  * Ajustes: tema/modo (RF-13), accesibilidad (RF-14) y datos (RF-21).
  * Los selectores completos se conectan en las Fases 2, 5 y 6.
  */
 export default function Ajustes() {
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const theme = useThemeStore((s) => s.theme);
   const mode = useThemeStore((s) => s.mode);
   const setMode = useThemeStore((s) => s.setMode);
+  const temaActual = THEMES.find((t) => t.id === theme) || THEMES[0];
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,16 +35,23 @@ export default function Ajustes() {
           <i className="fa-solid fa-palette text-primary" aria-hidden="true" /> Tema y modo
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          12 temas × 3 modos con vista previa y persistencia: disponible en la Fase 2. Por ahora
-          puedes alternar claro/oscuro:
+          Tema actual:{' '}
+          <strong>
+            <i className={`fa-solid ${temaActual.icon}`} aria-hidden="true" /> {temaActual.name}
+          </strong>{' '}
+          · Modo: <strong>{MODOS.find((m) => m.id === mode)?.label || mode}</strong> — 12 temas × 3
+          modos con vista previa en vivo y persistencia.
         </p>
 
-        <fieldset className="mt-3 flex flex-wrap gap-4">
-          <legend className="sr-only">Modo de apariencia</legend>
-          {[
-            { id: 'claro', label: 'Claro', icon: 'fa-sun' },
-            { id: 'oscuro', label: 'Oscuro', icon: 'fa-moon' },
-          ].map(({ id, label, icon }) => (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button type="button" className="btn-primary" onClick={() => setSelectorOpen(true)}>
+            <i className="fa-solid fa-palette" aria-hidden="true" /> Elegir tema y modo
+          </button>
+        </div>
+
+        <fieldset className="mt-4 flex flex-wrap gap-4">
+          <legend className="mb-1 text-sm font-semibold">Modo de apariencia</legend>
+          {MODOS.map(({ id, label, icon }) => (
             <label key={id} className="glass-card flex cursor-pointer items-center gap-2 !p-3">
               <input
                 type="radio"
@@ -46,6 +65,8 @@ export default function Ajustes() {
             </label>
           ))}
         </fieldset>
+
+        <ThemeSelector open={selectorOpen} onClose={() => setSelectorOpen(false)} />
       </section>
 
       {/* Accesibilidad */}
@@ -55,8 +76,8 @@ export default function Ajustes() {
           Accesibilidad
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tamaño de fuente, reducir movimiento y alto contraste se conectan en la Fase 6. Modo alto
-          contraste (AAA) viene con la Fase 2.
+          Tamaño de fuente y reducir movimiento se conectan en la Fase 6. El modo alto contraste
+          (AAA en texto) ya está disponible en «Tema y modo».
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="chip">
@@ -66,7 +87,8 @@ export default function Ajustes() {
             <i className="fa-solid fa-person-running" aria-hidden="true" /> Movimiento: normal
           </span>
           <span className="chip">
-            <i className="fa-solid fa-circle-half-stroke" aria-hidden="true" /> Contraste: AA
+            <i className="fa-solid fa-circle-half-stroke" aria-hidden="true" /> Contraste:{' '}
+            {mode === 'alto-contraste' ? 'AAA' : 'AA'}
           </span>
         </div>
       </section>

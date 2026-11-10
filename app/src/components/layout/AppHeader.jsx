@@ -6,7 +6,7 @@ import { useThemeStore } from '../../store/themeStore.js';
  * <header> global: logo, buscador global, selector de tema/modo,
  * notificaciones y perfil. Incluye botón de menú para móvil.
  */
-export default function AppHeader({ sidebarOpen, onToggleSidebar }) {
+export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const mode = useThemeStore((s) => s.mode);
@@ -18,9 +18,14 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar }) {
     navigate(q ? `/buscar?q=${encodeURIComponent(q)}` : '/buscar');
   }
 
+  // Alterna rápidamente entre los 3 modos (el selector completo abre el modal)
   function toggleMode() {
-    setMode(mode === 'claro' ? 'oscuro' : 'claro');
+    const orden = ['claro', 'oscuro', 'alto-contraste'];
+    setMode(orden[(orden.indexOf(mode) + 1) % orden.length]);
   }
+
+  const iconoModo =
+    mode === 'claro' ? 'fa-sun' : mode === 'oscuro' ? 'fa-moon' : 'fa-circle-half-stroke';
 
   return (
     <header className="glass sticky top-0 z-50 border-b border-[var(--glass-border)]">
@@ -83,18 +88,26 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar }) {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5 md:ml-3">
-          {/* Selector de modo (selector completo de temas en Fase 2) */}
+          {/* Selector de tema/modo (12 × 3) */}
+          <button
+            type="button"
+            className="btn-ghost !px-2.5"
+            onClick={onOpenTheme}
+            aria-label="Abrir selector de tema y modo"
+            title="Elegir tema y modo"
+          >
+            <i className="fa-solid fa-palette text-lg" aria-hidden="true" />
+          </button>
+
+          {/* Modo rápido (alterna claro → oscuro → alto contraste) */}
           <button
             type="button"
             className="btn-ghost !px-2.5"
             onClick={toggleMode}
-            aria-label={`Cambiar a modo ${mode === 'claro' ? 'oscuro' : 'claro'} (selector de temas completo en Fase 2)`}
-            title="Cambiar modo claro/oscuro"
+            aria-label={`Modo actual: ${mode}. Cambiar al siguiente modo`}
+            title="Cambiar modo rápido"
           >
-            <i
-              className={`fa-solid ${mode === 'claro' ? 'fa-moon' : 'fa-sun'} text-lg`}
-              aria-hidden="true"
-            />
+            <i className={`fa-solid ${iconoModo} text-lg`} aria-hidden="true" />
           </button>
 
           {/* Notificaciones (sistema toast en Fase 6) */}
