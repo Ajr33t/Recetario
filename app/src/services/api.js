@@ -1,7 +1,10 @@
 /**
  * Cliente HTTP base para la API de SazónLab.
  * En desarrollo, Vite hace proxy de /api → http://localhost:3001.
+ * Adjunta el JWT de la sesión y cierra sesión automáticamente en 401.
  */
+import { useAuthStore } from '../store/authStore.js';
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export class ApiError extends Error {
@@ -19,7 +22,7 @@ export class ApiError extends Error {
  * @param {RequestInit} options opciones de fetch
  */
 export async function apiFetch(path, options = {}) {
-  const token = localStorage.getItem('sazonlab-token');
+  const token = useAuthStore.getState().token;
 
   const headers = { ...(options.headers || {}) };
   if (!(options.body instanceof FormData)) {
@@ -37,6 +40,11 @@ export async function apiFetch(path, options = {}) {
   }
 
   const data = await response.json().catch(() => null);
+
+  // Token vencido o inválido: cerrar sesión (la UI reacciona al store)
+  if (response.status === 401 && token) {
+    useAuthStore.getState().logout();
+  }
 
   if (!response.ok) {
     throw new ApiError(

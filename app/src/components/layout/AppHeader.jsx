@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useThemeStore } from '../../store/themeStore.js';
+import { useAuthStore } from '../../store/authStore.js';
 
 /**
  * <header> global: logo, buscador global, selector de tema/modo,
@@ -8,11 +9,14 @@ import { useThemeStore } from '../../store/themeStore.js';
  */
 export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme }) {
   const [query, setQuery] = useState('');
+  const [perfilAbierto, setPerfilAbierto] = useState(false);
   const navigate = useNavigate();
   const mode = useThemeStore((s) => s.mode);
   const highContrast = useThemeStore((s) => s.highContrast);
   const setMode = useThemeStore((s) => s.setMode);
   const setHighContrast = useThemeStore((s) => s.setHighContrast);
+  const usuario = useAuthStore((s) => s.usuario);
+  const logout = useAuthStore((s) => s.logout);
 
   function handleSearch(event) {
     event.preventDefault();
@@ -133,15 +137,80 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
             <i className="fa-solid fa-bell text-lg" aria-hidden="true" />
           </button>
 
-          {/* Perfil */}
-          <Link
-            to="/login"
-            className="btn-secondary !px-3"
-            aria-label="Iniciar sesión o ver perfil"
-          >
-            <i className="fa-solid fa-user" aria-hidden="true" />
-            <span className="hidden sm:inline">Ingresar</span>
-          </Link>
+          {/* Perfil: invitado → Iniciar sesión; con sesión → menú de cuenta */}
+          {usuario ? (
+            <div className="relative">
+              <button
+                type="button"
+                className="btn-secondary !px-3"
+                onClick={() => setPerfilAbierto((abierto) => !abierto)}
+                aria-expanded={perfilAbierto}
+                aria-haspopup="menu"
+                aria-label={`Menú de cuenta de ${usuario.nombre}`}
+              >
+                <i className="fa-solid fa-circle-user" aria-hidden="true" />
+                <span className="hidden sm:inline">{usuario.nombre}</span>
+                <i className="fa-solid fa-chevron-down text-xs" aria-hidden="true" />
+              </button>
+
+              {perfilAbierto && (
+                <>
+                  {/* Cierra el menú al pulsar fuera */}
+                  <button
+                    type="button"
+                    className="fixed inset-0 z-40 cursor-default"
+                    aria-label="Cerrar menú de cuenta"
+                    onClick={() => setPerfilAbierto(false)}
+                  />
+                  <div
+                    role="menu"
+                    className="glass absolute right-0 z-50 mt-2 w-56 rounded-xl p-3 text-sm"
+                  >
+                    <p className="font-semibold">{usuario.nombre}</p>
+                    <p className="truncate text-xs text-muted-foreground">{usuario.correo}</p>
+                    <hr className="my-2 border-border" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="nav-link w-full"
+                      onClick={() => {
+                        setPerfilAbierto(false);
+                        navigate('/mis-recetas');
+                      }}
+                    >
+                      <i className="fa-solid fa-book-open w-5 text-center" aria-hidden="true" />
+                      Mis recetas
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="nav-link w-full !text-danger"
+                      onClick={() => {
+                        setPerfilAbierto(false);
+                        logout();
+                        navigate('/', { replace: true });
+                      }}
+                    >
+                      <i
+                        className="fa-solid fa-right-from-bracket w-5 text-center"
+                        aria-hidden="true"
+                      />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="btn-secondary !px-3"
+              aria-label="Iniciar sesión o ver perfil"
+            >
+              <i className="fa-solid fa-user" aria-hidden="true" />
+              <span className="hidden sm:inline">Ingresar</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>

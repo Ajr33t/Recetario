@@ -1,18 +1,32 @@
 import { NavLink } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore.js';
 
-const NAV_ITEMS = [
+// Menú completo: disponible cuando hay sesión iniciada
+const NAV_ITEMS_SESION = [
   { to: '/', label: 'Inicio', icon: 'fa-house' },
   { to: '/buscar', label: 'Buscar por ingredientes', icon: 'fa-magnifying-glass' },
   { to: '/mis-recetas', label: 'Mis recetas', icon: 'fa-book-open' },
   { to: '/favoritos', label: 'Favoritos', icon: 'fa-heart' },
+  { to: '/perfil', label: 'Mi perfil', icon: 'fa-user-pen' },
+  { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
+];
+
+// Menú de invitado: solo lo esencial (inicio, ajustes y acceso)
+const NAV_ITEMS_INVITADO = [
+  { to: '/', label: 'Inicio', icon: 'fa-house' },
   { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
 ];
 
 /**
  * <aside> con navegación principal (<nav> con aria-label).
+ * - Sin sesión: solo Inicio, Ajustes e Iniciar sesión.
+ * - Con sesión: se desbloquean Buscar, Mis recetas y Favoritos.
  * En móvil se muestra como panel superpuesto; en desktop, estático.
  */
 export default function AppSidebar({ open, onClose }) {
+  const usuario = useAuthStore((s) => s.usuario);
+  const items = usuario ? NAV_ITEMS_SESION : NAV_ITEMS_INVITADO;
+
   return (
     <>
       {/* Fondo superpuesto (solo móvil) */}
@@ -34,9 +48,9 @@ export default function AppSidebar({ open, onClose }) {
       >
         <nav aria-label="Navegación principal" className="glass-panel flex flex-col gap-1 p-3">
           <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Menú
+            {usuario ? 'Menú' : 'Invitado'}
           </p>
-          {NAV_ITEMS.map(({ to, label, icon }) => (
+          {items.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -49,16 +63,26 @@ export default function AppSidebar({ open, onClose }) {
             </NavLink>
           ))}
 
-          <hr className="my-2 border-border" />
+          {!usuario && (
+            <>
+              <hr className="my-2 border-border" />
+              <NavLink
+                to="/login"
+                onClick={onClose}
+                className={({ isActive }) => (isActive ? 'nav-link-active' : 'nav-link')}
+              >
+                <i className="fa-solid fa-right-to-bracket w-5 text-center" aria-hidden="true" />
+                Iniciar sesión
+              </NavLink>
+            </>
+          )}
 
-          <NavLink
-            to="/login"
-            onClick={onClose}
-            className={({ isActive }) => (isActive ? 'nav-link-active' : 'nav-link')}
-          >
-            <i className="fa-solid fa-right-to-bracket w-5 text-center" aria-hidden="true" />
-            Iniciar sesión
-          </NavLink>
+          {usuario && (
+            <p className="mt-2 px-3 text-xs text-muted-foreground">
+              <i className="fa-solid fa-cloud-arrow-up text-primary" aria-hidden="true" />{' '}
+              Sincronizado con tu cuenta
+            </p>
+          )}
         </nav>
       </aside>
     </>

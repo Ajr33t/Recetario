@@ -113,11 +113,47 @@ CREATE TABLE IF NOT EXISTS audit_log (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS password_reset (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  correo TEXT NOT NULL,
+  codigo_hash TEXT NOT NULL,
+  expira_en TEXT NOT NULL,
+  intentos INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_recipes_user ON recipes(user_id);
 CREATE INDEX IF NOT EXISTS idx_recipes_estado ON recipes(estado);
 CREATE INDEX IF NOT EXISTS idx_audit_fecha ON audit_log(creado_en);
 CREATE INDEX IF NOT EXISTS idx_search_user ON search_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_reset_correo ON password_reset(correo);
 `;
+
+/**
+ * Migraciones mínimas para bases creadas en fases anteriores:
+ * SQLite no añade columnas con CREATE TABLE IF NOT EXISTS, así que se
+ * agregan faltantes de forma segura (avatar/bio del perfil — Fase 3).
+ */
+function migrarEsquema(db) {
+  const columnas = db
+    .prepare('PRAGMA table_info(users)')
+    .all()
+    .map((c) => c.name);
+  if (!columnas.includes('avatar')) {
+    db.exec("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT 'fa-user'");
+  }
+  if (!columnas.includes('bio')) {
+    db.exec('ALTER TABLE users ADD COLUMN bio TEXT');
+  }
+  if (!columnas.includes('avatar_imagen')) {
+    // Foto de perfil como data URL (JPEG 256px, recortado en el navegador)
+    db.exec('ALTER TABLE users ADD COLUMN avatar_imagen TEXT');
+  }
+  if (!columnas.includes('color_perfil')) {
+    // Color de acento propio (#rrggbb) para la tarjeta de perfil
+    db.exec('ALTER TABLE users ADD COLUMN color_perfil TEXT');
+  }
+}
 
 /** Inicializa la conexión y crea el esquema si no existe. */
 export function initDatabase() {
@@ -127,6 +163,7 @@ export function initDatabase() {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  migrarEsquema(db);
   console.log(`[SazónLab] Base de datos lista en ${DB_PATH}`);
   return db;
 }

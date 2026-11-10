@@ -84,4 +84,30 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 3] — 10/11/2026 — Autenticación JWT + usuarios + recetas en la nube
+
+### Agregado
+- **Backend auth**: `POST /api/auth/registro` (bcrypt 10 rondas, correo único), `POST /api/auth/login` (JWT 7 días, mensajes genéricos), `GET /api/auth/me`, middleware `requireAuth`.
+- **Recetas por usuario**: `GET/POST/PUT/DELETE /api/recipes` protegidas — crear con ingredientes/pasos, editar con snapshot de versión, borrar suave (papelera), auditoría. **Recetas en el servidor = visibles desde cualquier dispositivo.**
+- **Recuperación de contraseña**: código de 6 dígitos al correo (SHA-256, TTL 15 min, 5 intentos) + `services/mailer.js` con envío real opcional (Resend vía `RESEND_API_KEY`) y **modo demo** que muestra el código en pantalla.
+- **Perfil personalizable** (`/perfil`): foto de perfil con recorte 256px en el navegador (canvas, sin librerías), 12 avatar-iconos, nombre, bio (200), **color de acento** (presets + selector), estadísticas (nº recetas, miembro desde), cambio de contraseña, cerrar sesión. `PUT /api/auth/perfil` + `POST /api/auth/cambiar-contrasena`.
+- **Menús por sesión** (decisión del cliente): lateral = Inicio/Ajustes/Iniciar sesión para invitados; con sesión se desbloquean Buscar, Mis recetas, Favoritos, **Mi perfil** (solo en el menú lateral, no en el navbar).
+- **Inicio con contenido**: sección «¿Cómo funciona?» (3 pasos), invitación a cuenta para invitados (nube/multi-dispositivo/seguridad).
+- `authStore` (Zustand) + API con `Bearer` automático y logout en 401.
+- `scripts/verificar-auth.mjs` → `npm run verificar:auth` (**27/27**).
+- Tabla `password_reset` + columnas `users.avatar/bio/avatar_imagen/color_perfil` con migración `ALTER` tolerante a BD existentes.
+
+### Cambiado
+- `Login.jsx`: 3 modos reales (entrar / crear cuenta / olvidé mi contraseña en 2 pasos).
+- `MisRecetas.jsx`: lista real desde el servidor (antes maqueta) + estado de invitado.
+- `AppFooter.jsx`: sin letrero «Liquid Glass»; «Accesibilidad» navega al menú de accesibilidad.
+- `AppHeader.jsx`: menú de cuenta con nombre (salir); «Mi perfil» removido del navbar por decisión del cliente.
+
+### Resuelto
+- `text-destructive` inexistente → token real `danger`.
+- Navegación durante render en Perfil sin sesión → `<Navigate replace />`.
+- Columnas de perfil ausentes en BD antigua → `migrarEsquema()` con PRAGMA + ALTER.
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

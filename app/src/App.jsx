@@ -12,6 +12,7 @@ import MisRecetas from './pages/MisRecetas.jsx';
 import Favoritos from './pages/Favoritos.jsx';
 import Ajustes from './pages/Ajustes.jsx';
 import Login from './pages/Login.jsx';
+import Perfil from './pages/Perfil.jsx';
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/favoritos" element={<Favoritos />} />
             <Route path="/ajustes" element={<Ajustes />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/perfil" element={<Perfil />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
