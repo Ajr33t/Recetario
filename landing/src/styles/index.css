@@ -1,0 +1,118 @@
+/* Landing SazónLab — Liquid Glass (misma base que app/) */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  /* Canales RGB (0-255) para rgb(var(--x) / alfa) */
+  --background: 242 247 251;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --primary: 2 132 199;
+  --primary-foreground: 255 255 255;
+  --accent: 14 165 233;
+  --muted: 226 232 240;
+  --muted-foreground: 71 85 105;
+  --border: 203 213 225;
+  --glass: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-fallback: #eef4f9;
+  --shadow-glass: 0 8px 32px rgba(15, 23, 42, 0.12);
+  --background-gradient: linear-gradient(135deg, #e0f2fe 0%, #f2f7fb 45%, #eef2ff 100%);
+}
+
+body {
+  min-height: 100vh;
+  background-color: rgb(var(--background));
+  background-image: var(--background-gradient);
+  background-attachment: fixed;
+  color: rgb(var(--foreground));
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible {
+  outline: 3px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+h3 {
+  font-weight: 600;
+}
+
+@layer components {
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  }
+
+  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+    .glass {
+      background: var(--glass-fallback);
+    }
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl p-6;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:brightness-110 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn glass text-foreground hover:brightness-105 active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-foreground hover:bg-muted;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium;
+  }
+
+  .skip-link {
+    @apply fixed left-4 top-4 z-[100] -translate-y-24 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform focus:translate-y-0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

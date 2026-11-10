@@ -1,0 +1,37 @@
+{
+  "name": "sazonlab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SazónLab — Recetario Inteligente (monorepo: app, server, desktop, landing)",
+  "license": "MIT",
+  "workspaces": [
+    "app",
+    "server",
+    "desktop",
+    "landing"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:app": "npm run dev --workspace app",
+    "dev:server": "npm run dev --workspace server",
+    "dev:landing": "npm run dev --workspace landing",
+    "dev:desktop": "npm run start --workspace desktop",
+    "build:app": "npm run build --workspace app",
+    "build:landing": "npm run build --workspace landing",
+    "build:exe": "npm run build:app && npm run dist --workspace desktop",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10"
+  }
+}
