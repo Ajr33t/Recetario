@@ -110,4 +110,22 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 4] — 10/11/2026 — Búsqueda con TheMealDB + sugerencias con IA
+
+### Agregado
+- **Cliente TheMealDB** (`services/mealdb.js`): caché 10 min, normalización completa (ingredientes, medidas, instrucciones, etiquetas, video, fuente), búsqueda por nombre, detalle, aleatorias, filtros, explorar y autocompletado.
+- **Fix**: el filtro multi-ingrediente oficial (`filter.php?i=a,b`) devuelve vacío → consulta por ingrediente + **fusión por frecuencia** (orden por `coincidencias`, tope 12).
+- **Sugerencias con IA** (`services/ia.js`): OpenAI `gpt-4o-mini` → Gemini `gemini-1.5-flash` → sin claves responde igual (`fuente:"ninguna"`). La IA solo aporta la "idea del chef"; **las recetas siempre salen de TheMealDB**.
+- **Todo siempre en español** (requisito del cliente): `services/diccionario.js` (diccionario culinario EN→ES local, ~250 términos) + `services/traductor.js` (diccionario → **caché permanente en SQLite** `traducciones` → Google translate sin clave → MyMemory con troceado ≤450 chars). Se traducen títulos, categorías, áreas, ingredientes con medidas e instrucciones; **el usuario busca en español** ("pollo, tomate") y la consulta se traduce a inglés para TheMealDB (con traducción inversa para lo traducido en línea).
+- **8 endpoints** en `/api/search`: nombre, ingredientes, sugerencias, filtros, categorías/áreas, destacadas, autocompletado e historial (solo con JWT).
+- **Autocompletado accesible** (`CampoAutocomplete.jsx`): ARIA combobox, debounce 250 ms, ↑↓/Enter/Escape; ingredientes → chip (admite parcial en español: "pol" → "Pollo"), recetas → abre el detalle.
+- `scripts/verificar-busqueda.mjs` → `npm run verificar:busqueda` (**41/41**, 8 de ellos de la capa en español).
+
+### Cambiado
+- `Buscar.jsx`: 3 modos conectados (ingredientes/nombre/explorar), banner "Idea del chef", chips con coincidencias, estados vacío/error.
+- `RecetaDetalle.jsx`: detalle real (imagen, categoría/área/etiquetas, ingredientes con medidas, pasos numerados, video/fuente, 404).
+- `Home.jsx`: "Recetas destacadas" reales desde `/search/destacadas` (respaldo estático si falla).
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

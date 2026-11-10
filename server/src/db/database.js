@@ -122,6 +122,13 @@ CREATE TABLE IF NOT EXISTS password_reset (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Caché permanente de traducciones en/es (Fase 4)
+CREATE TABLE IF NOT EXISTS traducciones (
+  clave TEXT PRIMARY KEY,
+  valor TEXT NOT NULL,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_recipes_user ON recipes(user_id);
 CREATE INDEX IF NOT EXISTS idx_recipes_estado ON recipes(estado);
 CREATE INDEX IF NOT EXISTS idx_audit_fecha ON audit_log(creado_en);

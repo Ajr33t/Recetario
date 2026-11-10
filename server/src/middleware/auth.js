@@ -13,6 +13,8 @@ function obtenerSecreto() {
   return 'sazonlab-dev-secret';
 }
 
+export { obtenerSecreto };
+
 /**
  * Middleware de autenticación: exige `Authorization: Bearer <jwt>`.
  * Si es válido, adjunta `req.user = { id, nombre, correo, rol }`.

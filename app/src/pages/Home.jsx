@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
+import { api } from '../services/api.js';
 
-const DESTACADAS = [
+/** Respaldo estático si la API de recetas destacadas no responde. */
+const DESTACADAS_RESPALDO = [
   { id: 'd1', titulo: 'Pasta al ajillo', tiempo: 25, dificultad: 'Fácil', icon: 'fa-fire' },
   { id: 'd2', titulo: 'Ensalada César', tiempo: 15, dificultad: 'Fácil', icon: 'fa-leaf' },
   {
@@ -56,6 +59,21 @@ const VENTAJAS = [
  */
 export default function Home() {
   const usuario = useAuthStore((s) => s.usuario);
+  const [destacadas, setDestacadas] = useState(DESTACADAS_RESPALDO);
+
+  // Recetas destacadas reales de TheMealDB (Fase 4); respaldo si falla
+  useEffect(() => {
+    let vivo = true;
+    api
+      .get('/search/destacadas?n=3')
+      .then((datos) => vivo && datos.recetas?.length > 0 && setDestacadas(datos.recetas))
+      .catch(() => {
+        /* sin conexión se mantienen las de respaldo */
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -144,31 +162,46 @@ export default function Home() {
           <h2 id="destacadas-titulo">Recetas destacadas</h2>
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
-          {DESTACADAS.map((receta) => (
+          {destacadas.map((receta) => (
             <li key={receta.id}>
               <Link
                 to={`/receta/${receta.id}`}
                 className="glass-card-hover block"
                 aria-label={`Ver detalle de ${receta.titulo}`}
               >
-                <span
-                  className="mb-3 flex h-28 items-center justify-center rounded-xl bg-primary/10 text-3xl text-primary"
-                  aria-hidden="true"
-                >
-                  <i className={`fa-solid ${receta.icon}`} />
-                </span>
-                <h3>{receta.titulo}</h3>
+                {receta.imagen ? (
+                  <img
+                    src={receta.imagen}
+                    alt=""
+                    loading="lazy"
+                    className="mb-3 h-28 w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <span
+                    className="mb-3 flex h-28 items-center justify-center rounded-xl bg-primary/10 text-3xl text-primary"
+                    aria-hidden="true"
+                  >
+                    <i className={`fa-solid ${receta.icon || 'fa-utensils'}`} />
+                  </span>
+                )}
+                <h3 className="line-clamp-2">{receta.titulo}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  <i className="fa-solid fa-clock" aria-hidden="true" /> {receta.tiempo} min ·{' '}
-                  <i className="fa-solid fa-signal" aria-hidden="true" /> {receta.dificultad}
+                  {receta.tiempo ? (
+                    <>
+                      <i className="fa-solid fa-clock" aria-hidden="true" /> {receta.tiempo} min ·{' '}
+                      <i className="fa-solid fa-signal" aria-hidden="true" /> {receta.dificultad}
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-database" aria-hidden="true" /> TheMealDB
+                      {receta.categoria ? ` · ${receta.categoria}` : ''}
+                    </>
+                  )}
                 </p>
               </Link>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-sm text-muted-foreground">
-          * Contenido de demostración: la sugerencia real (API/IA) se habilita en la Fase 4.
-        </p>
       </section>
     </div>
   );

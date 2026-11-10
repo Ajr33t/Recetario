@@ -28,6 +28,7 @@
     "verificar:contraste": "node scripts/verificar-contraste.mjs",
     "verificar:temas": "electron scripts/verificar-temas.cjs",
     "verificar:auth": "node scripts/verificar-auth.mjs",
+    "verificar:busqueda": "node scripts/verificar-busqueda.mjs",
     "capturas": "electron scripts/capturas.cjs"
   },
   "devDependencies": {
