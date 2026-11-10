@@ -5,33 +5,33 @@ import { useThemeStore } from '../../store/themeStore.js';
 const MODOS = [
   { id: 'claro', label: 'Claro', icon: 'fa-sun' },
   { id: 'oscuro', label: 'Oscuro', icon: 'fa-moon' },
-  { id: 'alto-contraste', label: 'Alto contraste', icon: 'fa-circle-half-stroke' },
 ];
 
 /**
- * Modal de selección de tema (12) y modo (3) — 36 combinaciones.
- * - Vista previa en vivo: cada clic aplica el tema de inmediato.
- * - Cancelar (Esc / fondo / botón) restaura el tema original.
+ * Modal de selección de tema (12) + modo (claro/oscuro) + alto contraste.
+ * - El alto contraste es un interruptor INDEPENDIENTE del modo (prevalece sobre él).
+ * - Vista previa en vivo: cada clic aplica de inmediato.
+ * - Cancelar (Esc / fondo / botón) restaura la combinación original.
  * - Aplicar confirma y cierra. Devuelve el foco al botón que lo abrió.
  */
 export default function ThemeSelector({ open, onClose }) {
   const theme = useThemeStore((s) => s.theme);
   const mode = useThemeStore((s) => s.mode);
+  const highContrast = useThemeStore((s) => s.highContrast);
   const setTheme = useThemeStore((s) => s.setTheme);
   const setMode = useThemeStore((s) => s.setMode);
+  const setHighContrast = useThemeStore((s) => s.setHighContrast);
 
   const dialogRef = useRef(null);
   const openerRef = useRef(null);
   const originalRef = useRef(null);
 
-  // Al abrir: guarda el tema original, enfoca el primer control y
+  // Al abrir: guarda la combinación original, enfoca el primer control y
   // al cerrar devuelve el foco al disparador (WCAG 2.4.3).
   useEffect(() => {
     if (!open) return;
-    originalRef.current = {
-      theme: useThemeStore.getState().theme,
-      mode: useThemeStore.getState().mode,
-    };
+    const s = useThemeStore.getState();
+    originalRef.current = { theme: s.theme, mode: s.mode, highContrast: s.highContrast };
     openerRef.current = document.activeElement;
     const first = dialogRef.current?.querySelector('input, button');
     first?.focus();
@@ -40,7 +40,7 @@ export default function ThemeSelector({ open, onClose }) {
     };
   }, [open]);
 
-  // Esc cancela (restaura el tema original)
+  // Esc cancela (restaura la combinación original)
   useEffect(() => {
     if (!open) return;
     const onKey = (event) => {
@@ -58,6 +58,7 @@ export default function ThemeSelector({ open, onClose }) {
     if (original) {
       setTheme(original.theme);
       setMode(original.mode);
+      setHighContrast(original.highContrast);
     }
     onClose();
   }
@@ -65,6 +66,9 @@ export default function ThemeSelector({ open, onClose }) {
   function aplicar() {
     onClose();
   }
+
+  // Paleta efectiva para las muestras de color (prevalece el alto contraste)
+  const modoEfectivo = highContrast ? 'alto-contraste' : mode;
 
   return (
     <div
@@ -86,7 +90,7 @@ export default function ThemeSelector({ open, onClose }) {
               <i className="fa-solid fa-palette text-primary" aria-hidden="true" /> Tema y modo
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              12 temas × 3 modos = 36 combinaciones. La vista previa se aplica en vivo.
+              12 temas × 2 modos + interruptor de alto contraste. La vista previa se aplica en vivo.
             </p>
           </div>
           <button
@@ -99,16 +103,16 @@ export default function ThemeSelector({ open, onClose }) {
           </button>
         </div>
 
-        {/* Modos */}
+        {/* Modo (claro/oscuro) */}
         <fieldset>
           <legend className="mb-2 text-sm font-semibold">Modo de apariencia</legend>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {MODOS.map(({ id, label, icon }) => (
               <label
                 key={id}
-                className={`glass flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium peer-focus-visible:outline peer-focus-visible:outline-2 ${
-                  mode === id ? 'ring-2 ring-primary' : ''
-                }`}
+                className={`glass flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${
+                  mode === id && !highContrast ? 'ring-2 ring-primary' : ''
+                } ${highContrast ? 'opacity-70' : ''}`}
               >
                 <input
                   type="radio"
@@ -117,11 +121,45 @@ export default function ThemeSelector({ open, onClose }) {
                   checked={mode === id}
                   onChange={() => setMode(id)}
                   className="sr-only"
+                  disabled={highContrast}
                 />
                 <i className={`fa-solid ${icon}`} aria-hidden="true" /> {label}
               </label>
             ))}
+
+            {/* Alto contraste: interruptor independiente del modo (prevalece) */}
+            <label
+              className={`glass flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${
+                highContrast ? 'ring-2 ring-primary' : ''
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={highContrast}
+                onChange={(event) => setHighContrast(event.target.checked)}
+                className="sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  highContrast ? 'bg-primary' : 'bg-muted'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    highContrast ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}
+                />
+              </span>
+              <i className="fa-solid fa-circle-half-stroke" aria-hidden="true" /> Alto contraste
+              (AAA)
+            </label>
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {highContrast
+              ? 'Alto contraste ACTIVO: prevalece sobre el modo (texto ≥ 7:1). Desactívalo para volver al modo claro/oscuro.'
+              : 'El alto contraste se puede activar por separado; no depende del modo claro/oscuro.'}
+          </p>
         </fieldset>
 
         {/* 12 temas */}
@@ -129,11 +167,11 @@ export default function ThemeSelector({ open, onClose }) {
           <legend className="mb-2 text-sm font-semibold">Tema</legend>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="list">
             {THEMES.map((t) => {
-              const p = getPalette(t.id, mode);
+              const p = getPalette(t.id, modoEfectivo);
               return (
                 <li key={t.id}>
                   <label
-                    className={`glass flex cursor-pointer flex-col gap-2 rounded-xl p-3 peer-focus-visible:outline peer-focus-visible:outline-2 ${
+                    className={`glass flex cursor-pointer flex-col gap-2 rounded-xl p-3 ${
                       theme === t.id ? 'ring-2 ring-primary' : ''
                     }`}
                   >

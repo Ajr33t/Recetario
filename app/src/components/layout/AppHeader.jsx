@@ -10,7 +10,9 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const mode = useThemeStore((s) => s.mode);
+  const highContrast = useThemeStore((s) => s.highContrast);
   const setMode = useThemeStore((s) => s.setMode);
+  const setHighContrast = useThemeStore((s) => s.setHighContrast);
 
   function handleSearch(event) {
     event.preventDefault();
@@ -18,14 +20,20 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
     navigate(q ? `/buscar?q=${encodeURIComponent(q)}` : '/buscar');
   }
 
-  // Alterna rápidamente entre los 3 modos (el selector completo abre el modal)
+  // Toggle rápido: solo claro ↔ oscuro. Si el alto contraste (interruptor
+  // aparte) está activo, el primer clic lo desactiva y muestra el modo actual.
   function toggleMode() {
-    const orden = ['claro', 'oscuro', 'alto-contraste'];
-    setMode(orden[(orden.indexOf(mode) + 1) % orden.length]);
+    if (highContrast) {
+      setHighContrast(false);
+      return;
+    }
+    setMode(mode === 'claro' ? 'oscuro' : 'claro');
   }
 
+  // Aspecto efectivo: el alto contraste prevalece sobre el modo
+  const efectivo = highContrast ? 'alto-contraste' : mode;
   const iconoModo =
-    mode === 'claro' ? 'fa-sun' : mode === 'oscuro' ? 'fa-moon' : 'fa-circle-half-stroke';
+    efectivo === 'claro' ? 'fa-sun' : efectivo === 'oscuro' ? 'fa-moon' : 'fa-circle-half-stroke';
 
   return (
     <header className="glass sticky top-0 z-50 border-b border-[var(--glass-border)]">
@@ -99,12 +107,16 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
             <i className="fa-solid fa-palette text-lg" aria-hidden="true" />
           </button>
 
-          {/* Modo rápido (alterna claro → oscuro → alto contraste) */}
+          {/* Modo rápido (claro ↔ oscuro; desactiva alto contraste si está activo) */}
           <button
             type="button"
             className="btn-ghost !px-2.5"
             onClick={toggleMode}
-            aria-label={`Modo actual: ${mode}. Cambiar al siguiente modo`}
+            aria-label={
+              highContrast
+                ? 'Alto contraste activo. Desactivarlo para volver al modo claro/oscuro'
+                : `Modo actual: ${mode}. Cambiar a modo ${mode === 'claro' ? 'oscuro' : 'claro'}`
+            }
             title="Cambiar modo rápido"
           >
             <i className={`fa-solid ${iconoModo} text-lg`} aria-hidden="true" />

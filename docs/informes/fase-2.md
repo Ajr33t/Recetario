@@ -80,6 +80,9 @@ docs/CHANGELOG.md                          # entrada Fase 2
 | 5.5 | Falsa alarma visual: la vista previa de la imagen mostraba celdas claras | Verificación por **decodificación de píxeles del PNG** (script propio con zlib): `rgb(6,12,15)` y `rgb(56,189,248)` confirman fondos oscuros correctos — 18.631 px oscuros vs 11.839 claros |
 | 5.6 | **Reportado en revisión (10/11):** en el servidor DEV los temas y el alto contraste no se aplicaban — Vite inyecta `index.css` *después* del `<style id="theme-vars">` (orden de imports), y sus reglas base pisaban las variables de tema | Doble fix: selector `html[data-theme][data-mode]` (especificidad 0-1-2, gana sin importar el orden) + import del CSS antes que `App` en `main.jsx`. **Verificado en dev con `npm run verificar:temas`: 4/4 combos con colores exactos** |
 | 5.7 | **Reportado en revisión:** el glass no tenía el aspecto Liquid Glass de iPhone | `.glass` rediseñado: capa de brillo especular en degradado, 4 sombras `inset` de refracción (borde superior luminoso, inferior oscuro, costados), `blur(24px) saturate(1.8)` (antes 16/1.5). Aplicado también en la landing |
+| 5.8 | **Reportado en revisión (2):** el modo alto convivía como 3er radio con claro/oscuro y faltaba el panel de accesibilidad | `mode` pasó a solo `claro|oscuro` + **`highContrast` como interruptor independiente** (prevalece sobre el modo); nuevo objeto `a11y` en el store con **panel completo en Ajustes**: tamaño de fuente (normal/grande/extra), tipografía para dislexia, reducir movimiento y subrayar enlaces; migración automática del localStorage antiguo (`mode:'alto-contraste'` → `oscuro` + `highContrast:true`) |
+| 5.9 | **Reportado en revisión (2):** el `merge` de Zustand recibía el estado interno, no el envoltorio `{state, version}` → los temas persistidos no se aplicaban (4/4 fallos en `verificar:temas`) | `merge` corregido a forma plana (tolerante a ambos formatos); **verificación 4/4 OK** incluyendo a11y (`dislexia=true`, `fuente=Verdana`, `enlace=underline`) |
+| 5.10 | **Reportado en revisión (2):** el pie mostraba «hecho con 💎 Liquid Glass» y el enlace «Accesibilidad» no llevaba al menú | Texto del pie limpio (solo © 2026 SazónLab) y «Accesibilidad» ahora navega a `/ajustes` + scroll suave a la sección Accesibilidad (con `HashRouter` se usa `navigate`, no `<a href="#...">`, que rompería la ruta) |
 
 ---
 
@@ -117,6 +120,9 @@ $ npm run capturas            → ✅ 5 PNG:
 - [x] Persistencia (localStorage / Zustand persist)
 - [x] Selector accesible: modal ARIA, radios nativos, Esc cancela, foco restaurado
 - [x] Vista previa en vivo
+- [x] **Alto contraste como interruptor independiente del modo claro/oscuro (prevalece)**
+- [x] **Panel de accesibilidad: fuente (normal/grande/extra), dislexia, reducir movimiento, subrayar enlaces**
+- [x] **Enlaces del pie funcionales: «Accesibilidad» → menú de accesibilidad**
 - [x] Liquid Glass: vidrio translúcido, blur, sombra + brillo interior, fallback sin `backdrop-filter`
 - [x] Estructura semántica intacta (`<header>`, `<aside>`, `<main>`, `<footer>`)
 - [x] Capturas de evidencia (galería + 4 combos reales)

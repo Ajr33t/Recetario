@@ -17,12 +17,15 @@ const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'docs', 'evidencias');
 const MODOS = ['claro', 'oscuro', 'alto-contraste'];
 
-// Combos de la app real que se capturan
+// Combos de la app real que se capturan (estado = formato del store)
 const APP_COMBOS = [
-  { theme: 'oceano', mode: 'claro', archivo: 'app-01-oceano-claro.png' },
-  { theme: 'ciberpunk', mode: 'oscuro', archivo: 'app-02-ciberpunk-oscuro.png' },
-  { theme: 'bosque', mode: 'alto-contraste', archivo: 'app-03-bosque-alto-contraste.png' },
-  { theme: 'sakura', mode: 'claro', archivo: 'app-04-sakura-claro.png' },
+  { state: { theme: 'oceano', mode: 'claro' }, archivo: 'app-01-oceano-claro.png' },
+  { state: { theme: 'ciberpunk', mode: 'oscuro' }, archivo: 'app-02-ciberpunk-oscuro.png' },
+  {
+    state: { theme: 'bosque', mode: 'oscuro', highContrast: true },
+    archivo: 'app-03-bosque-alto-contraste.png',
+  },
+  { state: { theme: 'sakura', mode: 'claro' }, archivo: 'app-04-sakura-claro.png' },
 ];
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -148,7 +151,7 @@ async function main() {
     await win.loadFile(appDist);
     await win.webContents.executeJavaScript(`
       localStorage.setItem('sazonlab-preferencias',
-        JSON.stringify({ state: { theme: '${combo.theme}', mode: '${combo.mode}' }, version: 0 }));
+        JSON.stringify({ state: ${JSON.stringify(combo.state)}, version: 0 }));
       true;
     `);
     // Recarga: la app hidrata las preferencias y aplica el tema al arrancar

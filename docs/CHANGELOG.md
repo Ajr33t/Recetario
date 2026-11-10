@@ -65,10 +65,22 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - Falsa alarma visual de la galería → verificación por decodificación de píxeles PNG (colores exactos confirmados).
 - **(revisión 10/11)** Temas/alto-contraste no aplicaban en DEV → selector `html[data-theme][data-mode]` (gana por especificidad sin importar el orden de inyección) + import de CSS antes que `App`; verificado con `npm run verificar:temas` (4/4 ✓).
 - **(revisión 10/11)** Glass sin estilo iPhone → `.glass` con brillo especular en degradado, refracción inset en 4 bordes y `blur(24px) saturate(1.8)` (app + landing).
+- **(revisión 2)** `merge` de Zustand recibía el envoltorio `{state, version}` en vez del estado plano → temas persistidos no se aplicaban; corregido y verificado 4/4 (`verificar:temas`).
+- **(revisión 2)** Pie con letrero «hecho con 💎 Liquid Glass» → texto legal limpio.
+- **(revisión 2)** Enlace «Accesibilidad» del pie no llevaba a ningún sitio → navega a `/ajustes` + scroll a la sección Accesibilidad.
+
+### Cambiado (revisión 2)
+- **Alto contraste ahora es un interruptor INDEPENDIENTE** del modo claro/oscuro (prevalece sobre él) — en Ajustes, en el selector de temas y en el toggle rápido de la cabecera (si HC está activo, el primer clic lo desactiva).
+- **Panel de accesibilidad completo en Ajustes (RF-14):** tamaño de fuente (normal 16 / grande 18 / extra 20), tipografía para dislexia (Verdana/Trebuchet + espaciado y altura de línea amplios), reducir movimiento y subrayar enlaces — todo persistido en `sazonlab-preferencias` con migración automática del formato antiguo.
+- Footer: eliminado el letrero «Liquid Glass».
 
 ### Nuevos scripts
 - `npm run verificar:temas` → valida en el dev server que los temas se aplican (computed style).
 - `npm run capturas` → galería + capturas de la app con Electron.
+
+### Pendientes registrados (para fases posteriores)
+- **Exportar recetas del usuario a PDF como libro de cocina** (solicitado por el cliente — candidato a Fase 5/7).
+- **Páginas legales reales de Privacidad y Términos** para que los enlaces del pie lleven a contenido legal completo (candidato a Fase 7).
 
 ---
 

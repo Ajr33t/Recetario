@@ -226,6 +226,37 @@ html[data-reduce-motion='true'] *::after {
   scroll-behavior: auto !important;
 }
 
+/* Dislexia: tipografía sans-serif ancha + espaciado y altura de línea amplios.
+   (Sin descargas: pila de fuentes del sistema, rendimiento en Electron). */
+html[data-dyslexia='true'] body {
+  font-family: Verdana, 'Trebuchet MS', 'OpenDyslexic', Arial, system-ui, sans-serif !important;
+  letter-spacing: 0.06em;
+  line-height: 1.8;
+  word-spacing: 0.1em;
+}
+html[data-dyslexia='true'] h1,
+html[data-dyslexia='true'] h2,
+html[data-dyslexia='true'] h3,
+html[data-dyslexia='true'] h4 {
+  font-family: Verdana, 'Trebuchet MS', Arial, system-ui, sans-serif !important;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+html[data-dyslexia='true'] p,
+html[data-dyslexia='true'] li {
+  line-height: 1.8;
+  word-spacing: 0.1em;
+}
+
+/* Subrayar enlaces: siempre visible (no solo al enfocar/pasar el cursor) */
+html[data-underline-links='true'] a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+html[data-underline-links='true'] a:hover {
+  text-decoration-thickness: 2px;
+}
+
 /* Anillo de foco de alto contraste en modo alto contraste (Fase 2 lo activa) */
 html[data-mode='alto-contraste'] *:focus-visible {
   outline: 4px solid #ffff00;
