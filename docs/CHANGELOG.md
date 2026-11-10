@@ -63,6 +63,12 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - `UnknownVizError` en `capturePage` → `disableHardwareAcceleration` + reintento visible.
 - Galería en blanco → CSS emitido como texto, faltaba envolver en `<style>`.
 - Falsa alarma visual de la galería → verificación por decodificación de píxeles PNG (colores exactos confirmados).
+- **(revisión 10/11)** Temas/alto-contraste no aplicaban en DEV → selector `html[data-theme][data-mode]` (gana por especificidad sin importar el orden de inyección) + import de CSS antes que `App`; verificado con `npm run verificar:temas` (4/4 ✓).
+- **(revisión 10/11)** Glass sin estilo iPhone → `.glass` con brillo especular en degradado, refracción inset en 4 bordes y `blur(24px) saturate(1.8)` (app + landing).
+
+### Nuevos scripts
+- `npm run verificar:temas` → valida en el dev server que los temas se aplican (computed style).
+- `npm run capturas` → galería + capturas de la app con Electron.
 
 ---
 

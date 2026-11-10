@@ -113,14 +113,25 @@
    ------------------------------------------------------------ */
 @layer components {
   .glass {
-    background: var(--glass);
+    /* Liquid Glass estilo iOS: capa de brillo especular sobre el vidrio */
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.24) 0%,
+        rgba(255, 255, 255, 0.05) 45%,
+        rgba(255, 255, 255, 0.16) 100%
+      ),
+      var(--glass);
     border: 1px solid var(--glass-border);
-    /* Sello Liquid Glass: sombra exterior + brillo interior (inset highlight) */
+    /* Refracción: brillo superior + borde inferior oscuro + costados luminosos */
     box-shadow:
       var(--shadow-glass),
-      inset 0 1px 0 var(--glass-highlight);
-    backdrop-filter: blur(16px) saturate(1.5);
-    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+      inset 0 1px 0 var(--glass-highlight),
+      inset 0 -1px 0 rgb(0 0 0 / 0.08),
+      inset 1px 0 0 rgb(255 255 255 / 0.16),
+      inset -1px 0 0 rgb(255 255 255 / 0.1);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
   }
 
   /* Fallback si el navegador no soporta backdrop-filter (EX-01 CU-13) */

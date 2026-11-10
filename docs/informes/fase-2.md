@@ -78,6 +78,8 @@ docs/CHANGELOG.md                          # entrada Fase 2
 | 5.3 | `capturePage` lanzaba `UnknownVizError` | `app.disableHardwareAcceleration()` + reintento con ventana visible |
 | 5.4 | Galería salía en blanco: el CSS se emitía como **texto** (faltaba envolver en `<style>`) | `<style>${...}</style>` + ventana de 1320px de alto |
 | 5.5 | Falsa alarma visual: la vista previa de la imagen mostraba celdas claras | Verificación por **decodificación de píxeles del PNG** (script propio con zlib): `rgb(6,12,15)` y `rgb(56,189,248)` confirman fondos oscuros correctos — 18.631 px oscuros vs 11.839 claros |
+| 5.6 | **Reportado en revisión (10/11):** en el servidor DEV los temas y el alto contraste no se aplicaban — Vite inyecta `index.css` *después* del `<style id="theme-vars">` (orden de imports), y sus reglas base pisaban las variables de tema | Doble fix: selector `html[data-theme][data-mode]` (especificidad 0-1-2, gana sin importar el orden) + import del CSS antes que `App` en `main.jsx`. **Verificado en dev con `npm run verificar:temas`: 4/4 combos con colores exactos** |
+| 5.7 | **Reportado en revisión:** el glass no tenía el aspecto Liquid Glass de iPhone | `.glass` rediseñado: capa de brillo especular en degradado, 4 sombras `inset` de refracción (borde superior luminoso, inferior oscuro, costados), `blur(24px) saturate(1.8)` (antes 16/1.5). Aplicado también en la landing |
 
 ---
 

@@ -26,6 +26,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verificar:contraste": "node scripts/verificar-contraste.mjs",
+    "verificar:temas": "electron scripts/verificar-temas.cjs",
     "capturas": "electron scripts/capturas.cjs"
   },
   "devDependencies": {

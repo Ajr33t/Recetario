@@ -590,8 +590,10 @@ export function buildThemeVars(themeId, mode) {
   const p = getPalette(themeId, mode);
   const dark = mode === 'oscuro' || mode === 'alto-contraste';
   const rgb = (hex) => hexToRgb(hex).join(' ');
+  // Selector con especificidad 0-1-2: gana siempre a :root y [data-mode]
+  // de index.css, sin importar el orden de inyección del CSS (dev vs prod).
   const css = `
-:root {
+html[data-theme][data-mode] {
   color-scheme: ${dark ? 'dark' : 'light'};
   --background: ${rgb(p.bg)};
   --foreground: ${rgb(p.fg)};
