@@ -170,7 +170,21 @@
   }
 
   .field {
-    @apply w-full rounded-xl border border-border bg-[var(--glass)] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2;
+    /* Relleno sólido con el token --muted del tema activo (no vidrio
+       translúcido): en modo claro el campo se distinguía mal del panel
+       glass casi blanco. La sombra interior da el aspecto «hundido». */
+    @apply w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2;
+    background: rgb(var(--muted) / 0.85);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.06);
+  }
+
+  .field:hover:not(:disabled) {
+    border-color: rgb(var(--primary) / 0.45);
+  }
+
+  .field:focus {
+    background: rgb(var(--card) / 0.95);
+    border-color: rgb(var(--primary));
   }
 
   .chip {
@@ -271,8 +285,14 @@ html[data-mode='alto-contraste'] .glass {
 /* ══════════════════════════════════════════════════════════════
    Impresión / "Guardar como PDF" (libro de cocina — Fase 5).
    Se oculta la chrome de la app y solo se imprime el documento
-   del libro, en negro sobre blanco (sin glass ni blur).
+   del libro, con colores de marca, portada a página completa y
+   saltos de página por receta (formato A4).
    ══════════════════════════════════════════════════════════════ */
+@page {
+  size: A4;
+  margin: 16mm 15mm;
+}
+
 @media print {
   .no-print,
   .skip-link,
@@ -285,7 +305,7 @@ html[data-mode='alto-contraste'] .glass {
   html,
   body {
     background: #fff !important;
-    color: #000 !important;
+    color: #0f172a !important;
   }
 
   body * {
@@ -294,8 +314,13 @@ html[data-mode='alto-contraste'] .glass {
 
   /* Solo el contenido del libro queda visible al imprimir */
   .libro,
-  .libro * {
+  .libro *,
+  .libro-portada::after {
     visibility: visible;
+    /* El navegador omite fondos por defecto: se piden explícitamente
+       para que la portada y los acentos salgan en el PDF */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .libro {
@@ -303,27 +328,68 @@ html[data-mode='alto-contraste'] .glass {
     inset: 0;
     margin: 0;
     padding: 0;
+    gap: 0; /* sin separación entre secciones: cada una es su página */
     background: #fff;
   }
 
   .libro a {
-    color: #000;
+    color: #0f172a;
     text-decoration: none;
   }
 
+  /* Portada: ocupa una página completa del PDF */
   .libro-portada {
     page-break-after: always;
     break-after: page;
+    min-height: 245mm;
+    border-width: 3px;
+    border-radius: 0;
+    padding: 30mm 20mm;
   }
 
   .libro-pagina {
     page-break-after: always;
     break-after: page;
+    padding: 0;
+    border-top: none;
+  }
+
+  .libro-pagina:last-child {
+    page-break-after: auto;
+    break-after: auto;
   }
 
   .libro-imagen {
     max-height: 6cm;
     object-fit: cover;
+  }
+
+  /* Colores de marca fijos en el PDF (independientes del tema activo) */
+  .libro-cols h3,
+  .libro-medidas-titulo,
+  .libro-indice-num,
+  .libro-valor,
+  .libro-sello,
+  .libro-portada > i {
+    color: #0284c7 !important;
+  }
+
+  /* Texto secundario con contraste fijo en el PDF (tema independiente) */
+  .libro-subtitulo,
+  .libro-desc,
+  .libro-meta,
+  .libro-pie,
+  .libro-tabla th {
+    color: #475569 !important;
+  }
+
+  .libro-tabla th,
+  .libro-tabla td {
+    border-color: #cbd5e1 !important;
+  }
+
+  .libro-indice-puntos {
+    border-bottom-color: #94a3b8 !important;
   }
 
   .glass-card,
@@ -333,8 +399,25 @@ html[data-mode='alto-contraste'] .glass {
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    border: 1px solid #999 !important;
-    color: #000 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  /* Receta suelta desde el detalle: se oculta la app y la receta
+     (clase libro-oculto) vuelve a ocupar la página */
+  body.solo-receta #root {
+    display: none !important;
+  }
+
+  body.solo-receta .libro-oculto {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  body.solo-receta .swal2-container {
+    display: none !important;
   }
 }
 
@@ -343,6 +426,10 @@ html[data-mode='alto-contraste'] .glass {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  /* Ancho del contenido imprimible A4 (210mm − 2×15mm): en pantalla es
+     una vista previa del papel y permite medir las páginas del índice */
+  max-width: 180mm;
+  margin-inline: auto;
 }
 
 .libro-portada {
@@ -354,8 +441,23 @@ html[data-mode='alto-contraste'] .glass {
   min-height: 60vh;
   padding: 3rem 1.5rem;
   text-align: center;
-  border: 2px solid rgb(var(--primary));
+  border: 3px solid rgb(var(--primary));
   border-radius: 1rem;
+  background:
+    radial-gradient(ellipse at top, rgb(var(--primary) / 0.12), transparent 60%),
+    linear-gradient(160deg, rgb(var(--card)) 0%, rgb(var(--muted)) 100%);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Filete decorativo doble bajo el sello de la portada */
+.libro-portada::after {
+  content: '';
+  position: absolute;
+  inset: 0.75rem;
+  border: 1px solid rgb(var(--primary) / 0.35);
+  border-radius: 0.6rem;
+  pointer-events: none;
 }
 
 .libro-portada > i {
@@ -380,12 +482,96 @@ html[data-mode='alto-contraste'] .glass {
   color: rgb(var(--muted-foreground));
 }
 
-.libro-indice {
-  margin-top: 1rem;
+/* Índice del libro (página 2): nombre + puntos guía + número de página */
+.libro-seccion-titulo {
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.libro-indice-lista {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.5rem;
+}
+
+.libro-indice-fila {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
   font-size: 0.95rem;
+}
+
+.libro-indice-num {
+  min-width: 1.6rem;
+  font-weight: 700;
+  color: rgb(var(--primary));
+}
+
+.libro-indice-nombre {
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libro-indice-puntos {
+  flex: 1;
+  min-width: 1.5rem;
+  border-bottom: 1px dotted rgb(var(--border));
+  transform: translateY(-4px);
+}
+
+.libro-indice-pag {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Página fija de medidas y equivalencias (página 3) */
+.libro-medidas-cols {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .libro-medidas-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.libro-medidas-titulo {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(var(--primary));
+}
+
+.libro-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.libro-tabla th {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 2px solid rgb(var(--border));
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgb(var(--muted-foreground));
+}
+
+.libro-tabla td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid rgb(var(--border) / 0.5);
+}
+
+.libro-valor {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--primary));
 }
 
 .libro-pagina {
@@ -420,7 +606,7 @@ html[data-mode='alto-contraste'] .glass {
 
 .libro-imagen {
   width: 100%;
-  max-height: 12rem;
+  max-height: 6cm; /* idéntico en impresión: la medición del índice cuadra */
   margin-bottom: 0.75rem;
   border-radius: 0.75rem;
   object-fit: cover;
@@ -476,4 +662,15 @@ html[data-mode='alto-contraste'] .glass {
   border-top: 1px dashed rgb(var(--border));
   font-size: 0.75rem;
   color: rgb(var(--muted-foreground));
+}
+
+/* Receta suelta (detalle): fuera de pantalla solo en pantalla.
+   En impresión vuelve a la página gracias a la regla posterior. */
+@media screen {
+  .libro-oculto {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 100%;
+  }
 }

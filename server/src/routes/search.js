@@ -11,6 +11,7 @@ import {
   explorar,
 } from '../services/mealdb.js';
 import { ideasDelChef } from '../services/ia.js';
+import { areasConRecetas } from '../services/coberturaAreas.js';
 import {
   aInglesConCache,
   traducirReceta,
@@ -117,13 +118,17 @@ router.get('/sugerencias', async (req, res, next) => {
   }
 });
 
-/** GET /api/search/filtros — categorías y áreas en español. */
+/** GET /api/search/filtros — categorías y áreas en español (solo áreas con recetas). */
 router.get('/filtros', async (_req, res, next) => {
   try {
     const datos = await filtros();
+    // TheMealDB lista 195 áreas pero la mayoría no tiene recetas: se
+    // ofrecen solo las que sí devuelven resultados (sondeo cacheado).
+    const conRecetas = areasConRecetas(datos.areas);
+    const areasBase = conRecetas ?? datos.areas;
     const [categorias, areas] = await Promise.all([
-      traducirLista(datos.categorias),
-      traducirLista(datos.areas),
+      traducirLista([...new Set(datos.categorias)]),
+      traducirLista([...new Set(areasBase)]), // sin duplicados (claves React)
     ]);
     return res.json({ categorias, areas });
   } catch (err) {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
 import { useAuthStore } from '../store/authStore.js';
+import { descargarImagenReceta, imprimirReceta, escaparHtml } from '../services/exportarReceta.js';
 
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
 
@@ -81,6 +82,7 @@ export default function RecetaDetalle() {
   const [favorito, setFavorito] = useState(false);
   const [recetaInterna, setRecetaInterna] = useState(null); // id interno (externas importadas)
   const [disponibles, setDisponibles] = useState([]); // ingredientes de la última búsqueda
+  const [marcados, setMarcados] = useState({}); // checklist de ingredientes
 
   // Cargar receta: propia/pública primero; si no, TheMealDB
   useEffect(() => {
@@ -141,6 +143,38 @@ export default function RecetaDetalle() {
     if (disponibles.length === 0) return false;
     const nombre = ingrediente.toLowerCase();
     return !disponibles.some((d) => nombre.includes(d) || d.includes(nombre));
+  }
+
+  // ── Checklist de ingredientes (persistido por receta) ──
+  useEffect(() => {
+    try {
+      const guardado = JSON.parse(localStorage.getItem(`sazonlab:checklist:${id}`) || '{}');
+      setMarcados(guardado && typeof guardado === 'object' ? guardado : {});
+    } catch {
+      setMarcados({});
+    }
+  }, [id]);
+
+  function alternarCheck(nombre) {
+    setMarcados((prev) => {
+      const siguiente = { ...prev, [nombre]: !prev[nombre] };
+      if (!siguiente[nombre]) delete siguiente[nombre]; // solo los marcados
+      try {
+        localStorage.setItem(`sazonlab:checklist:${id}`, JSON.stringify(siguiente));
+      } catch {
+        /* almacenamiento no disponible: el marcado vive en la sesión */
+      }
+      return siguiente;
+    });
+  }
+
+  function vaciarCheck() {
+    setMarcados({});
+    try {
+      localStorage.removeItem(`sazonlab:checklist:${id}`);
+    } catch {
+      /* almacenamiento no disponible */
+    }
   }
 
   async function alternarFavorito() {
@@ -224,26 +258,49 @@ export default function RecetaDetalle() {
   async function compartir() {
     const enlace = enlaceReceta();
     const privada = receta.esMia && !receta.esPublica;
-    const resultado = await Swal.fire({
+    let accion = null; // qué opción eligió el usuario
+
+    await Swal.fire({
       title: 'Compartir receta',
       html: `
-        <p style="margin-bottom:.5rem">${receta.titulo}</p>
-        <input id="swal-enlace" readonly value="${enlace}" class="swal2-input" style="font-size:.8rem">
-        ${privada ? '<p style="font-size:.85rem;color:#f87171">Esta receta es privada: hazla pública para que cualquiera con el enlace pueda verla.</p>' : ''}
+        <p style="margin-bottom:.5rem">${escaparHtml(receta.titulo)}</p>
+        <input id="swal-enlace" readonly value="${escaparHtml(enlace)}" class="swal2-input" style="font-size:.8rem">
+        ${privada ? '<p style="font-size:.85rem;color:#f87171">Esta receta es privada: al compartirla se hará pública.</p>' : ''}
+        <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;text-align:left">
+          <button type="button" class="btn-secondary" data-accion="enlace">
+            <i class="fa-solid ${privada ? 'fa-globe' : 'fa-link'}" aria-hidden="true"></i>
+            ${privada ? 'Publicar y copiar enlace' : 'Copiar enlace'}
+          </button>
+          <button type="button" class="btn-ghost" data-accion="texto">
+            <i class="fa-solid fa-align-left" aria-hidden="true"></i> Copiar receta como texto
+          </button>
+          <button type="button" class="btn-ghost" data-accion="imagen">
+            <i class="fa-solid fa-image" aria-hidden="true"></i> Descargar como imagen (PNG)
+          </button>
+          <button type="button" class="btn-ghost" data-accion="pdf">
+            <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Exportar a PDF
+          </button>
+        </div>
       `,
-      showDenyButton: true,
       showCancelButton: true,
-      confirmButtonText: '📋 Copiar enlace',
-      denyButtonText: privada ? '🌐 Publicar y copiar' : '📝 Copiar receta como texto',
       cancelButtonText: 'Cerrar',
-      focusConfirm: false,
+      showConfirmButton: false,
+      focusCancelButton: true,
+      didRender: () => {
+        Swal.getPopup()
+          ?.querySelectorAll('[data-accion]')
+          .forEach((boton) => {
+            boton.addEventListener('click', () => {
+              accion = boton.dataset.accion;
+              Swal.close();
+            });
+          });
+      },
     });
 
-    if (resultado.isConfirmed) {
-      await copiar(enlace, 'Enlace copiado');
-      return;
-    }
-    if (resultado.isDenied) {
+    if (!accion) return;
+
+    if (accion === 'enlace') {
       if (privada) {
         try {
           await api.put(`/recipes/${id}`, { visibilidad: 'publica' });
@@ -257,8 +314,46 @@ export default function RecetaDetalle() {
           });
         }
       } else {
-        await copiar(textoReceta(), 'Receta copiada como texto');
+        await copiar(enlace, 'Enlace copiado');
       }
+      return;
+    }
+
+    if (accion === 'texto') {
+      await copiar(textoReceta(), 'Receta copiada como texto');
+      return;
+    }
+
+    if (accion === 'imagen') {
+      try {
+        await descargarImagenReceta(receta);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Imagen descargada',
+          showConfirmButton: false,
+          timer: 1600,
+        });
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'No se pudo generar la imagen',
+          text: err.message || 'Reintenta en unos segundos.',
+        });
+      }
+      return;
+    }
+
+    // accion === 'pdf': vista de impresión con la receta sola
+    try {
+      imprimirReceta(receta);
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo abrir la impresión',
+        text: err.message || 'Reintenta en unos segundos.',
+      });
     }
   }
 
@@ -464,45 +559,76 @@ export default function RecetaDetalle() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-        {/* Ingredientes */}
+        {/* Ingredientes (checklist) */}
         <section className="surface-section h-fit" aria-labelledby="ingredientes-titulo">
           <h2 id="ingredientes-titulo" className="text-base">
             <i className="fa-solid fa-carrot text-primary" aria-hidden="true" /> Ingredientes (
             {receta.ingredientes.length})
+            {Object.keys(marcados).length > 0 && (
+              <span className="chip ml-2">
+                <i className="fa-solid fa-check" aria-hidden="true" />{' '}
+                {Object.keys(marcados).length}/{receta.ingredientes.length} listos
+              </span>
+            )}
           </h2>
           <ul className="mt-3 flex flex-col gap-1.5 text-sm" role="list">
-            {receta.ingredientes.map((ing) => {
+            {receta.ingredientes.map((ing, i) => {
               const esFaltante = disponibles.length > 0 && falta(ing.nombre);
+              const marcado = Boolean(marcados[ing.nombre]);
               return (
                 <li
-                  key={ing.nombre}
+                  key={`${i}-${ing.nombre}`}
                   className={`flex items-center justify-between gap-2 border-b border-border/50 pb-1.5 ${
                     esFaltante ? 'text-danger' : ''
                   }`}
                 >
-                  <span>
-                    {esFaltante && (
-                      <i
-                        className="fa-solid fa-circle-minus mr-1.5"
-                        aria-hidden="true"
-                        title="Te falta"
-                      />
-                    )}
-                    {ing.nombre}
-                  </span>
-                  <span className={esFaltante ? 'font-medium' : 'text-muted-foreground'}>
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={marcado}
+                      onChange={() => alternarCheck(ing.nombre)}
+                      className="h-4 w-4 shrink-0 accent-[rgb(var(--primary))]"
+                      aria-label={`Marcar ${ing.nombre} como listo`}
+                    />
+                    <span className={marcado ? 'line-through opacity-60' : ''}>
+                      {esFaltante && (
+                        <i
+                          className="fa-solid fa-circle-minus mr-1.5"
+                          aria-hidden="true"
+                          title="Te falta"
+                        />
+                      )}
+                      {ing.nombre}
+                    </span>
+                  </label>
+                  <span
+                    className={`${
+                      esFaltante ? 'font-medium' : 'text-muted-foreground'
+                    } ${marcado ? 'line-through opacity-60' : ''}`}
+                  >
                     {ing.cantidad || 'al gusto'}
                   </span>
                 </li>
               );
             })}
           </ul>
+          {Object.keys(marcados).length > 0 && (
+            <button type="button" className="btn-ghost mt-2 !px-2 text-xs" onClick={vaciarCheck}>
+              <i className="fa-solid fa-eraser" aria-hidden="true" /> Vaciar checklist
+            </button>
+          )}
           {disponibles.length > 0 && (
             <p className="mt-3 text-xs text-muted-foreground">
               <i className="fa-solid fa-circle-info" aria-hidden="true" /> Marcados en rojo los que
               no tienes de tu última búsqueda.
             </p>
           )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            <i className="fa-solid fa-ruler-combined" aria-hidden="true" />{' '}
+            <Link to="/medidas" className="underline hover:text-primary">
+              ¿Dudas con las medidas? Ver tabla y conversor
+            </Link>
+          </p>
         </section>
 
         {/* Preparación */}

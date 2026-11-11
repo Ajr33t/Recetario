@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
@@ -7,9 +7,9 @@ import { useAuthStore } from '../store/authStore.js';
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
 
 /**
- * Mis recetas (RF-06/08/21 — Fase 5): lista real con acciones
- * (ver, editar, eliminar con SweetAlert2), papelera, exportar/importar
- * JSON y selección para generar el libro de cocina en PDF (impresión).
+ * Mis recetas (RF-06/08 — Fase 5): lista real con acciones
+ * (ver, editar, eliminar con SweetAlert2), papelera y selección para
+ * generar el libro de cocina en PDF. Exportar/importar JSON vive en Ajustes.
  */
 export default function MisRecetas() {
   const usuario = useAuthStore((s) => s.usuario);
@@ -18,7 +18,6 @@ export default function MisRecetas() {
   const [error, setError] = useState('');
   const [seleccion, setSeleccion] = useState([]); // ids para el libro
   const [modoSeleccion, setModoSeleccion] = useState(false);
-  const archivoRef = useRef(null);
 
   function cargar() {
     api
@@ -75,65 +74,6 @@ export default function MisRecetas() {
     navigate('/libro', { state: { ids } });
   }
 
-  // ── Exportar JSON (RF-21) ──
-  async function exportar() {
-    try {
-      const datos = await api.get('/recipes/exportar');
-      const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const enlace = document.createElement('a');
-      enlace.href = url;
-      enlace.download = `sazonlab-recetas-${new Date().toISOString().slice(0, 10)}.json`;
-      enlace.click();
-      URL.revokeObjectURL(url);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: `${datos.total} receta(s) exportadas`,
-        showConfirmButton: false,
-        timer: 1800,
-      });
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo exportar.');
-    }
-  }
-
-  // ── Importar JSON (RF-21) ──
-  async function importar(evento) {
-    const archivo = evento.target.files?.[0];
-    evento.target.value = ''; // permite volver a elegir el mismo archivo
-    if (!archivo) return;
-    try {
-      const texto = await archivo.text();
-      let datos;
-      try {
-        datos = JSON.parse(texto);
-      } catch {
-        throw new Error('El archivo no es JSON válido');
-      }
-      const recetas = Array.isArray(datos) ? datos : datos.recetas;
-      if (!Array.isArray(recetas)) throw new Error('El archivo no contiene recetas');
-      const respuesta = await api.post('/recipes/importar', { recetas });
-      const mensaje =
-        respuesta.errores.length > 0
-          ? `${respuesta.importadas} importadas, ${respuesta.errores.length} omitidas`
-          : `${respuesta.importadas} receta(s) importadas`;
-      await Swal.fire({
-        icon: respuesta.importadas > 0 ? 'success' : 'warning',
-        title: 'Importación completada',
-        text: mensaje,
-      });
-      cargar();
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'No se pudo importar',
-        text: err.message || 'Archivo no válido',
-      });
-    }
-  }
-
   // Invitado: invitación a iniciar sesión
   if (!usuario) {
     return (
@@ -178,32 +118,13 @@ export default function MisRecetas() {
         </div>
       </header>
 
-      {/* Acciones de datos y libro */}
+      {/* Acciones del recetario: selección y libro de cocina (PDF) */}
       {recetas && recetas.length > 0 && (
         <div
           className="surface-section flex flex-wrap items-center gap-2"
           role="group"
           aria-label="Acciones del recetario"
         >
-          <button type="button" className="btn-secondary !px-3" onClick={exportar}>
-            <i className="fa-solid fa-file-export" aria-hidden="true" /> Exportar JSON
-          </button>
-          <button
-            type="button"
-            className="btn-secondary !px-3"
-            onClick={() => archivoRef.current?.click()}
-          >
-            <i className="fa-solid fa-file-import" aria-hidden="true" /> Importar JSON
-          </button>
-          <input
-            ref={archivoRef}
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            onChange={importar}
-            aria-label="Seleccionar archivo JSON para importar"
-          />
-          <span className="mx-1 h-6 w-px bg-border" aria-hidden="true" />
           <button
             type="button"
             className={modoSeleccion ? 'btn-primary !px-3' : 'btn-ghost !px-3'}
@@ -218,8 +139,9 @@ export default function MisRecetas() {
           {modoSeleccion && seleccion.length > 0 && (
             <span className="chip">{seleccion.length} seleccionada(s)</span>
           )}
-          <button type="button" className="btn-ghost !px-3" onClick={irAlLibro}>
-            <i className="fa-solid fa-book-bookmark" aria-hidden="true" /> Generar libro de cocina
+          <span className="mx-1 h-6 w-px bg-border" aria-hidden="true" />
+          <button type="button" className="btn-secondary !px-3" onClick={irAlLibro}>
+            <i className="fa-solid fa-file-pdf" aria-hidden="true" /> Generar libro de cocina (PDF)
           </button>
         </div>
       )}
@@ -241,8 +163,8 @@ export default function MisRecetas() {
           <i className="fa-solid fa-book-open text-4xl text-primary" aria-hidden="true" />
           <p className="font-medium">Tu recetario está vacío</p>
           <p className="max-w-md text-sm text-muted-foreground">
-            Crea tu primera receta con ingredientes, pasos, fotos y etiquetas. También puedes
-            importar un JSON exportado antes.
+            Crea tu primera receta con ingredientes, pasos, fotos y etiquetas. Después podrás
+            reunirlas en un libro de cocina en PDF.
           </p>
           <Link to="/recetas/nueva" className="btn-primary mt-1">
             <i className="fa-solid fa-plus" aria-hidden="true" /> Crear mi primera receta

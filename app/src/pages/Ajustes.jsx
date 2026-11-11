@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 import { useThemeStore } from '../store/themeStore.js';
+import { useAuthStore } from '../store/authStore.js';
+import { api, ApiError } from '../services/api.js';
 import { THEMES } from '../themes/palettes.js';
 import ThemeSelector from '../components/theme/ThemeSelector.jsx';
 
@@ -55,6 +58,69 @@ export default function Ajustes() {
   const setHighContrast = useThemeStore((s) => s.setHighContrast);
   const setA11y = useThemeStore((s) => s.setA11y);
   const temaActual = THEMES.find((t) => t.id === theme) || THEMES[0];
+  const usuario = useAuthStore((s) => s.usuario);
+  const archivoRef = useRef(null);
+
+  // ── Exportar recetas a JSON (RF-21) ──
+  async function exportarJson() {
+    try {
+      const datos = await api.get('/recipes/exportar');
+      const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = `sazonlab-recetas-${new Date().toISOString().slice(0, 10)}.json`;
+      enlace.click();
+      URL.revokeObjectURL(url);
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `${datos.total} receta(s) exportadas`,
+        showConfirmButton: false,
+        timer: 1800,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo exportar',
+        text: err instanceof ApiError ? err.message : 'Reintenta en unos segundos.',
+      });
+    }
+  }
+
+  // ── Importar recetas desde JSON (RF-21) ──
+  async function importarJson(evento) {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = ''; // permite volver a elegir el mismo archivo
+    if (!archivo) return;
+    try {
+      const texto = await archivo.text();
+      let datos;
+      try {
+        datos = JSON.parse(texto);
+      } catch {
+        throw new Error('El archivo no es JSON válido');
+      }
+      const recetas = Array.isArray(datos) ? datos : datos.recetas;
+      if (!Array.isArray(recetas)) throw new Error('El archivo no contiene recetas');
+      const respuesta = await api.post('/recipes/importar', { recetas });
+      await Swal.fire({
+        icon: respuesta.importadas > 0 ? 'success' : 'warning',
+        title: 'Importación completada',
+        text:
+          respuesta.errores.length > 0
+            ? `${respuesta.importadas} importadas, ${respuesta.errores.length} omitidas`
+            : `${respuesta.importadas} receta(s) importadas`,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo importar',
+        text: err.message || 'Archivo no válido',
+      });
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -194,16 +260,35 @@ export default function Ajustes() {
           <i className="fa-solid fa-file-export text-primary" aria-hidden="true" /> Datos
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Exportar e importar recetas en JSON (RF-21): disponible desde la Fase 5.
+          Exporta todas tus recetas a un archivo JSON o recupéralas desde una copia (RF-21).
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" className="btn-secondary" disabled>
-            <i className="fa-solid fa-download" aria-hidden="true" /> Exportar JSON
-          </button>
-          <button type="button" className="btn-secondary" disabled>
-            <i className="fa-solid fa-upload" aria-hidden="true" /> Importar JSON
-          </button>
-        </div>
+        {usuario ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className="btn-secondary" onClick={exportarJson}>
+              <i className="fa-solid fa-download" aria-hidden="true" /> Exportar JSON
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => archivoRef.current?.click()}
+            >
+              <i className="fa-solid fa-upload" aria-hidden="true" /> Importar JSON
+            </button>
+            <input
+              ref={archivoRef}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              onChange={importarJson}
+              aria-label="Seleccionar archivo JSON para importar"
+            />
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-muted-foreground">
+            <i className="fa-solid fa-lock" aria-hidden="true" /> Inicia sesión para exportar o
+            importar tus recetas.
+          </p>
+        )}
       </section>
     </div>
   );

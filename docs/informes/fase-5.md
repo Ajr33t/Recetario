@@ -35,6 +35,15 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
 | 12 | Estilos `@media print` (oculta chrome de la app, negro sobre blanco, saltos de página) + clase `no-print` en landmarks | `app/src/styles/index.css`, `AppHeader/AppSidebar/AppFooter/SkipLink` |
 | 13 | Última búsqueda de ingredientes guardada en `sessionStorage` para el detalle | `app/src/pages/Buscar.jsx` |
 | 14 | Suite de verificación de la fase | `scripts/verificar-recetas.mjs` → `npm run verificar:recetas` |
+| 15 | Compartir con **imagen PNG** (canvas) y **PDF** además de enlace/texto | `app/src/services/exportarReceta.js`, `RecetaDetalle.jsx` |
+| 16 | Exportar/importar JSON movido de «Mis recetas» a **Ajustes → Datos** (RF-21) | `Ajustes.jsx`, `MisRecetas.jsx` |
+| 17 | Libro: portada decorativa, botón PDF, **índice con número de página** (medido vs. A4) y **página fija de medidas** | `LibroCocina.jsx`, `styles/index.css` |
+| 18 | Fix «Explorar»: cobertura de áreas sondeada y cacheada (30 días) + `/filtros` filtrado y sin duplicados | `server/src/services/coberturaAreas.js`, `mealdb.js` (`contarArea`), `routes/search.js`, `index.js` (sondeo al arrancar) |
+| 19 | Filtros de Explorar con carga perezosa, error + reintentar y deduplicación | `app/src/pages/Buscar.jsx` |
+| 20 | **Checklist de ingredientes** con persistencia por receta | `app/src/pages/RecetaDetalle.jsx` |
+| 21 | **Página `/medidas`**: conversor + 3 tablas de equivalencias es/en (módulo compartido) | `app/src/data/medidas.js`, `pages/Medidas.jsx`, `App.jsx`, `AppFooter.jsx` |
+| 22 | Fix campos en modo claro: relleno sólido por token `--muted` + sombra interior/hover/foco | `app/src/styles/index.css` (`.field`) |
+| 23 | Suites nuevas de la tanda | `scripts/verificar-ui-f5.cjs` (37), `scripts/verificar-busqueda.mjs` ampliado (68) |
 
 ---
 
@@ -83,9 +92,11 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
 | RF-07 | Versiones restaurables | Snapshot completo + `POST /:id/versiones/:v/restaurar` |
 | RF-08 | Papelera (borrado suave 30 días) | `Papelera.jsx` + `DELETE /:id` + `?permanente=1` |
 | RF-09 | Favoritos | `Favoritos.jsx` + `/api/favorites` (propias y externas) |
-| RF-12 | Compartir recetas | Visibilidad pública + diálogo (enlace / texto) |
-| RF-21 | Exportar/importar recetas | `GET /exportar`, `POST /importar`, UI con archivo |
-| — | Libro de cocina PDF (cliente) | `/libro` + `@media print` |
+| RF-12 | Compartir recetas | Visibilidad pública + diálogo (enlace / texto / **imagen PNG** / **PDF**) |
+| RF-21 | Exportar/importar recetas | `GET /exportar`, `POST /importar`, UI en **Ajustes → Datos** |
+| — | Libro de cocina PDF (cliente) | `/libro`: portada + **índice con páginas** + **página fija de medidas** + `@media print` |
+| — | Medidas y conversor (cliente) | `/medidas` + página fija del libro (valores fijos es/en) |
+| — | Checklist de ingredientes (cliente) | `RecetaDetalle.jsx` + `localStorage` por receta |
 
 ---
 
@@ -94,16 +105,30 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
 | Comando | Resultado |
 |---------|-----------|
 | `npm run verificar:recetas` | ✅ 39/39 |
+| `npm run verificar:ui-f5` | ✅ 37/37 (JSON, libro/índice/PDF, compartir imagen+PDF, checklist, Explorar, medidas) |
+| `npm run verificar:busqueda` | ✅ 68/68 (incluye: cada área de `/filtros` con recetas reales) |
 | `npm run lint` | ✅ 0 errores, 0 avisos |
 | `npm run format` | ✅ aplicado |
-| `npm run build:app` | ✅ (70 módulos, 3.5 s) |
-| `npm run build:landing` | ✅ (30 módulos, 1.6 s) |
+| `npm run build:app` | ✅ (73 módulos) |
+| `npm run build:landing` | ✅ |
 | `npm run verificar:contraste` | ✅ 36/36 combinaciones |
 | `npm run verificar:temas` | ✅ 4/4 en dev (Electron) |
 | `npm run verificar:auth` | ✅ 27/27 |
-| `npm run verificar:busqueda` | ✅ 41/41 |
 | Demo `localhost:5173` | ✅ 200 |
 | API `localhost:3001/api/health` | ✅ 200 |
+| `GET /api/search/filtros` | ✅ 14 categorías, **29 áreas** (todas con recetas; antes 195 casi todas vacías) |
+
+### Cumplimiento de requisitos obligatorios del cliente (tanda)
+
+| Requisito | Estado | Evidencia |
+|-----------|--------|-----------|
+| Electron | ✅ | Suites UI corren con `electron`; builds `build:app` |
+| 12 temas × claro/oscuro/alto contraste | ✅ | `verificar:temas` 4/4 + `verificar:contraste` 36/36 (`.field` ahora por tokens `--muted`/`--primary`) |
+| Estructura semántica (header, sidebar, footer, contenido) | ✅ | Landmarks intactos; secciones nuevas usan `<header>`/`<section aria-labelledby>`/`<footer>` |
+| Apartado visual siempre en glassmode | ✅ | `.surface-section` = `glass-panel`; el libro es documento imprimible (excección `@media print`) |
+| Font Awesome | ✅ | `fa-ruler-combined`, `fa-right-left`, `fa-eraser`, `fa-book-bookmark`, etc. |
+| SweetAlert2 | ✅ | Diálogo de compartir, confirmaciones de checklist/papelera |
+| Notificaciones y popups | ✅ | Toasts propios + SweetAlert2 (selector de tema, compartir) |
 
 ---
 

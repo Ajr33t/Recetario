@@ -31,6 +31,14 @@ export default function AppFooter() {
             Accesibilidad
           </button>
           <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            onClick={() => navigate('/medidas')}
+            className="hover:text-foreground hover:underline"
+          >
+            Medidas
+          </button>
+          <span aria-hidden="true">·</span>
           <a href="#" className="hover:text-foreground">
             Términos
           </a>

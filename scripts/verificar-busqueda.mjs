@@ -116,6 +116,17 @@ async function main() {
     `total=${cat.datos?.total}`,
   );
 
+  // 5b) Fix «Explorar»: TODAS las áreas ofrecidas en /filtros deben
+  //     devolver recetas (el servidor filtra las sin cobertura).
+  for (const area of filtros.datos?.areas || []) {
+    const a = await llamar(`/search/categorias?a=${encodeURIComponent(area)}`);
+    check(
+      `área «${area}» con recetas`,
+      a.status === 200 && (a.datos?.recetas?.length || 0) > 0,
+      `total=${a.datos?.total ?? '?'}`,
+    );
+  }
+
   // 6) Destacadas del inicio
   const dest = await llamar('/search/destacadas?n=3');
   check('GET /search/destacadas → 200', dest.status === 200);

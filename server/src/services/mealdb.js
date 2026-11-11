@@ -116,6 +116,16 @@ export async function aleatorias(cantidad = 3) {
   return resultados.map((d) => normalizar(d.meals?.[0])).filter(Boolean);
 }
 
+/**
+ * Cuenta las recetas de un área (sondeo de cobertura — Fase 5).
+ * La API free de TheMealDB lista 195 áreas pero solo unas pocas tienen
+ * recetas; se usa para no ofrecer filtros que siempre dan 0 resultados.
+ */
+export async function contarArea(area) {
+  const datos = await obtener(`/filter.php?a=${encodeURIComponent(area)}`);
+  return (datos.meals || []).length;
+}
+
 /** Categorías y áreas (para los filtros de búsqueda). */
 export async function filtros() {
   const [categorias, areas] = await Promise.all([

@@ -148,6 +148,16 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
   - Rutas nuevas: `/recetas/nueva`, `/recetas/:id/editar`, `/papelera`, `/libro`; CTA «Crear receta» del Home apunta al formulario.
   - `Buscar.jsx` guarda los ingredientes de la última búsqueda en `sessionStorage['sazonlab:ingredientes']` (lo consume el detalle).
 - `scripts/verificar-recetas.mjs` → `npm run verificar:recetas` (**39/39**: CRUD, detalle público/privado, versiones, papelera, export/import, favoritos propios y externos, casos de error).
+- **Ajustes de la tanda de cambios del cliente (misma fase)**:
+  - **Compartir con imagen y PDF**: `services/exportarReceta.js` genera la receta como **imagen PNG** (canvas) y ofrece **Exportar a PDF** además de copiar enlace/texto (SweetAlert2 con 4 opciones).
+  - **JSON a Ajustes → Datos**: exportar/importar JSON (RF-21) se movió de «Mis recetas» a Ajustes (con sesión); en «Mis recetas» queda solo el libro.
+  - **Libro de cocina mejorado**: portada decorativa, botón «Descargar libro en PDF», **índice con nombre + puntos guía + número de página** (medido contra la altura imprimible A4) y **página fija de «Medidas y equivalencias»** (volumen/peso/temperatura, español ↔ inglés, 20 filas).
+  - **Fix «Explorar»**: nuevo `server/src/services/coberturaAreas.js` — sondeo secuencial (300 ms + confirmación de ceros) de las 195 áreas de TheMealDB cacheado 30 días en SQLite (`cobertura_areas`); `/search/filtros` devuelve **solo las 29 áreas con recetas** (antes 195 y casi todas vacías); sondeo en background al arrancar. `Buscar.jsx` carga filtros al entrar en Explorar con estado de carga, error + reintentar y deduplicación (claves React duplicadas eliminadas).
+  - **Checklist de ingredientes** en el detalle: casillas con tachado, chip «x/n listos», «Vaciar checklist», persistencia en `localStorage['sazonlab:checklist:<id>']`.
+  - **Página `/medidas`** (nueva ruta + enlace al pie + enlace desde el detalle): conversor de volumen/peso/temperatura (cantidad, De, A, invertir, `aria-live`) + 3 tablas de equivalencias es/en con valores fijos; módulo compartido `app/src/data/medidas.js` (también alimenta la página fija del libro).
+  - **Fix campos en modo claro**: `.field` pasa de `--glass` translúcido (se fundía con el panel blanco) a relleno sólido `rgb(var(--muted) / 0.85)` + sombra interior, hover/foco con `--primary` — token-based, vale para los 12 temas × 3 modos.
+- `scripts/verificar-ui-f5.cjs` → `npm run verificar:ui-f5` (**37/37**: JSON fuera de «Mis recetas»/dentro de Ajustes, portada/índice con página/PDF/medidas del libro, compartir imagen+PDF, checklist con persistencia, Explorar 29 áreas sin duplicados + resultados, conversor 2 tazas = 473,176 ml).
+- `scripts/verificar-busqueda.mjs` ampliado a **68/68**: comprueba que **cada área ofrecida en `/filtros` devuelve recetas reales**.
 
 ### Cambiado
 - `styles/index.css`: bloque `@media print` (oculta `.no-print`, header/aside/footer, fondo blanco y texto negro, sin blur, saltos de página) + estilos `.libro-*` para pantalla e impresión.
@@ -157,6 +167,8 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 ### Resuelto
 - Token `warning` inexistente en Tailwind → aviso de ingredientes faltantes usa `danger` (coherente con el marcado rojo).
 - Sombreamiento `falta`/`faltaIng` en `RecetaDetalle` → función única `falta()`.
+- **«Explorar no funciona» (cliente)**: TheMealDB lista 195 áreas pero solo ~29 tienen recetas (y el rate-limit devolvía ceros falsos bajo concurrencia) → cobertura sondeada secuencialmente y cacheada; el filtro solo ofrece áreas que devuelven resultados.
+- **Campos poco visibles en modo claro (cliente)**: `.field` con fondo glass blanco sobre panel glass blanco → relleno sólido por token `--muted` + sombra interior.
 
 ---
 

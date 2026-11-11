@@ -13,6 +13,7 @@ import MisRecetas from './pages/MisRecetas.jsx';
 import Favoritos from './pages/Favoritos.jsx';
 import Papelera from './pages/Papelera.jsx';
 import LibroCocina from './pages/LibroCocina.jsx';
+import Medidas from './pages/Medidas.jsx';
 import Ajustes from './pages/Ajustes.jsx';
 import Login from './pages/Login.jsx';
 import Perfil from './pages/Perfil.jsx';
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/favoritos" element={<Favoritos />} />
             <Route path="/papelera" element={<Papelera />} />
             <Route path="/libro" element={<LibroCocina />} />
+            <Route path="/medidas" element={<Medidas />} />
             <Route path="/ajustes" element={<Ajustes />} />
             <Route path="/login" element={<Login />} />
             <Route path="/perfil" element={<Perfil />} />

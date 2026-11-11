@@ -7,6 +7,7 @@ import authRouter from './routes/auth.js';
 import recipesRouter from './routes/recipes.js';
 import searchRouter from './routes/search.js';
 import favoritesRouter from './routes/favorites.js';
+import { sondearCobertura } from './services/coberturaAreas.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -31,4 +32,6 @@ initDatabase();
 
 app.listen(PORT, () => {
   console.log(`[SazónLab] API escuchando en http://localhost:${PORT}`);
+  // En segundo plano: ¿qué áreas de TheMealDB tienen recetas? (Explorar)
+  sondearCobertura();
 });

@@ -30,6 +30,7 @@
     "verificar:auth": "node scripts/verificar-auth.mjs",
     "verificar:busqueda": "node scripts/verificar-busqueda.mjs",
     "verificar:recetas": "node scripts/verificar-recetas.mjs",
+    "verificar:ui-f5": "electron scripts/verificar-ui-f5.cjs",
     "capturas": "electron scripts/capturas.cjs"
   },
   "devDependencies": {

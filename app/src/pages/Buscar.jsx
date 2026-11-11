@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../services/api.js';
 import CampoAutocomplete from '../components/search/CampoAutocomplete.jsx';
@@ -25,6 +25,8 @@ export default function Buscar() {
   const [areas, setAreas] = useState([]);
   const [categoriaSel, setCategoriaSel] = useState('');
   const [areaSel, setAreaSel] = useState('');
+  const [filtrosCargando, setFiltrosCargando] = useState(false);
+  const [filtrosError, setFiltrosError] = useState(false);
 
   const [resultados, setResultados] = useState(null); // null = sin buscar
   const [ideas, setIdeas] = useState([]);
@@ -32,21 +34,25 @@ export default function Buscar() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  // Carga los filtros (categorías/áreas) una sola vez
-  useEffect(() => {
-    let vivo = true;
-    api
-      .get('/search/filtros')
-      .then((datos) => {
-        if (!vivo) return;
-        setCategorias(datos.categorias || []);
-        setAreas(datos.areas || []);
-      })
-      .catch(() => {}); // sin filtros la búsqueda sigue funcionando
-    return () => {
-      vivo = false;
-    };
+  // Carga los filtros (categorías/áreas) al entrar en «Explorar»: el
+  // servidor devuelve solo áreas con recetas reales y sin duplicados.
+  const cargarFiltros = useCallback(async () => {
+    setFiltrosCargando(true);
+    setFiltrosError(false);
+    try {
+      const datos = await api.get('/search/filtros');
+      setCategorias([...new Set(datos.categorias || [])]);
+      setAreas([...new Set(datos.areas || [])]);
+    } catch {
+      setFiltrosError(true);
+    } finally {
+      setFiltrosCargando(false);
+    }
   }, []);
+
+  useEffect(() => {
+    if (modo === 'categorias') cargarFiltros();
+  }, [modo, cargarFiltros]);
 
   function agregarIngrediente(event) {
     event.preventDefault();
@@ -230,43 +236,68 @@ export default function Buscar() {
         {modo === 'categorias' && (
           <fieldset className="grid gap-3 sm:grid-cols-2">
             <legend className="mb-1 text-sm font-medium">Explorar por filtro</legend>
-            <select
-              className="field"
-              value={categoriaSel}
-              onChange={(e) => {
-                setCategoriaSel(e.target.value);
-                if (e.target.value) setAreaSel('');
-              }}
-              aria-label="Categoría"
-            >
-              <option value="">Categoría: cualquiera</option>
-              {categorias.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <select
-              className="field"
-              value={areaSel}
-              onChange={(e) => {
-                setAreaSel(e.target.value);
-                if (e.target.value) setCategoriaSel('');
-              }}
-              aria-label="Área o región"
-            >
-              <option value="">Área: cualquier</option>
-              {areas.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
+            {filtrosCargando && (
+              <p className="text-sm text-muted-foreground sm:col-span-2" role="status">
+                <i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> Cargando categorías
+                y áreas…
+              </p>
+            )}
+            {filtrosError && (
+              <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+                <p role="alert" className="text-sm font-medium text-danger">
+                  <i className="fa-solid fa-circle-exclamation" aria-hidden="true" /> No se pudieron
+                  cargar los filtros.
+                </p>
+                <button type="button" className="btn-ghost !px-3" onClick={cargarFiltros}>
+                  <i className="fa-solid fa-rotate-right" aria-hidden="true" /> Reintentar
+                </button>
+              </div>
+            )}
+            {!filtrosCargando && !filtrosError && (
+              <>
+                <select
+                  className="field"
+                  value={categoriaSel}
+                  onChange={(e) => {
+                    setCategoriaSel(e.target.value);
+                    if (e.target.value) setAreaSel('');
+                  }}
+                  aria-label="Categoría"
+                >
+                  <option value="">Categoría: cualquiera</option>
+                  {categorias.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="field"
+                  value={areaSel}
+                  onChange={(e) => {
+                    setAreaSel(e.target.value);
+                    if (e.target.value) setCategoriaSel('');
+                  }}
+                  aria-label="Área o región"
+                >
+                  <option value="">Área: cualquier</option>
+                  {areas.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
           </fieldset>
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" className="btn-primary" disabled={cargando}>
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={cargando || (modo === 'categorias' && filtrosCargando)}
+          >
             <i
               className={`fa-solid ${cargando ? 'fa-spinner fa-spin' : 'fa-magnifying-glass'}`}
               aria-hidden="true"
@@ -319,8 +350,9 @@ export default function Buscar() {
             <i className="fa-solid fa-face-meh text-4xl text-muted-foreground" aria-hidden="true" />
             <p className="font-medium">Sin coincidencias</p>
             <p className="max-w-md text-sm text-muted-foreground">
-              Prueba con otros ingredientes (pollo, tomate, arroz, cebolla…) o cambia de modo de
-              búsqueda.
+              {modo === 'categorias'
+                ? 'TheMealDB no tiene recetas de esa categoría o área todavía. Prueba con otra opción del filtro.'
+                : 'Prueba con otros ingredientes (pollo, tomate, arroz, cebolla…) o cambia de modo de búsqueda.'}
             </p>
           </div>
         )}
