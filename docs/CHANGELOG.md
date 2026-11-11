@@ -128,4 +128,36 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 5] — 10/11/2026 — CRUD de recetas en UI + favoritos + papelera + versiones + compartir + libro de cocina
+
+### Agregado
+- **Backend ampliado**:
+  - `opcionalAuth` en `middleware/auth.js` → `GET /api/recipes/:id` funciona para invitados (recetas públicas) y con sesión (las propias + indicador `favorito`).
+  - Migración `recipes.externo_id` + índice → recetas de TheMealDB guardadas como favoritas se **importan a la colección del usuario** (`origen='sugerida'`), sin duplicados por usuario.
+  - Versiones con **snapshot completo** (`{receta, ingredientes, pasos}`): `GET /:id/versiones`, `POST /:id/versiones/:v/restaurar` (antes de restaurar guarda el estado actual como versión nueva).
+  - Papelera: `GET /recipes?estado=papelera`, `POST /:id/restaurar`, `DELETE /:id?permanente=1` (borrado definitivo), columna `deleted_at` en la lista.
+  - Exportar/importar JSON (RF-21): `GET /recipes/exportar` (formato `sazonlab.recetas` v1 con ingredientes y pasos) y `POST /recipes/importar` (valida hasta 500, informa errores por receta).
+  - **Nuevo router `/api/favorites`**: listar favoritas, alternar por id, `POST /externa` (importa de TheMealDB y marca favorita), `GET /estado?externo_id=`.
+- **Frontend**:
+  - `RecetaForm.jsx`: crear/editar recetas con ingredientes y pasos dinámicos, etiquetas (máx. 10), subida de foto con redimensionado en canvas (sin librerías), visibilidad privada/pública (RF-12), SweetAlert2 para eliminar, **panel de historial de versiones con «Restaurar»**.
+  - `MisRecetas.jsx`: acciones Ver/Editar/Eliminar (confirmación SweetAlert2), enlace a Papelera, **Exportar/Importar JSON**, modo selección → «Generar libro de cocina».
+  - `Favoritos.jsx`: lista real (propias + guardadas de TheMealDB), quitar, estados invitado/cargando/vacío.
+  - `Papelera.jsx`: restaurar y **borrado permanente con casilla de confirmación** (SweetAlert2).
+  - `RecetaDetalle.jsx`: unificado (propia/pública/externa), **corazón de favorito** (invitado → prompt de login), **diálogo de compartir** (copiar enlace / copiar receta como texto / «Publicar y copiar»), Editar/Eliminar si es tuya, **aviso de ingredientes faltantes** según la última búsqueda con marcado en rojo, chip «Traducido al español».
+  - **`LibroCocina.jsx`** (idea del cliente): portada + índice + una receta por página; botón «Imprimir / Guardar como PDF» con `window.print()` (sin dependencias: el PDF lo genera el navegador).
+  - Rutas nuevas: `/recetas/nueva`, `/recetas/:id/editar`, `/papelera`, `/libro`; CTA «Crear receta» del Home apunta al formulario.
+  - `Buscar.jsx` guarda los ingredientes de la última búsqueda en `sessionStorage['sazonlab:ingredientes']` (lo consume el detalle).
+- `scripts/verificar-recetas.mjs` → `npm run verificar:recetas` (**39/39**: CRUD, detalle público/privado, versiones, papelera, export/import, favoritos propios y externos, casos de error).
+
+### Cambiado
+- `styles/index.css`: bloque `@media print` (oculta `.no-print`, header/aside/footer, fondo blanco y texto negro, sin blur, saltos de página) + estilos `.libro-*` para pantalla e impresión.
+- `AppHeader/AppSidebar/AppFooter/SkipLink`: clase `no-print`.
+- `RecetaDetalle`: unifica propias y externas (antes solo externas de la Fase 4).
+
+### Resuelto
+- Token `warning` inexistente en Tailwind → aviso de ingredientes faltantes usa `danger` (coherente con el marcado rojo).
+- Sombreamiento `falta`/`faltaIng` en `RecetaDetalle` → función única `falta()`.
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

@@ -40,7 +40,7 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
     efectivo === 'claro' ? 'fa-sun' : efectivo === 'oscuro' ? 'fa-moon' : 'fa-circle-half-stroke';
 
   return (
-    <header className="glass sticky top-0 z-50 border-b border-[var(--glass-border)]">
+    <header className="glass no-print sticky top-0 z-50 border-b border-[var(--glass-border)]">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4">
         {/* Menú móvil */}
         <button

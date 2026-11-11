@@ -95,7 +95,7 @@ export default function Home() {
             Buscar por ingredientes
           </Link>
           {usuario ? (
-            <Link to="/mis-recetas" className="btn-secondary">
+            <Link to="/recetas/nueva" className="btn-secondary">
               <i className="fa-solid fa-plus" aria-hidden="true" />
               Crear receta
             </Link>

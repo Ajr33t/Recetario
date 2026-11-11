@@ -18,7 +18,7 @@ export default function AppFooter() {
   }
 
   return (
-    <footer className="glass mt-8 border-t border-[var(--glass-border)]">
+    <footer className="glass no-print mt-8 border-t border-[var(--glass-border)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-3 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:justify-between">
         <p>© 2026 SazónLab · Recetario Inteligente</p>
 

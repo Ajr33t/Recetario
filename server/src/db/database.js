@@ -160,6 +160,15 @@ function migrarEsquema(db) {
     // Color de acento propio (#rrggbb) para la tarjeta de perfil
     db.exec('ALTER TABLE users ADD COLUMN color_perfil TEXT');
   }
+  // Recetas guardadas desde TheMealDB (Fase 5): id externo para no duplicar
+  const columnasRecetas = db
+    .prepare('PRAGMA table_info(recipes)')
+    .all()
+    .map((c) => c.name);
+  if (!columnasRecetas.includes('externo_id')) {
+    db.exec('ALTER TABLE recipes ADD COLUMN externo_id TEXT');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_recipes_externo ON recipes(externo_id)');
 }
 
 /** Inicializa la conexión y crea el esquema si no existe. */

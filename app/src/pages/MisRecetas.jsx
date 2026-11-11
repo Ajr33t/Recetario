@@ -1,38 +1,138 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
 import { useAuthStore } from '../store/authStore.js';
 
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
 
 /**
- * Mis recetas (RF-06): lista las recetas del usuario desde el servidor
- * (Fase 3). Al estar en la cuenta, aparecen en cualquier dispositivo.
- * El editor completo (crear/editar/papelera) llega en la Fase 5.
+ * Mis recetas (RF-06/08/21 — Fase 5): lista real con acciones
+ * (ver, editar, eliminar con SweetAlert2), papelera, exportar/importar
+ * JSON y selección para generar el libro de cocina en PDF (impresión).
  */
 export default function MisRecetas() {
   const usuario = useAuthStore((s) => s.usuario);
+  const navigate = useNavigate();
   const [recetas, setRecetas] = useState(null); // null = cargando
   const [error, setError] = useState('');
+  const [seleccion, setSeleccion] = useState([]); // ids para el libro
+  const [modoSeleccion, setModoSeleccion] = useState(false);
+  const archivoRef = useRef(null);
+
+  function cargar() {
+    api
+      .get('/recipes')
+      .then((datos) => setRecetas(datos.recetas))
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'No se pudieron cargar las recetas');
+        setRecetas([]);
+      });
+  }
 
   useEffect(() => {
     if (!usuario) {
       setRecetas([]);
       return;
     }
-    let vivo = true;
-    api
-      .get('/recipes')
-      .then((datos) => vivo && setRecetas(datos.recetas))
-      .catch((err) => {
-        if (!vivo) return;
-        setError(err instanceof ApiError ? err.message : 'No se pudieron cargar las recetas');
-        setRecetas([]);
-      });
-    return () => {
-      vivo = false;
-    };
+    cargar();
   }, [usuario]);
+
+  async function eliminar(receta) {
+    const resultado = await Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar esta receta?',
+      text: `«${receta.titulo}» pasará a la papelera (30 días de retención).`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+    if (!resultado.isConfirmed) return;
+    try {
+      await api.delete(`/recipes/${receta.id}`);
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Receta en la papelera',
+        showConfirmButton: false,
+        timer: 1800,
+      });
+      setSeleccion((prev) => prev.filter((x) => x !== receta.id));
+      cargar();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'No se pudo eliminar la receta.');
+    }
+  }
+
+  function alternarSeleccion(id) {
+    setSeleccion((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function irAlLibro() {
+    const ids = modoSeleccion && seleccion.length > 0 ? seleccion : recetas.map((r) => r.id);
+    navigate('/libro', { state: { ids } });
+  }
+
+  // ── Exportar JSON (RF-21) ──
+  async function exportar() {
+    try {
+      const datos = await api.get('/recipes/exportar');
+      const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = `sazonlab-recetas-${new Date().toISOString().slice(0, 10)}.json`;
+      enlace.click();
+      URL.revokeObjectURL(url);
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `${datos.total} receta(s) exportadas`,
+        showConfirmButton: false,
+        timer: 1800,
+      });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'No se pudo exportar.');
+    }
+  }
+
+  // ── Importar JSON (RF-21) ──
+  async function importar(evento) {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = ''; // permite volver a elegir el mismo archivo
+    if (!archivo) return;
+    try {
+      const texto = await archivo.text();
+      let datos;
+      try {
+        datos = JSON.parse(texto);
+      } catch {
+        throw new Error('El archivo no es JSON válido');
+      }
+      const recetas = Array.isArray(datos) ? datos : datos.recetas;
+      if (!Array.isArray(recetas)) throw new Error('El archivo no contiene recetas');
+      const respuesta = await api.post('/recipes/importar', { recetas });
+      const mensaje =
+        respuesta.errores.length > 0
+          ? `${respuesta.importadas} importadas, ${respuesta.errores.length} omitidas`
+          : `${respuesta.importadas} receta(s) importadas`;
+      await Swal.fire({
+        icon: respuesta.importadas > 0 ? 'success' : 'warning',
+        title: 'Importación completada',
+        text: mensaje,
+      });
+      cargar();
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo importar',
+        text: err.message || 'Archivo no válido',
+      });
+    }
+  }
 
   // Invitado: invitación a iniciar sesión
   if (!usuario) {
@@ -68,12 +168,61 @@ export default function MisRecetas() {
             Tu recetario personal, sincronizado con tu cuenta.
           </p>
         </div>
-        <span className="btn-secondary pointer-events-none !px-3 opacity-70" aria-disabled="true">
-          <i className="fa-solid fa-plus" aria-hidden="true" />
-          Nueva receta
-          <span className="chip ml-1">Fase 5</span>
-        </span>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/recetas/nueva" className="btn-primary !px-3">
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Nueva receta
+          </Link>
+          <Link to="/papelera" className="btn-ghost !px-3">
+            <i className="fa-solid fa-trash-can" aria-hidden="true" /> Papelera
+          </Link>
+        </div>
       </header>
+
+      {/* Acciones de datos y libro */}
+      {recetas && recetas.length > 0 && (
+        <div
+          className="surface-section flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Acciones del recetario"
+        >
+          <button type="button" className="btn-secondary !px-3" onClick={exportar}>
+            <i className="fa-solid fa-file-export" aria-hidden="true" /> Exportar JSON
+          </button>
+          <button
+            type="button"
+            className="btn-secondary !px-3"
+            onClick={() => archivoRef.current?.click()}
+          >
+            <i className="fa-solid fa-file-import" aria-hidden="true" /> Importar JSON
+          </button>
+          <input
+            ref={archivoRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={importar}
+            aria-label="Seleccionar archivo JSON para importar"
+          />
+          <span className="mx-1 h-6 w-px bg-border" aria-hidden="true" />
+          <button
+            type="button"
+            className={modoSeleccion ? 'btn-primary !px-3' : 'btn-ghost !px-3'}
+            aria-pressed={modoSeleccion}
+            onClick={() => {
+              setModoSeleccion((v) => !v);
+              setSeleccion([]);
+            }}
+          >
+            <i className="fa-solid fa-square-check" aria-hidden="true" /> Elegir para el libro
+          </button>
+          {modoSeleccion && seleccion.length > 0 && (
+            <span className="chip">{seleccion.length} seleccionada(s)</span>
+          )}
+          <button type="button" className="btn-ghost !px-3" onClick={irAlLibro}>
+            <i className="fa-solid fa-book-bookmark" aria-hidden="true" /> Generar libro de cocina
+          </button>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="glass-card text-sm font-medium text-danger">
@@ -92,51 +241,100 @@ export default function MisRecetas() {
           <i className="fa-solid fa-book-open text-4xl text-primary" aria-hidden="true" />
           <p className="font-medium">Tu recetario está vacío</p>
           <p className="max-w-md text-sm text-muted-foreground">
-            Crea tu primera receta con ingredientes, pasos, fotos y etiquetas. El CRUD completo
-            (editar, duplicar, papelera y versiones) está disponible desde la Fase 5.
+            Crea tu primera receta con ingredientes, pasos, fotos y etiquetas. También puedes
+            importar un JSON exportado antes.
           </p>
+          <Link to="/recetas/nueva" className="btn-primary mt-1">
+            <i className="fa-solid fa-plus" aria-hidden="true" /> Crear mi primera receta
+          </Link>
         </div>
       )}
 
       {recetas?.length > 0 && (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
-          {recetas.map((receta) => (
-            <li key={receta.id} className="glass-card">
-              <span
-                className="mb-3 flex h-20 items-center justify-center rounded-xl bg-primary/10 text-2xl text-primary"
-                aria-hidden="true"
-              >
-                <i className={`fa-solid ${receta.imagen_url ? 'fa-image' : 'fa-utensils'}`} />
-              </span>
-              <h3 className="text-base">{receta.titulo}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {receta.tiempo_min && (
-                  <>
-                    <i className="fa-solid fa-clock" aria-hidden="true" /> {receta.tiempo_min} min
-                    ·{' '}
-                  </>
+          {recetas.map((receta) => {
+            const elegida = seleccion.includes(receta.id);
+            return (
+              <li key={receta.id} className="glass-card flex flex-col">
+                {modoSeleccion && (
+                  <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={elegida}
+                      onChange={() => alternarSeleccion(receta.id)}
+                      aria-label={`Seleccionar ${receta.titulo} para el libro`}
+                    />
+                    Incluir en el libro
+                  </label>
                 )}
-                {receta.dificultad && (
-                  <>
-                    <i className="fa-solid fa-signal" aria-hidden="true" />{' '}
-                    {DIFICULTADES[receta.dificultad] || receta.dificultad}
-                  </>
+                {receta.imagen_url ? (
+                  <img
+                    src={receta.imagen_url}
+                    alt=""
+                    loading="lazy"
+                    className="mb-3 h-28 w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <span
+                    className="mb-3 flex h-20 items-center justify-center rounded-xl bg-primary/10 text-2xl text-primary"
+                    aria-hidden="true"
+                  >
+                    <i className="fa-solid fa-utensils" />
+                  </span>
                 )}
-                {!receta.tiempo_min && !receta.dificultad && (
-                  <span className="italic">Sin datos de preparación</span>
-                )}
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                <i
-                  className={`fa-solid ${receta.visibilidad === 'publica' ? 'fa-globe' : 'fa-lock'}`}
-                  aria-hidden="true"
-                />{' '}
-                {receta.visibilidad === 'publica' ? 'Pública' : 'Privada'} ·{' '}
-                <i className="fa-solid fa-cloud-arrow-up" aria-hidden="true" /> guardada en tu
-                cuenta
-              </p>
-            </li>
-          ))}
+                <h3 className="text-base">
+                  <Link to={`/receta/${receta.id}`} className="hover:text-primary">
+                    {receta.titulo}
+                  </Link>
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {receta.tiempo_min && (
+                    <>
+                      <i className="fa-solid fa-clock" aria-hidden="true" /> {receta.tiempo_min} min
+                      ·{' '}
+                    </>
+                  )}
+                  {receta.dificultad && (
+                    <>
+                      <i className="fa-solid fa-signal" aria-hidden="true" />{' '}
+                      {DIFICULTADES[receta.dificultad] || receta.dificultad}
+                    </>
+                  )}
+                  {!receta.tiempo_min && !receta.dificultad && (
+                    <span className="italic">Sin datos de preparación</span>
+                  )}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  <i
+                    className={`fa-solid ${receta.visibilidad === 'publica' ? 'fa-globe' : 'fa-lock'}`}
+                    aria-hidden="true"
+                  />{' '}
+                  {receta.visibilidad === 'publica' ? 'Pública' : 'Privada'}
+                  {receta.origen === 'sugerida' && (
+                    <>
+                      {' '}
+                      · <i className="fa-solid fa-database" aria-hidden="true" /> de TheMealDB
+                    </>
+                  )}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2 border-t border-border/50 pt-3">
+                  <Link to={`/receta/${receta.id}`} className="btn-ghost !px-3 !text-xs">
+                    <i className="fa-solid fa-eye" aria-hidden="true" /> Ver
+                  </Link>
+                  <Link to={`/recetas/${receta.id}/editar`} className="btn-ghost !px-3 !text-xs">
+                    <i className="fa-solid fa-pen" aria-hidden="true" /> Editar
+                  </Link>
+                  <button
+                    type="button"
+                    className="btn-ghost !px-3 !text-xs text-danger"
+                    onClick={() => eliminar(receta)}
+                  >
+                    <i className="fa-solid fa-trash" aria-hidden="true" /> Eliminar
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

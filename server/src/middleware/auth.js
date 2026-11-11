@@ -41,6 +41,31 @@ export function requireAuth(req, res, next) {
   }
 }
 
+/**
+ * Autenticación opcional (Fase 5): adjunta `req.user` si el token es
+ * válido, pero nunca rechaza la petición. Permite que el detalle de
+ * receta funcione tanto para invitados (recetas públicas) como con
+ * sesión (las suyas + indicador de favorito).
+ */
+export function opcionalAuth(req, _res, next) {
+  const cabecera = req.headers.authorization || '';
+  const [esquema, token] = cabecera.split(' ');
+  if (esquema === 'Bearer' && token) {
+    try {
+      const payload = jwt.verify(token, obtenerSecreto());
+      req.user = {
+        id: Number(payload.sub),
+        nombre: payload.nombre,
+        correo: payload.correo,
+        rol: payload.rol,
+      };
+    } catch {
+      // Token inválido o caducado: se trata como invitado
+    }
+  }
+  return next();
+}
+
 /** Firma un JWT de 7 días para el usuario dado. */
 export function firmarToken(usuario) {
   return jwt.sign(

@@ -33,7 +33,7 @@ export default function AppSidebar({ open, onClose }) {
       {open && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="no-print fixed inset-0 z-30 bg-black/40 md:hidden"
           aria-label="Cerrar menú de navegación"
           onClick={onClose}
         />
@@ -42,7 +42,7 @@ export default function AppSidebar({ open, onClose }) {
       <aside
         id="sidebar-principal"
         aria-label="Navegación lateral"
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto px-4 pb-6 pt-20 transition-transform duration-200 md:static md:z-auto md:block md:w-56 md:shrink-0 md:translate-x-0 md:overflow-visible md:px-0 md:pt-0 ${
+        className={`no-print fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto px-4 pb-6 pt-20 transition-transform duration-200 md:static md:z-auto md:block md:w-56 md:shrink-0 md:translate-x-0 md:overflow-visible md:px-0 md:pt-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

@@ -6,6 +6,7 @@ import healthRouter from './routes/health.js';
 import authRouter from './routes/auth.js';
 import recipesRouter from './routes/recipes.js';
 import searchRouter from './routes/search.js';
+import favoritesRouter from './routes/favorites.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/recipes', recipesRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/favorites', favoritesRouter);
 
 // 404 y manejo de errores centralizado
 app.use(notFound);

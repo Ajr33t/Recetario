@@ -8,8 +8,11 @@ import ThemeSelector from './components/theme/ThemeSelector.jsx';
 import Home from './pages/Home.jsx';
 import Buscar from './pages/Buscar.jsx';
 import RecetaDetalle from './pages/RecetaDetalle.jsx';
+import RecetaForm from './pages/RecetaForm.jsx';
 import MisRecetas from './pages/MisRecetas.jsx';
 import Favoritos from './pages/Favoritos.jsx';
+import Papelera from './pages/Papelera.jsx';
+import LibroCocina from './pages/LibroCocina.jsx';
 import Ajustes from './pages/Ajustes.jsx';
 import Login from './pages/Login.jsx';
 import Perfil from './pages/Perfil.jsx';
@@ -35,8 +38,12 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/buscar" element={<Buscar />} />
             <Route path="/receta/:id" element={<RecetaDetalle />} />
+            <Route path="/recetas/nueva" element={<RecetaForm />} />
+            <Route path="/recetas/:id/editar" element={<RecetaForm />} />
             <Route path="/mis-recetas" element={<MisRecetas />} />
             <Route path="/favoritos" element={<Favoritos />} />
+            <Route path="/papelera" element={<Papelera />} />
+            <Route path="/libro" element={<LibroCocina />} />
             <Route path="/ajustes" element={<Ajustes />} />
             <Route path="/login" element={<Login />} />
             <Route path="/perfil" element={<Perfil />} />

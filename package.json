@@ -29,6 +29,7 @@
     "verificar:temas": "electron scripts/verificar-temas.cjs",
     "verificar:auth": "node scripts/verificar-auth.mjs",
     "verificar:busqueda": "node scripts/verificar-busqueda.mjs",
+    "verificar:recetas": "node scripts/verificar-recetas.mjs",
     "capturas": "electron scripts/capturas.cjs"
   },
   "devDependencies": {

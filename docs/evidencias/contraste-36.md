@@ -1,7 +1,7 @@
 # Evidencia de contraste — 36 combinaciones (12 temas × 3 modos)
 
 **Generado por:** `scripts/verificar-contraste.mjs`
-**Fecha:** 2026-11-10
+**Fecha:** 2026-11-11
 **Estándar:** WCAG 2.1 — 1.4.3 (AA ≥ 4.5:1), 1.4.6 (AAA ≥ 7:1), 1.4.11 (UI ≥ 3:1)
 
 ## Reglas aplicadas

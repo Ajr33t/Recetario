@@ -89,6 +89,16 @@ export default function Buscar() {
         setResultados(datos.recetas);
         setIdeas(datos.ideas || []);
         setFuenteIA(datos.fuente || 'ninguna');
+        // Guarda los ingredientes disponibles: el detalle de receta los usa
+        // para marcar en rojo los ingredientes que te faltan (Fase 5)
+        try {
+          sessionStorage.setItem(
+            'sazonlab:ingredientes',
+            JSON.stringify(ingredientes.map((i) => i.toLowerCase())),
+          );
+        } catch {
+          /* almacenamiento no disponible: se omite sin romper la búsqueda */
+        }
         return;
       }
 
