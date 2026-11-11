@@ -44,6 +44,12 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
 | 21 | **Página `/medidas`**: conversor + 3 tablas de equivalencias es/en (módulo compartido) | `app/src/data/medidas.js`, `pages/Medidas.jsx`, `App.jsx`, `AppFooter.jsx` |
 | 22 | Fix campos en modo claro: relleno sólido por token `--muted` + sombra interior/hover/foco | `app/src/styles/index.css` (`.field`) |
 | 23 | Suites nuevas de la tanda | `scripts/verificar-ui-f5.cjs` (37), `scripts/verificar-busqueda.mjs` ampliado (68) |
+| 24 | **Checklist ↔ faltantes**: marcar un ingrediente como «lo tengo» lo saca del aviso «Te faltan…» y del marcado en rojo | `app/src/pages/RecetaDetalle.jsx` |
+| 25 | Avisos informativos ⓘ retirados («Marcados en rojo…», «Valores fijos de referencia…», panel «Consejo»); panel lateral del formulario solo al editar | `RecetaDetalle.jsx`, `Medidas.jsx`, `RecetaForm.jsx` |
+| 26 | Chevron del perfil gira (rotate-180) al abrir/cerrar el menú | `app/src/components/layout/AppHeader.jsx` |
+| 27 | `.field` vuelve a translúcido (visible en claro sin perder Liquid Glass) + **tema glass de SweetAlert2** (popup, inputs, botones) | `app/src/styles/index.css` |
+| 28 | **Exportación robusta**: `imprimirReceta` async (espera la foto máx. 4 s, limpieza solo en `afterprint` + respaldo 5 min) y ancla PNG diferida (15 s) | `app/src/services/exportarReceta.js`, `RecetaDetalle.jsx` |
+| 29 | Verificación real de exportación: PDF con `printToPDF` (2 páginas, foto embebida) y PNG capturado del canvas (estilos + foto) | Evidencia en §5 |
 
 ---
 
@@ -80,6 +86,21 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
    coherente con el marcado rojo de la lista.
 7. **Papelera con doble confirmación**: «Restaurar» es directo; «Borrar para
    siempre» exige casilla de confirmación en SweetAlert2 (irreversible).
+8. **Checklist y faltantes son un mismo estado.** «Te faltan X de Y» se
+   calcula sobre los ingredientes no disponibles **y no marcados en el
+   checklist**: marcar una casilla («lo tengo») descuenta el ingrediente del
+   aviso y de la lista en rojo, en lugar de mantener dos estados
+   independientes.
+9. **SweetAlert2 tematizado sin `!important`.** SweetAlert2 v11 importa su
+   CSS después del nuestro y usa selectores `:where()` de casi nula
+   especificidad: se le contrarresta prefijando (`html .swal2-container …`)
+   con glass de `--card` + blur, botón confirmar `--primary` y cancelar
+   `--card` — aplica a los 12 temas × 3 modos.
+10. **Impresión sin carreras.** `imprimirReceta` es async: espera la foto de
+    la comida (máx. 4 s) antes de `window.print()` y solo limpia la vista en
+    `afterprint` (respaldo a 5 min). En Electron `print()` no bloquea el
+    hilo: el respaldo corto de 1,5 s anterior borraba la receta y el PDF
+    salía en blanco.
 
 ---
 
@@ -118,6 +139,15 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
 | API `localhost:3001/api/health` | ✅ 200 |
 | `GET /api/search/filtros` | ✅ 14 categorías, **29 áreas** (todas con recetas; antes 195 casi todas vacías) |
 
+#### Evidencia de exportación (PNG y PDF)
+
+| Prueba | Resultado |
+|--------|-----------|
+| PDF real de una receta externa (`printToPDF`) | ✅ 153 KB, **2 páginas A4**, JPEG de la comida embebido (`DCTDecode`), verificado en el visor: cabecera, badge, título, foto, columnas Ingredientes/Preparación en color primario, todo en español |
+| Vista de impresión (`Emulation.setEmulatedMedia: print`) | ✅ Oculta la app (`#root`), muestra solo la receta con estilos y foto |
+| PNG generado por la app (blob del canvas) | ✅ 1,35 MB capturado: tarjeta estilizada con encabezado de marca, **foto de la comida**, ingredientes y pasos |
+| Descarga de archivos en Electron (esta máquina) | ⚠️ **Hallazgo de entorno, no de la app**: con Electron 44.10.2 toda descarga termina `interrupted` — repro mínimo con `BrowserWindow` de stock y URL `data:` (sin código de la app), con `setSavePath` en Temp/OneDrive/Downloads y sin él; disco con 398 GB libres. El PNG se genera correctamente (contenido verificado) y la descarga funciona en navegadores normales (Chrome/Edge), donde la app web es el destino principal |
+
 ### Cumplimiento de requisitos obligatorios del cliente (tanda)
 
 | Requisito | Estado | Evidencia |
@@ -137,3 +167,4 @@ exportar/importar JSON y la generación del **libro de cocina en PDF**
 - Páginas legales de Privacidad y Términos → **Fase 7**.
 - Toasts/modales propios y SweetAlert2 unificado → **Fase 6**.
 - `.exe` con SQLite local + assets compilados → **Fase 8**.
+- Descarga de archivos interrumpida en Electron 44 en **esta máquina** (entorno, repro mínimo sin código de la app): el PNG se genera bien y la descarga funciona en navegadores normales; reevaluar al empacar en **Fase 8**.

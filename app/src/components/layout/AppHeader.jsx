@@ -150,7 +150,12 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
               >
                 <i className="fa-solid fa-circle-user" aria-hidden="true" />
                 <span className="hidden sm:inline">{usuario.nombre}</span>
-                <i className="fa-solid fa-chevron-down text-xs" aria-hidden="true" />
+                <i
+                  className={`fa-solid fa-chevron-down text-xs transition-transform duration-200 ${
+                    perfilAbierto ? 'rotate-180' : ''
+                  }`}
+                  aria-hidden="true"
+                />
               </button>
 
               {perfilAbierto && (

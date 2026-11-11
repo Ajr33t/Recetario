@@ -203,10 +203,6 @@ export default function Medidas() {
             </>
           )}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          <i className="fa-solid fa-circle-info" aria-hidden="true" /> Valores fijos de referencia:
-          1 taza = 236,59 ml · 1 cucharada = 14,79 ml · 1 onza = 28,35 g · 1 libra = 453,59 g
-        </p>
       </section>
 
       <Tabla

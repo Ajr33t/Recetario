@@ -170,6 +170,24 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - **«Explorar no funciona» (cliente)**: TheMealDB lista 195 áreas pero solo ~29 tienen recetas (y el rate-limit devolvía ceros falsos bajo concurrencia) → cobertura sondeada secuencialmente y cacheada; el filtro solo ofrece áreas que devuelven resultados.
 - **Campos poco visibles en modo claro (cliente)**: `.field` con fondo glass blanco sobre panel glass blanco → relleno sólido por token `--muted` + sombra interior.
 
+### 2.ª tanda de cambios del cliente (misma Fase 5)
+
+### Cambiado
+- **Checklist ↔ faltantes**: marcar un ingrediente en el checklist («lo tengo») lo saca del aviso «Te faltan X de Y» y del marcado en rojo — antes eran estados independientes y el aviso nunca cambiaba.
+- **Avisos informativos ⓘ retirados**: «Marcados en rojo…» (detalle), «Valores fijos de referencia…» (/medidas) y panel «Consejo» (formulario).
+- `RecetaForm`: el panel lateral (historial de versiones) solo se muestra al editar; al crear, una sola columna.
+- `AppHeader`: el chevron del perfil **gira** (rotate-180 con transición) al abrir/cerrar el menú.
+- `.field` vuelve a translúcido `rgb(var(--muted) / 0.65)` + sombra interior: visible en modo claro y con más Liquid Glass (petición del cliente).
+- **Tema glass para SweetAlert2**: popup con gradiente glass `--card/0.88` + blur, inputs y botones tematizados (confirmar `--primary`, cancelar `--card`) mediante selectores prefijados `html .swal2-container …` — más específicos que los `:where()` de SweetAlert2 sin usar `!important`.
+- Compartir: aviso de receta privada con token `danger` (antes color inline) y `focusCancel` (SweetAlert2 ignora `focusCancelButton`).
+
+### Corregido
+- **PDF en blanco al compartir**: `imprimirReceta` ahora es `async` — espera la foto de la comida (máx. 4 s) antes de `window.print()` y limpia la vista solo en `afterprint` (respaldo a 5 min); en Electron `print()` no bloquea el hilo y el respaldo de 1,5 s borraba la receta antes de tiempo.
+- **Descarga PNG**: el ancla ya no se retira en el mismo tick (se limpia a los 15 s) y el blob se revoca a los 30 s — en Electron eso interrumpía la descarga.
+
+### Hallazgo de entorno (no es bug de la app)
+- En **esta máquina**, Electron 44.10.2 interrumpe **toda** descarga (`done: interrupted`) con cualquier origen (blob/`data:`/http, con y sin `setSavePath`, en Temp/OneDrive/Downloads) — reproducible con un `BrowserWindow` de stock sin código de la app; disco con 398 GB libres. El PNG se genera correctamente (contenido verificado: estilos + foto de la comida) y la descarga funciona en navegadores normales (Chrome/Edge). Evidencia en `docs/informes/fase-5.md` §5.
+
 ---
 
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

@@ -325,7 +325,7 @@ export default function RecetaForm() {
         </p>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+      <div className={`grid gap-6 ${esEdicion ? 'lg:grid-cols-[1fr_280px]' : ''}`}>
         <form
           className="surface-section flex flex-col gap-5"
           onSubmit={guardar}
@@ -618,19 +618,9 @@ export default function RecetaForm() {
           </div>
         </form>
 
-        {/* Panel lateral: imagen + historial */}
-        <aside className="flex h-fit flex-col gap-4" aria-label="Información adicional">
-          <section className="surface-section">
-            <h2 className="text-base">
-              <i className="fa-solid fa-circle-info text-primary" aria-hidden="true" /> Consejo
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Usa ingredientes concretos («250 g de arroz») y pasos cortos: así tu receta se lee
-              bien en el libro de cocina y al compartirla.
-            </p>
-          </section>
-
-          {esEdicion && (
+        {/* Panel lateral: historial de versiones (solo al editar) */}
+        {esEdicion && (
+          <aside className="flex h-fit flex-col gap-4" aria-label="Información adicional">
             <section className="surface-section" aria-labelledby="versiones-titulo">
               <h2 id="versiones-titulo" className="text-base">
                 <i className="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true" />{' '}
@@ -667,8 +657,8 @@ export default function RecetaForm() {
                 </ul>
               )}
             </section>
-          )}
-        </aside>
+          </aside>
+        )}
       </div>
     </div>
   );

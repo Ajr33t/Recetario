@@ -245,8 +245,10 @@ export async function descargarImagenReceta(receta) {
   enlace.download = `sazonlab-${slug(receta.titulo)}.png`;
   document.body.appendChild(enlace);
   enlace.click();
-  enlace.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  // No se retira el nodo en el mismo tick: en Electron eso interrumpe
+  // la descarga del blob. Se limpia a los 15 s.
+  setTimeout(() => enlace.remove(), 15000);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 function metaReceta(receta) {
@@ -260,8 +262,12 @@ function metaReceta(receta) {
 /**
  * Abre la vista de impresión con solo la receta: el diálogo nativo ofrece
  * "Guardar como PDF" (Chrome/Edge) o "PDF" (Firefox).
+ * Espera a que la foto de la comida se cargue antes de imprimir y solo
+ * limpia al cerrarse el diálogo (afterprint) — en Electron print() NO
+ * bloquea el hilo, un respaldo corto borraba la receta y el PDF salía
+ * en blanco.
  */
-export function imprimirReceta(receta) {
+export async function imprimirReceta(receta) {
   const cont = document.createElement('div');
   cont.className = 'libro libro-oculto';
   const ingredientes = (receta.ingredientes || [])
@@ -298,12 +304,30 @@ export function imprimirReceta(receta) {
   document.body.appendChild(cont);
   document.body.classList.add('solo-receta');
 
+  let seguridad = null;
+  let limpiado = false;
   const limpiar = () => {
+    if (limpiado) return;
+    limpiado = true;
+    clearTimeout(seguridad);
     cont.remove();
     document.body.classList.remove('solo-receta');
     window.removeEventListener('afterprint', limpiar);
   };
   window.addEventListener('afterprint', limpiar);
+  // Respaldo largo por si el navegador no emite afterprint: la clase
+  // `solo-receta` no afecta a la pantalla, solo a la impresión.
+  seguridad = setTimeout(limpiar, 5 * 60 * 1000);
+
+  // La foto de la comida debe estar en el PDF: se espera su carga (máx. 4 s)
+  const img = cont.querySelector('img');
+  if (img && !img.complete) {
+    await new Promise((resolver) => {
+      img.addEventListener('load', resolver, { once: true });
+      img.addEventListener('error', resolver, { once: true });
+      setTimeout(resolver, 4000);
+    });
+  }
 
   try {
     window.print();
@@ -311,8 +335,4 @@ export function imprimirReceta(receta) {
     limpiar();
     throw new Error('No se pudo abrir el diálogo de impresión');
   }
-  // Respaldo si el navegador no dispara afterprint
-  setTimeout(() => {
-    if (document.body.contains(cont)) limpiar();
-  }, 1500);
 }

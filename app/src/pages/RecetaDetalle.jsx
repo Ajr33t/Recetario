@@ -265,7 +265,7 @@ export default function RecetaDetalle() {
       html: `
         <p style="margin-bottom:.5rem">${escaparHtml(receta.titulo)}</p>
         <input id="swal-enlace" readonly value="${escaparHtml(enlace)}" class="swal2-input" style="font-size:.8rem">
-        ${privada ? '<p style="font-size:.85rem;color:#f87171">Esta receta es privada: al compartirla se hará pública.</p>' : ''}
+        ${privada ? '<p class="text-danger" style="font-size:.85rem">Esta receta es privada: al compartirla se hará pública.</p>' : ''}
         <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;text-align:left">
           <button type="button" class="btn-secondary" data-accion="enlace">
             <i class="fa-solid ${privada ? 'fa-globe' : 'fa-link'}" aria-hidden="true"></i>
@@ -285,7 +285,7 @@ export default function RecetaDetalle() {
       showCancelButton: true,
       cancelButtonText: 'Cerrar',
       showConfirmButton: false,
-      focusCancelButton: true,
+      focusCancel: true,
       didRender: () => {
         Swal.getPopup()
           ?.querySelectorAll('[data-accion]')
@@ -347,7 +347,7 @@ export default function RecetaDetalle() {
 
     // accion === 'pdf': vista de impresión con la receta sola
     try {
-      imprimirReceta(receta);
+      await imprimirReceta(receta);
     } catch (err) {
       Swal.fire({
         icon: 'error',
@@ -413,8 +413,12 @@ export default function RecetaDetalle() {
     );
   }
 
+  // Faltantes = no disponibles en tu última búsqueda y AÚN no marcados
+  // en el checklist (marcar = «lo tengo», así deja de faltar).
   const faltantes =
-    disponibles.length > 0 ? receta.ingredientes.filter((i) => falta(i.nombre)) : [];
+    disponibles.length > 0
+      ? receta.ingredientes.filter((i) => falta(i.nombre) && !marcados[i.nombre])
+      : [];
 
   return (
     <article className="flex flex-col gap-6">
@@ -573,8 +577,10 @@ export default function RecetaDetalle() {
           </h2>
           <ul className="mt-3 flex flex-col gap-1.5 text-sm" role="list">
             {receta.ingredientes.map((ing, i) => {
-              const esFaltante = disponibles.length > 0 && falta(ing.nombre);
               const marcado = Boolean(marcados[ing.nombre]);
+              // Un ingrediente marcado en el checklist ya no cuenta como
+              // faltante: se tacha y desaparece del aviso «Te faltan…».
+              const esFaltante = !marcado && disponibles.length > 0 && falta(ing.nombre);
               return (
                 <li
                   key={`${i}-${ing.nombre}`}
@@ -616,12 +622,6 @@ export default function RecetaDetalle() {
             <button type="button" className="btn-ghost mt-2 !px-2 text-xs" onClick={vaciarCheck}>
               <i className="fa-solid fa-eraser" aria-hidden="true" /> Vaciar checklist
             </button>
-          )}
-          {disponibles.length > 0 && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              <i className="fa-solid fa-circle-info" aria-hidden="true" /> Marcados en rojo los que
-              no tienes de tu última búsqueda.
-            </p>
           )}
           <p className="mt-3 text-xs text-muted-foreground">
             <i className="fa-solid fa-ruler-combined" aria-hidden="true" />{' '}
