@@ -136,12 +136,12 @@ router.post('/olvide-contrasena', async (req, res) => {
     const codigo = String(randomInt(100000, 1000000)); // 6 dígitos
     const expira = new Date(Date.now() + CODIGO_TTL_MIN * 60_000).toISOString();
 
-    db.prepare('DELETE FROM password_reset WHERE correo = ?').run(correoLimpio);
-    db.prepare('INSERT INTO password_reset (correo, codigo_hash, expira_en) VALUES (?, ?, ?)').run(
+    db.prepare("DELETE FROM password_reset WHERE correo = ? AND proposito = 'recuperacion'").run(
       correoLimpio,
-      hashCodigo(codigo),
-      expira,
     );
+    db.prepare(
+      'INSERT INTO password_reset (correo, codigo_hash, proposito, expira_en) VALUES (?, ?, ?, ?)',
+    ).run(correoLimpio, hashCodigo(codigo), 'recuperacion', expira);
 
     const resultado = await enviarCodigoCorreo(correoLimpio, codigo);
     demo = resultado.demo;
@@ -176,7 +176,9 @@ router.post('/restablecer-contrasena', (req, res) => {
   const correoLimpio = String(correo).trim().toLowerCase();
   const db = getDb();
   const registro = db
-    .prepare('SELECT * FROM password_reset WHERE correo = ? ORDER BY creado_en DESC LIMIT 1')
+    .prepare(
+      "SELECT * FROM password_reset WHERE correo = ? AND proposito = 'recuperacion' ORDER BY creado_en DESC LIMIT 1",
+    )
     .get(correoLimpio);
 
   if (!registro) {
@@ -204,7 +206,9 @@ router.post('/restablecer-contrasena', (req, res) => {
   db.prepare(
     "UPDATE users SET contrasena_hash = ?, actualizado_en = datetime('now') WHERE id = ?",
   ).run(hash, usuario.id);
-  db.prepare('DELETE FROM password_reset WHERE correo = ?').run(correoLimpio);
+  db.prepare("DELETE FROM password_reset WHERE correo = ? AND proposito = 'recuperacion'").run(
+    correoLimpio,
+  );
 
   registrarAuditoria(correoLimpio, 'restablecer_contrasena', null, req.ip);
   return res.json({ ok: true, mensaje: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
@@ -293,6 +297,94 @@ router.post('/cambiar-contrasena', requireAuth, (req, res) => {
 
   registrarAuditoria(fila.correo, 'cambiar_contrasena', null, req.ip);
   return res.json({ ok: true, mensaje: 'Contraseña actualizada.' });
+});
+
+/**
+ * POST /api/auth/solicitar-eliminacion — envía al correo un código de
+ * 6 dígitos para confirmar la eliminación definitiva de la cuenta.
+ * Requiere sesión; en modo demo devuelve el código (fuera de producción).
+ */
+router.post('/solicitar-eliminacion', requireAuth, async (req, res) => {
+  const db = getDb();
+  const fila = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!fila || fila.estado !== 'activo') {
+    return res.status(401).json({ error: 'Usuario no encontrado' });
+  }
+
+  const codigo = String(randomInt(100000, 1000000)); // 6 dígitos
+  const expira = new Date(Date.now() + CODIGO_TTL_MIN * 60_000).toISOString();
+
+  db.prepare("DELETE FROM password_reset WHERE correo = ? AND proposito = 'eliminacion'").run(
+    fila.correo,
+  );
+  db.prepare(
+    'INSERT INTO password_reset (correo, codigo_hash, proposito, expira_en) VALUES (?, ?, ?, ?)',
+  ).run(fila.correo, hashCodigo(codigo), 'eliminacion', expira);
+
+  const resultado = await enviarCodigoCorreo(fila.correo, codigo, 'eliminacion');
+  let codigoDev = null;
+  if (resultado.demo && process.env.NODE_ENV !== 'production') codigoDev = codigo;
+
+  registrarAuditoria(fila.correo, 'solicitar_eliminacion', null, req.ip);
+  return res.json({
+    ok: true,
+    mensaje: 'Te enviamos un código a tu correo para confirmar la eliminación.',
+    demo: resultado.demo,
+    ...(codigoDev ? { codigo: codigoDev } : {}),
+  });
+});
+
+/**
+ * POST /api/auth/eliminar-cuenta — elimina la cuenta y todos sus datos
+ * (recetas propias, favoritos, búsquedas y preferencias) al validar el
+ * código de 6 dígitos. Acción irreversible.
+ */
+router.post('/eliminar-cuenta', requireAuth, (req, res) => {
+  const { codigo } = req.body || {};
+  if (!codigo || !/^\d{6}$/.test(String(codigo))) {
+    return res.status(400).json({ error: 'El código debe tener 6 dígitos' });
+  }
+
+  const db = getDb();
+  const fila = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!fila || fila.estado !== 'activo') {
+    return res.status(401).json({ error: 'Usuario no encontrado' });
+  }
+
+  const registro = db
+    .prepare(
+      "SELECT * FROM password_reset WHERE correo = ? AND proposito = 'eliminacion' ORDER BY creado_en DESC LIMIT 1",
+    )
+    .get(fila.correo);
+
+  if (!registro) {
+    return res.status(400).json({ error: 'Solicita un código nuevo' });
+  }
+  if (registro.intentos >= 5) {
+    db.prepare('DELETE FROM password_reset WHERE id = ?').run(registro.id);
+    return res.status(429).json({ error: 'Demasiados intentos: pide un código nuevo' });
+  }
+  if (new Date(registro.expira_en) < new Date()) {
+    db.prepare('DELETE FROM password_reset WHERE id = ?').run(registro.id);
+    return res.status(400).json({ error: 'El código expiró: pide uno nuevo' });
+  }
+  if (registro.codigo_hash !== hashCodigo(codigo)) {
+    db.prepare('UPDATE password_reset SET intentos = intentos + 1 WHERE id = ?').run(registro.id);
+    return res.status(400).json({ error: 'Código incorrecto' });
+  }
+
+  // Borra en orden: recipes.user_id es ON DELETE SET NULL, así que las
+  // recetas propias se eliminan explícitamente; el resto cae en cascada
+  // (user_preferences, favorites, search_history).
+  const eliminar = db.transaction(() => {
+    db.prepare('DELETE FROM recipes WHERE user_id = ?').run(fila.id);
+    db.prepare('DELETE FROM password_reset WHERE correo = ?').run(fila.correo);
+    db.prepare('DELETE FROM users WHERE id = ?').run(fila.id);
+  });
+  eliminar();
+
+  registrarAuditoria(fila.correo, 'eliminar_cuenta', null, req.ip);
+  return res.json({ ok: true, mensaje: 'Cuenta eliminada definitivamente.' });
 });
 
 export default router;

@@ -11,11 +11,19 @@
 
 /**
  * Envía un correo de 6 dígitos.
+ * @param {string} correo destino
+ * @param {string} codigo código de 6 dígitos
+ * @param {'recuperacion'|'eliminacion'} [motivo] motivo del código
  * @returns {Promise<{ demo: boolean }>} demo=true si no hay proveedor real
  */
-export async function enviarCodigoCorreo(correo, codigo) {
-  const asunto = 'SazónLab — tu código de recuperación';
-  const texto = `Hola, tu código para restablecer tu contraseña es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este mensaje.`;
+export async function enviarCodigoCorreo(correo, codigo, motivo = 'recuperacion') {
+  const esEliminacion = motivo === 'eliminacion';
+  const asunto = esEliminacion
+    ? 'SazónLab — código para eliminar tu cuenta'
+    : 'SazónLab — tu código de recuperación';
+  const texto = esEliminacion
+    ? `Hola, tu código para eliminar definitivamente tu cuenta es: ${codigo}\n\nVence en 15 minutos y la acción no se puede deshacer. Si no pediste esto, ignora este mensaje.`
+    : `Hola, tu código para restablecer tu contraseña es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este mensaje.`;
 
   const apiKey = process.env.RESEND_API_KEY;
   if (apiKey) {
@@ -41,6 +49,6 @@ export async function enviarCodigoCorreo(correo, codigo) {
   }
 
   // Modo demo: el código queda visible para desarrollo/pruebas
-  console.log(`[SazónLab][DEMO] Código de recuperación para ${correo}: ${codigo}`);
+  console.log(`[SazónLab][DEMO] Código de ${motivo} para ${correo}: ${codigo}`);
   return { demo: true };
 }

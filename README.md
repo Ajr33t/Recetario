@@ -97,6 +97,8 @@ recetario/
 | `npm run verificar:ui-f5`     | UI Fase 5: JSON, libro, compartir, checklist, medidas   |
 | `npm run verificar:ui-f6`     | UI Fase 6: tour, campana de notificaciones, toasts      |
 | `npm run verificar:landing`   | Landing oficial: secciones, legales, SEO, axe           |
+| `npm run verificar:cuenta`    | Eliminar cuenta con código al correo (API + UI + axe)   |
+| `npm run logo`                | Regenera el PNG512 del logo (Electron, sin deps)        |
 | `npm run capturas`            | Capturas de evidencia (galería de temas)                |
 
 > Las suites UI necesitan la demo (`dev:server` + `dev:app`) corriendo; las de red necesitan internet para TheMealDB.
@@ -117,6 +119,9 @@ recetario/
 - 🧭 **Tour de bienvenida** de 6 pasos (repetible desde Ajustes)
 - 🧩 Estructura semántica (`<header>`, `<aside>`, `<main>`, `<footer>`) + ARIA
 - 🌐 **Landing oficial** con captura real, «¿Cómo funciona?», SEO (JSON-LD/robots) y **páginas legales** (Privacidad/Términos) en app y landing
+- ⚖️ **Legales con normativa colombiana** en fuente única compartida: Ley 1581/2012, Ley 1480/2011 + 2439/2024, Ley 1755/2015, Ley 527/1999, Ley 1712/2014, Ley 1273/2009, Constitución (hábeas data) y SIC como autoridad de control
+- 🗑️ **Eliminar cuenta** desde la «Zona de peligro» del perfil con **código de confirmación de 6 dígitos enviado al correo** (SweetAlert2 en 3 pasos)
+- 🎨 **Logo propio** de SazónLab (SVG + favicon) e icono personalizado en el `.exe`
 - 💎 Estilo Liquid Glass en toda la interfaz
 - 💻 Versión `.exe` con modo offline básico (SQLite)
 

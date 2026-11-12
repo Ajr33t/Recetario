@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS password_reset (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   correo TEXT NOT NULL,
   codigo_hash TEXT NOT NULL,
+  proposito TEXT NOT NULL DEFAULT 'recuperacion' CHECK (proposito IN ('recuperacion', 'eliminacion')),
   expira_en TEXT NOT NULL,
   intentos INTEGER NOT NULL DEFAULT 0,
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
@@ -169,6 +170,14 @@ function migrarEsquema(db) {
     db.exec('ALTER TABLE recipes ADD COLUMN externo_id TEXT');
   }
   db.exec('CREATE INDEX IF NOT EXISTS idx_recipes_externo ON recipes(externo_id)');
+  // Motivo del código de 6 dígitos: recuperación o eliminación de cuenta (Fase 7)
+  const columnasReset = db
+    .prepare('PRAGMA table_info(password_reset)')
+    .all()
+    .map((c) => c.name);
+  if (!columnasReset.includes('proposito')) {
+    db.exec("ALTER TABLE password_reset ADD COLUMN proposito TEXT NOT NULL DEFAULT 'recuperacion'");
+  }
 }
 
 /** Inicializa la conexión y crea el esquema si no existe. */

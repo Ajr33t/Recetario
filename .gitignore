@@ -6,6 +6,8 @@ dist/
 release/
 desktop/renderer/
 *.tsbuildinfo
+# Artefactos pesados generados (el .exe pesa >100 MB: límite de GitHub)
+*.exe
 
 # Entornos y secretos
 .env

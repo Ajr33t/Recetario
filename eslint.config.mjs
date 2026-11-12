@@ -16,7 +16,7 @@ export default [
   js.configs.recommended,
   {
     // React (renderer web y landing)
-    files: ['app/**/*.{js,jsx}', 'landing/**/*.{js,jsx}'],
+    files: ['app/**/*.{js,jsx}', 'landing/**/*.{js,jsx}', 'legal/**/*.{js,jsx}'],
     plugins: { react, 'react-hooks': reactHooks },
     languageOptions: {
       ecmaVersion: 'latest',

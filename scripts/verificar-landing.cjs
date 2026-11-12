@@ -145,6 +145,13 @@ app.whenReady().then(async () => {
       `/bcrypt/.test(document.body.textContent) && /TheMealDB/.test(document.body.textContent) && /derechos/i.test(document.body.textContent)`,
     ),
   );
+  check(
+    'privacidad: leyes colombianas (Ley 1581, 1755, 1712, SIC)',
+    await js(
+      win,
+      `/Ley 1581/.test(document.body.textContent) && /Ley 1755/.test(document.body.textContent) && /Ley 1712/.test(document.body.textContent) && /Superintendencia/.test(document.body.textContent)`,
+    ),
+  );
   resultados.push(await ejecutarAxe(win, 'Landing — Política de privacidad'));
 
   await js(win, `location.hash = '#/terminos'; true`);
@@ -158,6 +165,13 @@ app.whenReady().then(async () => {
     await js(
       win,
       `/Inteligencia artificial|IA/.test(document.body.textContent) && /responsabilidad/i.test(document.body.textContent)`,
+    ),
+  );
+  check(
+    'términos: leyes colombianas (Ley 1480, 527, 1273, 23)',
+    await js(
+      win,
+      `/Ley 1480/.test(document.body.textContent) && /Ley 527/.test(document.body.textContent) && /Ley 1273/.test(document.body.textContent) && /Ley 23 de 1982/.test(document.body.textContent)`,
     ),
   );
   resultados.push(await ejecutarAxe(win, 'Landing — Términos del servicio'));
@@ -195,6 +209,13 @@ app.whenReady().then(async () => {
   check(
     'app: /privacidad renderiza',
     await js(win, `/Política de privacidad/.test(document.body.textContent)`),
+  );
+  check(
+    'app: normativa colombiana compartida (Ley 1581 + Ley 1480)',
+    await js(
+      win,
+      `/Ley 1581/.test(document.body.textContent) && /Ley 1480/.test(document.body.textContent)`,
+    ),
   );
   check(
     'app: pie con enlaces vivos a legales',

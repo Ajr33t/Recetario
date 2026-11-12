@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
+import { exito, fracaso } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 
 // Avatares disponibles (iconos de Font Awesome Free)
@@ -180,6 +182,52 @@ export default function Perfil() {
       setPassError(err instanceof ApiError ? err.message : 'No se pudo cambiar la contraseña');
     } finally {
       setGuardando(false);
+    }
+  }
+
+  /**
+   * Flujo de eliminación de cuenta (Fase 7): confirmación → código de
+   * 6 dígitos al correo → borrado definitivo + cierre de sesión.
+   */
+  async function eliminarCuenta() {
+    const confirmar = await Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar tu cuenta?',
+      text: 'Esta acción es irreversible: se borrarán tus recetas, favoritos, búsquedas y preferencias. Te enviaremos un código de confirmación a tu correo.',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, enviar código',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#b91c1c',
+      reverseButtons: true,
+    });
+    if (!confirmar.isConfirmed) return;
+
+    try {
+      const r = await api.post('/auth/solicitar-eliminacion', {});
+      const pedir = await Swal.fire({
+        icon: 'info',
+        title: 'Código de confirmación',
+        text: `Enviamos un código de 6 dígitos a ${usuario.correo}. Escríbelo para eliminar la cuenta.`,
+        input: 'text',
+        inputValue: r.codigo || '',
+        inputLabel: 'Código de 6 dígitos',
+        inputAttributes: { maxlength: 6, autocomplete: 'one-time-code', inputmode: 'numeric' },
+        inputValidator: (valor) =>
+          /^\d{6}$/.test(valor || '') ? null : 'El código debe tener 6 dígitos',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar definitivamente',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#b91c1c',
+        reverseButtons: true,
+      });
+      if (!pedir.isConfirmed) return;
+
+      await api.post('/auth/eliminar-cuenta', { codigo: pedir.value });
+      exito('Cuenta eliminada definitivamente');
+      logout();
+      navigate('/', { replace: true });
+    } catch (err) {
+      fracaso(err instanceof ApiError ? err.message : 'No se pudo eliminar la cuenta');
     }
   }
 
@@ -501,6 +549,22 @@ export default function Perfil() {
           }}
         >
           <i className="fa-solid fa-right-from-bracket" aria-hidden="true" /> Cerrar sesión
+        </button>
+      </section>
+
+      {/* Zona de peligro — eliminación de cuenta con código al correo (Fase 7) */}
+      <section className="surface-section" aria-labelledby="peligro-titulo">
+        <h2 id="peligro-titulo">
+          <i className="fa-solid fa-triangle-exclamation text-danger" aria-hidden="true" /> Zona de
+          peligro
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Eliminar tu cuenta borra <strong>definitivamente</strong> tus recetas, favoritos,
+          historial de búsquedas y preferencias. Por tu seguridad te enviaremos un código de 6
+          dígitos a <strong>{usuario.correo}</strong> para confirmar.
+        </p>
+        <button type="button" className="btn-ghost mt-3 !text-danger" onClick={eliminarCuenta}>
+          <i className="fa-solid fa-user-slash" aria-hidden="true" /> Eliminar mi cuenta
         </button>
       </section>
     </div>

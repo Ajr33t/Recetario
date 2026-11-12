@@ -222,18 +222,25 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - **Landing completa** (`landing/src/App.jsx`): hero con **captura real** de la app (`landing/public/captura-app.png`) dentro de un marco tipo navegador, sección **«¿Cómo funciona?»** (3 pasos), 6 funciones, descarga y pie con enlaces vivos — cero `href="#"`.
 - **Enlaces reales**: demo → `http://localhost:5173/`, descarga → `./SazónLab-Setup-1.0.0.exe` (artefacto que copiará la Fase 8).
 - **Vistas legales en la landing** por hash (`#/privacidad`, `#/terminos`), sin react-router, con el mismo texto que la app.
-- **Páginas legales en la app**: `app/src/pages/Legal.jsx` (dos documentos: datos recolectados, almacenamiento, terceros TheMealDB/IA, derechos; uso, propiedad, aviso de IA, responsabilidad) con rutas `/privacidad` y `/terminos`.
+- **Páginas legales en la app**: `app/src/pages/Legal.jsx` con rutas `/privacidad` y `/terminos`.
 - **SEO**: `landing/public/robots.txt` + JSON-LD (`SoftwareApplication`, `inLanguage: es`) + Open Graph + Twitter Card + canonical en `landing/index.html`.
-- **Suite** `npm run verificar:landing` (`scripts/verificar-landing.cjs`, 35 checks + axe en 5 estados) con capturas de evidencia (`landing-01-inicio.png`, `landing-02-privacidad.png`, `app-05-terminos.png`).
+- **Normativa colombiana completa** en un módulo compartido **`legal/contenido-legal.jsx`** (fuente única consumida por app y landing; globs de Tailwind/ESLint ampliados): Constitución arts. 15/20/86 + T-625 de 2015, Ley 1581 de 2012 (+ Decreto 1377 de 2013 y Decreto 1074 de 2015), Ley 1266 de 2009, Ley 1480 de 2011 modificada por la Ley 2439 de 2024 (retracto), Ley 527 de 1999, Ley 1712 de 2014, Ley 1755 de 2015 (15 días hábiles), Ley 1273 de 2009 y Ley 23 de 1982, con la **SIC** como autoridad de control y PQRSD vía `soporte@sazonlab.test`.
+- **Eliminación de cuenta con código de confirmación al correo**: `POST /auth/solicitar-eliminacion` + `POST /auth/eliminar-cuenta` (código de 6 dígitos, SHA-256, TTL 15 min, máx. 5 intentos, modo demo devuelve el código, auditoría `eliminar_cuenta`); **«Zona de peligro»** en Mi perfil con flujo SweetAlert2 de 3 pasos (advertencia → código → borrado) + toast + cierre de sesión; migración `password_reset.proposito` (`recuperacion`/`eliminacion`) y borrado explícito de recetas propias (el resto en cascada).
+- **Logo de la app**: `assets/logo.svg` (chef hat glassy con destellos), favicons SVG en app y landing, imagen en las cabeceras, script `npm run logo` (rasteriza 512×512 con Electron, sin dependencias nuevas) e icono `desktop/build/icon.png` aplicado al instalador NSIS (`win.icon`).
+- **Suite** `npm run verificar:cuenta` (`scripts/verificar-cuenta.cjs`, **27 checks**: API + flujo UI + axe en `/perfil`) con captura `app-06-zona-peligro.png`; `verificar:landing` ampliada a **38 checks** (aserciones de leyes colombianas en ambas superficies).
 
 ### Cambiado
 - **Pie de la app**: «Términos» y «Privacidad» dejan de ser enlaces muertos (`<a href="#">`) y navegan con botón + `navigate()` (patrón HashRouter ya usado en Medidas).
 - Landing: `--primary` de `2 132 199` a `3 105 161` (sky-700) — el anterior daba 4.1:1 con texto blanco (axe `serious` en `.btn-primary`).
 - CSS de la landing: nueva clase `.surface-section` (usada por las páginas legales).
+- Cabeceras (app y landing): el cuadrado con icono de tenedor pasa a usar el **logo SVG**.
+- `AppHeader`: `aria-label` del botón «Ingresar» corregido a *«Ingresar: iniciar sesión o ver perfil»* — el texto visible no estaba en el nombre accesible (axe `label-content-name-mismatch`, gate de `verificar:a11y`).
+- `desktop/package.json`: `electron` fijado a `44.10.2` exacto (electron-builder exige versión fija) + `win.icon`.
 
 ### Resuelto
 - **Pendiente de la Fase 5** — enlaces legales del pie que no llevaban a ninguna parte.
 - **axe `color-contrast` en la landing** (3 nodos): contraste AA insuficiente del primario en los botones.
+- **`.exe` generado con icono propio** y copiado a `landing/public/SazónLab-Setup-1.0.0.exe` (114.9 MB) — el enlace de descarga de la landing ya funciona (el binario no se versiona por el límite de 100 MB de GitHub: se regenera con `npm run build:exe`).
 
 ---
 

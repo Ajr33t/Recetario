@@ -101,12 +101,14 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
           className="flex items-center gap-2 font-bold"
           aria-label="SazónLab, ir al inicio"
         >
-          <span
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"
+          <img
+            src="logo.svg"
+            alt=""
+            width="36"
+            height="36"
+            className="h-9 w-9 rounded-xl shadow-sm"
             aria-hidden="true"
-          >
-            <i className="fa-solid fa-utensils" />
-          </span>
+          />
           <span className="text-lg">
             Sazón<span className="text-primary">Lab</span>
           </span>
@@ -328,7 +330,7 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
             <Link
               to="/login"
               className="btn-secondary !px-3"
-              aria-label="Iniciar sesión o ver perfil"
+              aria-label="Ingresar: iniciar sesión o ver perfil"
             >
               <i className="fa-solid fa-user" aria-hidden="true" />
               <span className="hidden sm:inline">Ingresar</span>

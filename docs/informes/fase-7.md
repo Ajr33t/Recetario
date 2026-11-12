@@ -30,17 +30,24 @@ Completar el entregable **(C) página web oficial del producto** del IEEE:
 | 6 | **SEO**: `robots.txt`, meta description/author/robots/canonical, Open Graph + Twitter Card y **JSON-LD** (`SoftwareApplication` con `inLanguage: es`) | `landing/public/robots.txt`, `landing/index.html` |
 | 7 | **Captura real** copiada a la landing (`captura-app.png`, 380 KB) dentro del marco tipo navegador | `landing/public/captura-app.png` |
 | 8 | **Clase `.surface-section`** añadida al CSS de la landing (no existía) y **`--primary` oscurecido** a `3 105 161` (sky-700): el sky-600 daba 4.1:1 con blanco y axe lo marcaba como `serious` | `landing/src/styles/index.css` |
-| 9 | **Suite** `npm run verificar:landing` (`scripts/verificar-landing.cjs`, **35 checks + axe en 5 estados**): semántica, secciones, enlaces reales, vistas legales hash, SEO, páginas legales de la app y navegación del pie; genera capturas de evidencia | `scripts/verificar-landing.cjs` |
+| 9 | **Suite** `npm run verificar:landing` (`scripts/verificar-landing.cjs`, **38 checks + axe en 5 estados**): semántica, secciones, enlaces reales, vistas legales hash, SEO, páginas legales de la app, navegación del pie y **leyes colombianas** en ambas superficies; genera capturas de evidencia | `scripts/verificar-landing.cjs` |
+| 10 | **Módulo legal compartido con normativa colombiana**: fuente única `Privacidad` (15 secciones) + `Terminos` (14 secciones) con Ley 1581/2012 (+ Dtos. 1377/2013 y 1074/2015), Ley 1480/2011 + Ley 2439/2024, Ley 527/1999, Ley 1712/2014, Ley 1755/2015, Ley 1273/2009, Ley 23/1982, Ley 1266/2009, Constitución arts. 15/20/86, T-625/2015 y SIC como autoridad de control; consumido por `Legal.jsx` (app) y `ContenidoLegal` (landing) con globs de Tailwind/ESLint ampliados | `legal/contenido-legal.jsx`, `app/src/pages/Legal.jsx`, `landing/src/App.jsx` |
+| 11 | **Eliminación de cuenta con código al correo**: endpoints `POST /auth/solicitar-eliminacion` y `POST /auth/eliminar-cuenta` (6 dígitos, SHA-256, TTL 15 min, 5 intentos, demo devuelve el código, auditoría), migración `password_reset.proposito` con scope `recuperacion`/`eliminacion`, borrado explícito de recetas propias + cascadas | `server/src/routes/auth.js`, `server/src/db/database.js`, `server/src/services/mailer.js` |
+| 12 | **«Zona de peligro» en Mi perfil**: flujo SweetAlert2 de 3 pasos (advertencia irreversible → código prellenado en demo → borrado), toast propio + `logout()` + navegación; gate axe en `/perfil` | `app/src/pages/Perfil.jsx` |
+| 13 | **Logo de la app**: SVG fuente (chef hat glassy con destellos), favicons en app/landing, imagen en cabeceras, `npm run logo` (rasteriza con Electron a 512×512) e icono NSIS del `.exe` | `assets/logo.svg`, `scripts/generar-logo.cjs`, `desktop/build/icon.png` |
+| 14 | **Suite** `npm run verificar:cuenta` (`scripts/verificar-cuenta.cjs`, **27 checks**: API 401/400/borrado/login 401/re-registro + flujo UI completo + axe en `/perfil`) con captura `app-06-zona-peligro.png` | `scripts/verificar-cuenta.cjs` |
 
 ---
 
 ## 3. Decisiones de diseño
 
-1. **Un solo componente legal con dos documentos.** El texto de Privacidad/Términos
-   vive en `Legal.jsx` (app) y se duplica en la landing: los dos proyectos se
-   construyen por separado (sin dependencias cruzadas) y ambos deben poder
-   publicarse de forma independiente. La suite verifica que las dos
-   implementaciones rendericen el contenido esperado.
+1. **Un solo módulo legal compartido (evolución de la decisión original).**
+   Inicialmente el texto vivía duplicado en `Legal.jsx` y en la landing; al
+   incorporar la normativa colombiana completa se creó
+   `legal/contenido-legal.jsx` como **fuente única** consumida por ambas
+   superficies (globs de Tailwind y ESLint ampliados para incluirlo). Así se
+   evita divergir textos legales idénticos; las dos apps siguen pudiendo
+   construirse por separado y la suite verifica cada superficie.
 2. **Legales en la landing por hash, sin react-router.** `#/privacidad` y
    `#/terminos` se resuelven con `hashchange`; el resto de anclas (`#funciones`,
    `#descarga`) siguen funcionando como anclas normales — sin añadir una
@@ -86,7 +93,8 @@ Completar el entregable **(C) página web oficial del producto** del IEEE:
 
 | Comando | Resultado |
 |---------|-----------|
-| `npm run verificar:landing` | ✅ 35/35 + axe 5/5 estados sin serious/critical |
+| `npm run verificar:landing` | ✅ 38/38 + axe 5/5 estados sin serious/critical |
+| `npm run verificar:cuenta` | ✅ 27/27 (API + flujo de borrado en UI + axe en `/perfil`) |
 | `npm run lint` / `format` | ✅ 0 errores |
 | `npm test` | ✅ 18/18 |
 | `npm run verificar:a11y` | ✅ 11/11 |
@@ -97,17 +105,23 @@ Completar el entregable **(C) página web oficial del producto** del IEEE:
 | `npm run verificar:busqueda` | ✅ 68/68 |
 | `npm run verificar:recetas` | ✅ 39/39 |
 | `npm run verificar:auth` | ✅ 27/27 |
-| `npm run build:app` / `build:landing` | ✅ |
+| `npm run build:app` / `build:landing` / `build:exe` | ✅ (`.exe` NSIS con icono propio) |
 | Demo `:5173` / API `:3001` / landing `:5174` / robots.txt | ✅ 200 / 200 / 200 / 200 |
 
 **Evidencias:** `docs/evidencias/landing-01-inicio.png`,
-`landing-02-privacidad.png`, `app-05-terminos.png`.
+`landing-02-privacidad.png`, `app-05-terminos.png`,
+`app-06-zona-peligro.png`.
 
 ---
 
 ## 6. Pendientes registrados
 
-- Copiar `SazónLab-Setup-1.0.0.exe` a `landing/public/` → **Fase 8** (el enlace
-  ya apunta ahí).
+- ~~Copiar `SazónLab-Setup-1.0.0.exe` a `landing/public/`~~ → **adelantado**:
+  `npm run build:exe` genera `desktop/release/SazonLab Setup 1.0.0.exe`
+  (114.9 MB, con icono `desktop/build/icon.png`) y ya está copiado en
+  `landing/public/SazónLab-Setup-1.0.0.exe`; la Fase 8 solo deberá
+  re-verificarlo con el bundle SQLite local. **Nota:** el `.exe` no se
+  versiona (límite de 100 MB de GitHub, `.gitignore` con `*.exe`): se
+  regenera con `npm run build:exe` y se copia a la landing.
 - `sitemap.xml` real cuando exista dominio de publicación (el robots.txt ya lo
   referencia).
