@@ -244,4 +244,26 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 8] — 11/11/2026 — Electron + `.exe` NSIS + modo offline SQLite (Sprint 10)
+
+### Agregado
+- **API embebida en el `.exe`**: `desktop/main.js` hace `fork` de `server/src/index.js` con `ELECTRON_RUN_AS_NODE=1`, puerto fijo **4731** (`SAZONLAB_PORT` para cambiarlo; el dev server sigue en 3001), espera activa de `/api/health` (máx. 10 s) antes de mostrar la UI y cierre del hijo en `will-quit`/`exit` (sin procesos huérfanos).
+- **SQLite local en el `.exe`**: `SAZONLAB_DATA_DIR` (nuevo en `server/src/db/database.js`) redirige la BD a `app.getPath('userData')` → `%APPDATA%\SazonLab\sazonlab.db` (fuera de `Program Files`; `productName: SazonLab` top-level la hace determinista).
+- **Descubrimiento de API en `file://`**: `app/src/services/api.js` arma `http://127.0.0.1:{puerto}/api` cuando la página corre desde archivo (el puerto llega como query param `?apiPort=4731` en `loadFile`); `VITE_API_URL` sigue teniendo prioridad y en web/`http` nada cambia.
+- **Empaquetado completo**: `desktop/package.json` con dependencias de runtime del server (bcryptjs, better-sqlite3, cors, dotenv, express, jsonwebtoken), `files` = `main.js` + `preload.js` + `build/icon.png` + `renderer/**` + `server/**`, `asarUnpack` de `server/**/*` y `**/node_modules/**` (el hijo nunca lee el asar: `dlopen` de `.node` y resolución de `express` funcionan desde rutas reales).
+- **Pipeline de build**: `npm run sincronizar:desktop` (`scripts/sincronizar-desktop.cjs`) copia `app/dist → desktop/renderer` y `server/src + server/package.json → desktop/server` (el `package.json` declara `type: module`); `build:exe` = `build:app && sincronizar:desktop && dist`.
+- **Suite** `npm run verificar:desktop` (`scripts/verificar-desktop.mjs`, **23 checks**): estático (asar con UI+API+assets, desempaquetado de express/better-sqlite3/prebuild win32-x64) + dinámico (lanza `SazonLab.exe --remote-debugging-port`, health 4731 `database:ok`, React montado en `#root` vía CDP/WebSocket, `file:` + `apiPort=4731`, flujo registro→receta→listar→favorito sobre la BD local, puerto liberado al cerrar y `%APPDATA%\SazonLab\sazonlab.db` creada en la corrida).
+
+### Cambiado
+- `desktop/package.json`: **`npmRebuild: false`** — `@electron/rebuild` intentaba compilar `better-sqlite3` con node-gyp y la máquina no tiene Python; el prebuild oficial ya carga en Electron 44 (test `ABI-OK` con `ELECTRON_RUN_AS_NODE`), así que se empaqueta tal cual.
+- `.exe` regenerado con el bundle offline completo: **124.7 MB** (antes 114.9 sin server ni SQLite) y copiado a `landing/public/SazónLab-Setup-1.0.0.exe`.
+- `eslint.config.mjs` / `.prettierignore`: ignoran `desktop/server/**` (copia generada de `server/src`, ya lintada en origen) — sin esto el lint daba 37 falsos positivos tras sincronizar.
+- `.gitignore`: también `desktop/server/` (artefacto generado).
+
+### Resuelto
+- **Requisito del cliente de la Fase 1**: el `.exe` incluye **SQLite local (modo offline) + todos los assets compilados** (CSS, Font Awesome, SweetAlert2, JS) dentro del instalador — verificado por `verificar:desktop` sobre el binario real.
+- **El `.exe` anterior no tenía UI**: `desktop/renderer` no existía (build sin sincronizar) y la API no estaba embebida; ahora el instalador es autosuficiente.
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

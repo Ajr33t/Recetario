@@ -5,6 +5,7 @@ node_modules/
 dist/
 release/
 desktop/renderer/
+desktop/server/
 *.tsbuildinfo
 # Artefactos pesados generados (el .exe pesa >100 MB: límite de GitHub)
 *.exe

@@ -1,11 +1,19 @@
 /**
  * Cliente HTTP base para la API de SazónLab.
  * En desarrollo, Vite hace proxy de /api → http://localhost:3001.
+ * En el .exe (file://) la API es un servidor local embebido: el puerto se
+ * pasa como query param al cargar el renderer (ver desktop/main.js).
  * Adjunta el JWT de la sesión y cierra sesión automáticamente en 401.
  */
 import { useAuthStore } from '../store/authStore.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const ES_ARCHIVO = typeof window !== 'undefined' && window.location.protocol === 'file:';
+const PUERTO_EMBEBIDO =
+  typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('apiPort') : null;
+
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (ES_ARCHIVO && PUERTO_EMBEBIDO ? `http://127.0.0.1:${PUERTO_EMBEBIDO}/api` : '/api');
 
 export class ApiError extends Error {
   constructor(message, status, data) {

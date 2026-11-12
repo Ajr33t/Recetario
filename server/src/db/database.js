@@ -13,7 +13,11 @@ import Database from 'better-sqlite3';
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.resolve(__dirname, '../../data');
+// En el .exe empaquetado la BD vive en el directorio de datos del usuario
+// (%APPDATA%/SazonLab); en desarrollo, en server/data (ver Fase 8).
+const DATA_DIR = process.env.SAZONLAB_DATA_DIR
+  ? path.resolve(process.env.SAZONLAB_DATA_DIR)
+  : path.resolve(__dirname, '../../data');
 const DB_PATH = path.join(DATA_DIR, 'sazonlab.db');
 
 let db = null;

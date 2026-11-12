@@ -40,7 +40,7 @@ npm run dev:landing  # http://localhost:5174
 # Electron (requiere dev:server y dev:app corriendo)
 npm run dev:desktop
 
-# Empaquetar .exe
+# Empaquetar .exe (compila la UI, sincroniza server+renderer y arma el NSIS)
 npm run build:exe
 ```
 
@@ -71,17 +71,18 @@ recetario/
 
 ### Desarrollo y build
 
-| Script                      | Descripción                              |
-| --------------------------- | ---------------------------------------- |
-| `npm run dev:app`           | Demo web (Vite, puerto 5173)             |
-| `npm run dev:server`        | API Express (puerto 3001)                |
-| `npm run dev:landing`       | Landing oficial (puerto 5174)            |
-| `npm run dev:desktop`       | Electron en modo desarrollo              |
-| `npm run build:app`         | Build de producción de la demo           |
-| `npm run build:landing`     | Build de la landing                      |
-| `npm run build:exe`         | Build web + generación del `.exe` (NSIS) |
-| `npm run lint` / `lint:fix` | ESLint                                   |
-| `npm run format`            | Prettier                                 |
+| Script                        | Descripción                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `npm run dev:app`             | Demo web (Vite, puerto 5173)                                  |
+| `npm run dev:server`          | API Express (puerto 3001)                                     |
+| `npm run dev:landing`         | Landing oficial (puerto 5174)                                 |
+| `npm run dev:desktop`         | Electron en modo desarrollo                                   |
+| `npm run build:app`           | Build de producción de la demo                                |
+| `npm run build:landing`       | Build de la landing                                           |
+| `npm run build:exe`           | Build web + sincroniza + genera el `.exe` (NSIS)              |
+| `npm run sincronizar:desktop` | Copia `app/dist` y `server/src` a `desktop/` (para el `.exe`) |
+| `npm run lint` / `lint:fix`   | ESLint                                                        |
+| `npm run format`              | Prettier                                                      |
 
 ### Verificación (batería por fase)
 
@@ -98,6 +99,7 @@ recetario/
 | `npm run verificar:ui-f6`     | UI Fase 6: tour, campana de notificaciones, toasts      |
 | `npm run verificar:landing`   | Landing oficial: secciones, legales, SEO, axe           |
 | `npm run verificar:cuenta`    | Eliminar cuenta con código al correo (API + UI + axe)   |
+| `npm run verificar:desktop`   | `.exe` empaquetado: API embebida, SQLite local y UI     |
 | `npm run logo`                | Regenera el PNG512 del logo (Electron, sin deps)        |
 | `npm run capturas`            | Capturas de evidencia (galería de temas)                |
 
@@ -123,7 +125,7 @@ recetario/
 - 🗑️ **Eliminar cuenta** desde la «Zona de peligro» del perfil con **código de confirmación de 6 dígitos enviado al correo** (SweetAlert2 en 3 pasos)
 - 🎨 **Logo propio** de SazónLab (SVG + favicon) e icono personalizado en el `.exe`
 - 💎 Estilo Liquid Glass en toda la interfaz
-- 💻 Versión `.exe` con modo offline básico (SQLite)
+- 💻 **Modo offline real en el `.exe`**: API de Express embebida (puerto 4731), **SQLite local en `%APPDATA%\SazonLab`** y todos los assets compilados (CSS, Font Awesome, SweetAlert2, JS) dentro del instalador — sin instalar Node ni internet
 
 ## 📄 Licencia
 

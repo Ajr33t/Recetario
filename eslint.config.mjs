@@ -11,6 +11,7 @@ export default [
       '**/release/**',
       'docs/**',
       'desktop/renderer/**',
+      'desktop/server/**',
     ],
   },
   js.configs.recommended,

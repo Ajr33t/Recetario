@@ -20,7 +20,8 @@
     "dev:desktop": "npm run start --workspace desktop",
     "build:app": "npm run build --workspace app",
     "build:landing": "npm run build --workspace landing",
-    "build:exe": "npm run build:app && npm run dist --workspace desktop",
+    "sincronizar:desktop": "node scripts/sincronizar-desktop.cjs",
+    "build:exe": "npm run build:app && npm run sincronizar:desktop && npm run dist --workspace desktop",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "node --test app/src",
@@ -35,6 +36,7 @@
     "verificar:ui-f6": "electron scripts/verificar-ui-f6.cjs",
     "verificar:landing": "electron scripts/verificar-landing.cjs",
     "verificar:cuenta": "electron scripts/verificar-cuenta.cjs",
+    "verificar:desktop": "node scripts/verificar-desktop.mjs",
     "verificar:a11y": "electron scripts/verificar-a11y.cjs",
     "capturas": "electron scripts/capturas.cjs",
     "logo": "electron scripts/generar-logo.cjs"

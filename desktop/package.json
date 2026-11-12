@@ -2,6 +2,7 @@
   "name": "sazonlab-desktop",
   "version": "1.0.0",
   "private": true,
+  "productName": "SazonLab",
   "description": "SazónLab — aplicación de escritorio (.exe)",
   "main": "main.js",
   "scripts": {
@@ -12,16 +13,31 @@
     "electron": "44.10.2",
     "electron-builder": "^26.18.0"
   },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3"
+  },
   "build": {
     "appId": "com.sazonlab.recetario",
     "productName": "SazonLab",
+    "npmRebuild": false,
     "directories": {
       "output": "release"
     },
     "files": [
       "main.js",
       "preload.js",
-      "renderer/**/*"
+      "build/icon.png",
+      "renderer/**/*",
+      "server/**/*"
+    ],
+    "asarUnpack": [
+      "server/**/*",
+      "**/node_modules/**"
     ],
     "win": {
       "target": [
