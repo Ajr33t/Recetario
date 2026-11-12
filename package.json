@@ -23,6 +23,7 @@
     "build:exe": "npm run build:app && npm run dist --workspace desktop",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test": "node --test app/src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verificar:contraste": "node scripts/verificar-contraste.mjs",
@@ -31,10 +32,13 @@
     "verificar:busqueda": "node scripts/verificar-busqueda.mjs",
     "verificar:recetas": "node scripts/verificar-recetas.mjs",
     "verificar:ui-f5": "electron scripts/verificar-ui-f5.cjs",
+    "verificar:ui-f6": "electron scripts/verificar-ui-f6.cjs",
+    "verificar:a11y": "electron scripts/verificar-a11y.cjs",
     "capturas": "electron scripts/capturas.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",

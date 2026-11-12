@@ -187,7 +187,11 @@ export default function ThemeSelector({ open, onClose }) {
                       <i className={`fa-solid ${t.icon} text-primary`} aria-hidden="true" />
                       {t.name}
                       {theme === t.id && (
-                        <i className="fa-solid fa-check text-primary" aria-label="Seleccionado" />
+                        <i
+                          className="fa-solid fa-check text-primary"
+                          role="img"
+                          aria-label="Seleccionado"
+                        />
                       )}
                     </span>
                     <span className="flex gap-1.5" aria-hidden="true">

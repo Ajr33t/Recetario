@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
+import { exito } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 
 /**
@@ -35,14 +36,7 @@ export default function Papelera() {
   async function restaurar(receta) {
     try {
       await api.post(`/recipes/${receta.id}/restaurar`, {});
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Receta restaurada',
-        showConfirmButton: false,
-        timer: 1600,
-      });
+      exito('Receta restaurada');
       cargar();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo restaurar.');
@@ -65,14 +59,7 @@ export default function Papelera() {
     if (!resultado.isConfirmed) return;
     try {
       await api.delete(`/recipes/${receta.id}?permanente=1`);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Eliminada definitivamente',
-        showConfirmButton: false,
-        timer: 1600,
-      });
+      exito('Eliminada definitivamente');
       cargar();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo eliminar.');

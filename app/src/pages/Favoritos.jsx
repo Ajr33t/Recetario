@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
+import { informar } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
@@ -39,14 +39,7 @@ export default function Favoritos() {
       // Las externas ya fueron importadas como receta propia: se alterna por id
       await api.post(`/favorites/${receta.id}`);
       setFavoritos((prev) => prev.filter((f) => f.id !== receta.id));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'info',
-        title: 'Quitada de favoritos',
-        showConfirmButton: false,
-        timer: 1400,
-      });
+      informar('Quitada de favoritos');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo quitar la receta.');
     }

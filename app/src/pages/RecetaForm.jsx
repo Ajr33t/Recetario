@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
+import { exito } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 
 const DIFICULTADES = [
@@ -197,14 +198,7 @@ export default function RecetaForm() {
       const datos = esEdicion
         ? await api.put(`/recipes/${id}`, cuerpo)
         : await api.post('/recipes', cuerpo);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: esEdicion ? 'Receta actualizada' : 'Receta creada',
-        showConfirmButton: false,
-        timer: 1800,
-      });
+      exito(esEdicion ? 'Receta actualizada' : 'Receta creada');
       navigate(`/receta/${datos.receta.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar la receta.');
@@ -226,14 +220,7 @@ export default function RecetaForm() {
     if (!resultado.isConfirmed) return;
     try {
       await api.delete(`/recipes/${id}`);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Receta en la papelera',
-        showConfirmButton: false,
-        timer: 1800,
-      });
+      exito('Receta en la papelera');
       navigate('/mis-recetas');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo eliminar.');
@@ -275,14 +262,7 @@ export default function RecetaForm() {
       setPasos(datos.receta.pasos?.length ? datos.receta.pasos.map((p) => p.descripcion) : ['']);
       const hist = await api.get(`/recipes/${id}/versiones`);
       setVersiones(hist.versiones || []);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Versión restaurada',
-        showConfirmButton: false,
-        timer: 1800,
-      });
+      exito('Versión restaurada');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo restaurar la versión.');
     }

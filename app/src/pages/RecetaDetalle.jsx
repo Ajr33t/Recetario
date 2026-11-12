@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
+import { exito, informar } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 import { descargarImagenReceta, imprimirReceta, escaparHtml } from '../services/exportarReceta.js';
 
@@ -204,14 +205,8 @@ export default function RecetaDetalle() {
         const res = await api.post(`/favorites/${id}`, {});
         setFavorito(res.favorito);
       }
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: favorito ? 'info' : 'success',
-        title: favorito ? 'Quitada de favoritos' : 'Guardada en favoritos',
-        showConfirmButton: false,
-        timer: 1400,
-      });
+      if (favorito) informar('Quitada de favoritos');
+      else exito('Guardada en favoritos');
     } catch (err) {
       Swal.fire({
         icon: 'error',
@@ -242,14 +237,7 @@ export default function RecetaDetalle() {
   async function copiar(texto, mensaje) {
     try {
       await navigator.clipboard.writeText(texto);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: mensaje,
-        showConfirmButton: false,
-        timer: 1500,
-      });
+      exito(mensaje);
     } catch {
       Swal.fire({ icon: 'info', title: 'Copia manualmente', text: texto.slice(0, 300) });
     }
@@ -264,7 +252,14 @@ export default function RecetaDetalle() {
       title: 'Compartir receta',
       html: `
         <p style="margin-bottom:.5rem">${escaparHtml(receta.titulo)}</p>
-        <input id="swal-enlace" readonly value="${escaparHtml(enlace)}" class="swal2-input" style="font-size:.8rem">
+        <input
+          id="swal-enlace"
+          readonly
+          value="${escaparHtml(enlace)}"
+          class="swal2-input"
+          aria-label="Enlace de la receta para compartir"
+          style="font-size:.8rem"
+        >
         ${privada ? '<p class="text-danger" style="font-size:.85rem">Esta receta es privada: al compartirla se hará pública.</p>' : ''}
         <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;text-align:left">
           <button type="button" class="btn-secondary" data-accion="enlace">
@@ -327,14 +322,7 @@ export default function RecetaDetalle() {
     if (accion === 'imagen') {
       try {
         await descargarImagenReceta(receta);
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Imagen descargada',
-          showConfirmButton: false,
-          timer: 1600,
-        });
+        exito('Imagen descargada');
       } catch (err) {
         Swal.fire({
           icon: 'error',
@@ -497,7 +485,7 @@ export default function RecetaDetalle() {
               )}
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2" role="list" aria-label="Acciones">
+            <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Acciones">
               <button
                 type="button"
                 className={favorito ? 'btn-primary !px-3' : 'btn-secondary !px-3'}

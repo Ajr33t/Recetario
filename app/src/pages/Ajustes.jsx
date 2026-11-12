@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import { useThemeStore } from '../store/themeStore.js';
 import { useAuthStore } from '../store/authStore.js';
 import { api, ApiError } from '../services/api.js';
+import { exito } from '../services/toast.js';
 import { THEMES } from '../themes/palettes.js';
 import ThemeSelector from '../components/theme/ThemeSelector.jsx';
 
@@ -34,7 +35,9 @@ function Switch({ checked, onChange, label, icon, description }) {
       <span className="flex-1">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <i className={`fa-solid ${icon} text-primary`} aria-hidden="true" /> {label}
-          {checked && <i className="fa-solid fa-check text-primary" aria-label="Activado" />}
+          {checked && (
+            <i className="fa-solid fa-check text-primary" role="img" aria-label="Activado" />
+          )}
         </span>
         <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
       </span>
@@ -72,14 +75,7 @@ export default function Ajustes() {
       enlace.download = `sazonlab-recetas-${new Date().toISOString().slice(0, 10)}.json`;
       enlace.click();
       URL.revokeObjectURL(url);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: `${datos.total} receta(s) exportadas`,
-        showConfirmButton: false,
-        timer: 1800,
-      });
+      exito(`${datos.total} receta(s) exportadas`);
     } catch (err) {
       Swal.fire({
         icon: 'error',
@@ -251,6 +247,27 @@ export default function Ajustes() {
             <i className="fa-solid fa-brain" aria-hidden="true" /> Dislexia:{' '}
             {a11y.dyslexia ? 'activada' : 'desactivada'}
           </span>
+        </div>
+
+        {/* Tour de bienvenida (RF-25): se puede repetir cuando se quiera */}
+        <div className="mt-4">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              try {
+                localStorage.removeItem('sazonlab-onboarding');
+              } catch {
+                /* sin almacenamiento: el tour igual se puede ver ahora */
+              }
+              window.dispatchEvent(new Event('sazonlab:tour'));
+            }}
+          >
+            <i className="fa-solid fa-route" aria-hidden="true" /> Repetir tour de bienvenida
+          </button>
+          <p className="mt-1 text-xs text-muted-foreground">
+            El tour se muestra la primera vez que entras al inicio. Aquí puedes verlo otra vez.
+          </p>
         </div>
       </section>
 

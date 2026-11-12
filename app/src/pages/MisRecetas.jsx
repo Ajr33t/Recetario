@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
+import { exito } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
@@ -50,14 +51,7 @@ export default function MisRecetas() {
     if (!resultado.isConfirmed) return;
     try {
       await api.delete(`/recipes/${receta.id}`);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Receta en la papelera',
-        showConfirmButton: false,
-        timer: 1800,
-      });
+      exito('Receta en la papelera');
       setSeleccion((prev) => prev.filter((x) => x !== receta.id));
       cargar();
     } catch (err) {

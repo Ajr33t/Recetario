@@ -190,4 +190,30 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 6] — 11/11/2026 — Accesibilidad WCAG 2.1 AA + notificaciones, pop-ups y onboarding (Sprints 7–8)
+
+### Agregado
+- **Servicio de notificaciones propio** (`app/src/services/toast.js`): cola de toasts + historial de 20 con estado no leído, sin dependencias y testeable en Node (`exito`/`fracaso`/`informar`, `tiempoRelativo` en español).
+- **`ToastHost.jsx`**: toasts glass con tokens del tema, región `aria-live` **siempre montada**, `role="status"` (polite) / `role="alert"` (errores, WCAG 4.1.3) y cierre manual etiquetado.
+- **`Modal.jsx`** (RF-16): modal glass propio reutilizable — portal, trampa de foco, Esc, devolución de foco al disparador, `aria-modal` + `aria-labelledby`, backdrop configurable.
+- **Tour de bienvenida** (`Onboarding.jsx`, RF-25/CU-25/47/48): 6 pasos con anillo *spotlight* sobre elementos reales (`[data-tour]`), «Paso X de 6» con `aria-current`, «Omitir» siempre visible, persistencia en localStorage (una sola vez) y **«Repetir tour» desde Ajustes → Accesibilidad**.
+- **Campana de notificaciones** en la cabecera (antes botón deshabilitado): badge de no leídas, panel con historial y tiempo relativo en español, estado vacío, «Vaciar», Esc cierra y devuelve el foco.
+- **Pruebas unitarias** con el runner nativo de Node (`npm test` → `node --test app/src`, cero dependencias): 18 tests (toast, medidas, `escaparHtml`).
+- **Batería de accesibilidad** `npm run verificar:a11y` (`scripts/verificar-a11y.cjs`): axe-core (etiquetas WCAG 2.0/2.1 A+AA) sobre **11 estados** (7 páginas + tour + selector de tema + panel de notificaciones + diálogo de compartir); informe en `docs/evidencias/a11y-axe.md`; falla ante cualquier violación `serious`/`critical`.
+- **Checklist manual WCAG 2.1 AA** (`docs/evidencias/checklist-wcag-21-aa.md`): 28 criterios + guion de teclado y NVDA.
+- **Suite UI** `npm run verificar:ui-f6` (`scripts/verificar-ui-f6.cjs`, 29 checks): tour (apertura, progreso, spotlight, omitir/persistencia, repetir), campana (aria-expanded, Esc+foco, vacío) y toasts (aviso real al marcar favorito, historial, cierre manual).
+
+### Cambiado
+- **Los 11 toasts de SweetAlert2 pasan al sistema propio** (`exito`/`informar`): SweetAlert2 queda para diálogos, confirmaciones y alertas (requisito del cliente) con su tema glass de la Fase 5.
+- `AppHeader`: campana habilitada con panel accesible; buscador/tema/campana marcados `data-tour` como objetivos del tour.
+- Ajustes → Accesibilidad: botón «Repetir tour de bienvenida».
+
+### Resuelto
+- **axe `aria-prohibited-attr`**: contenedor de toasts con `aria-label` sin rol → `role="region"`; iconos `<i aria-label>` (check «Activado/Seleccionado») → `role="img"`.
+- **axe `label-content-name-mismatch`**: las tarjetas del Home llevaban `aria-label` que ocultaba el texto visible → se elimina (el texto visible pasa a ser el nombre accesible).
+- **axe `label`**: input del enlace en el diálogo de compartir sin etiqueta → `aria-label`.
+- **axe `aria-required-children`**: contenedor de acciones del detalle con `role="list"` sin hijos `listitem` → `role="group"`.
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*

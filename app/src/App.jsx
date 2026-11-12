@@ -5,6 +5,8 @@ import AppHeader from './components/layout/AppHeader.jsx';
 import AppSidebar from './components/layout/AppSidebar.jsx';
 import AppFooter from './components/layout/AppFooter.jsx';
 import ThemeSelector from './components/theme/ThemeSelector.jsx';
+import ToastHost from './components/ui/ToastHost.jsx';
+import Onboarding from './components/onboarding/Onboarding.jsx';
 import Home from './pages/Home.jsx';
 import Buscar from './pages/Buscar.jsx';
 import RecetaDetalle from './pages/RecetaDetalle.jsx';
@@ -58,6 +60,12 @@ export default function App() {
 
       {/* Selector de tema/modo (12 × 3 = 36 combinaciones) */}
       <ThemeSelector open={themeOpen} onClose={() => setThemeOpen(false)} />
+
+      {/* Notificaciones (toasts glass) — Fase 6 */}
+      <ToastHost />
+
+      {/* Tour de bienvenida (RF-25) — Fase 6 */}
+      <Onboarding />
     </div>
   );
 }

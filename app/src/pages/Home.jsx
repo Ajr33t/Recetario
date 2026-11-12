@@ -95,12 +95,12 @@ export default function Home() {
             Buscar por ingredientes
           </Link>
           {usuario ? (
-            <Link to="/recetas/nueva" className="btn-secondary">
+            <Link to="/recetas/nueva" className="btn-secondary" data-tour="crear">
               <i className="fa-solid fa-plus" aria-hidden="true" />
               Crear receta
             </Link>
           ) : (
-            <Link to="/login" className="btn-secondary">
+            <Link to="/login" className="btn-secondary" data-tour="crear">
               <i className="fa-solid fa-user-plus" aria-hidden="true" />
               Crear cuenta gratis
             </Link>
@@ -164,11 +164,7 @@ export default function Home() {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
           {destacadas.map((receta) => (
             <li key={receta.id}>
-              <Link
-                to={`/receta/${receta.id}`}
-                className="glass-card-hover block"
-                aria-label={`Ver detalle de ${receta.titulo}`}
-              >
+              <Link to={`/receta/${receta.id}`} className="glass-card-hover block">
                 {receta.imagen ? (
                   <img
                     src={receta.imagen}
