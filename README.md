@@ -4,6 +4,7 @@ Aplicación de recetario digital que sugiere recetas según los ingredientes dis
 
 > 📄 Especificación de requisitos: [`docs/IEEE_Recetario_Inteligente.md`](docs/IEEE_Recetario_Inteligente.md)
 > 📈 Estado por fase: [`docs/CHANGELOG.md`](docs/CHANGELOG.md) · Informes: [`docs/informes/`](docs/informes/)
+> 🏁 **Informe final (25/25 RF):** [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md)
 
 ## 📦 Entregables
 
@@ -43,6 +44,10 @@ npm run dev:desktop
 # Empaquetar .exe (compila la UI, sincroniza server+renderer y arma el NSIS)
 npm run build:exe
 ```
+
+> 🛡️ **Cuenta admin de demo** (se crea sola si no hay ningún administrador):
+> `admin@sazonlab.test` / `SazonLab-Admin-2026` — cámbiala con `ADMIN_CORREO` / `ADMIN_PASSWORD`
+> en `server/.env` antes de un despliegue real. Detalle en [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md).
 
 ## 📁 Estructura
 
@@ -92,10 +97,10 @@ recetario/
 | `npm run verificar:a11y`      | axe-core WCAG 2.1 AA sobre 11 estados de la UI          |
 | `npm run verificar:contraste` | Contraste WCAG en 12 temas × 3 modos (36 combinaciones) |
 | `npm run verificar:temas`     | Aplicación de temas/modos/a11y en Electron              |
-| `npm run verificar:auth`      | Registro, login, JWT, roles, auditoría                  |
+| `npm run verificar:auth`      | Registro, login, JWT, roles, panel admin, auditoría     |
 | `npm run verificar:busqueda`  | Búsqueda, filtros, traducción y cobertura de áreas      |
 | `npm run verificar:recetas`   | CRUD, versiones, papelera, favoritos, export/import     |
-| `npm run verificar:ui-f5`     | UI Fase 5: JSON, libro, compartir, checklist, medidas   |
+| `npm run verificar:ui-f5`     | UI Fase 5: JSON, libro, compartir, filtros e historial  |
 | `npm run verificar:ui-f6`     | UI Fase 6: tour, campana de notificaciones, toasts      |
 | `npm run verificar:landing`   | Landing oficial: secciones, legales, SEO, axe           |
 | `npm run verificar:cuenta`    | Eliminar cuenta con código al correo (API + UI + axe)   |
@@ -107,8 +112,10 @@ recetario/
 
 ## 🎨 Características
 
-- 🔍 Búsqueda por ingredientes con sugerencia IA (OpenAI/Gemini opcional) e historial
-- 🗂️ Filtros de Explorar con categorías y solo las **áreas con recetas reales**
+- 🔍 Búsqueda por ingredientes con sugerencia IA (OpenAI/Gemini opcional)
+- 🕘 **Historial de búsquedas**: «Búsquedas recientes» con repetición en un clic y vaciado (RF-11)
+- 🗂️ **Filtros avanzados**: ingredientes excluidos y dieta (vegetariana/vegana) en Buscar; tiempo, dificultad, texto y etiqueta en Mis recetas; categorías y solo las **áreas con recetas reales** en Explorar (RF-10)
+- 🛡️ **Panel de administración** (`/admin`, solo rol admin): crear cuentas, cambiar roles e inactivar/activar usuarios con revocación inmediata de sesiones (RF-02/RF-22)
 - 📝 CRUD de recetas propias con **historial de versiones restaurables** y **papelera** (30 días)
 - ❤️ Favoritos (propias y de TheMealDB) e importación a tu colección
 - 📤 **Compartir**: enlace, receta como texto, **imagen PNG** y **PDF** con estilos y foto

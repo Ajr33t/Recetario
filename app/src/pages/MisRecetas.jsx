@@ -20,6 +20,57 @@ export default function MisRecetas() {
   const [seleccion, setSeleccion] = useState([]); // ids para el libro
   const [modoSeleccion, setModoSeleccion] = useState(false);
 
+  // Filtros avanzados (RF-10 — Fase 9): tiempo, dificultad, texto y
+  // etiqueta/dieta. Sobre recetas propias sí existen tiempo y dificultad
+  // (TheMealDB no los publica; ver docs/informes/fase-9.md).
+  const [filtroTexto, setFiltroTexto] = useState('');
+  const [filtroTiempo, setFiltroTiempo] = useState('');
+  const [filtroDificultad, setFiltroDificultad] = useState('');
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState('');
+
+  const etiquetasDisponibles = [
+    ...new Set((recetas || []).flatMap((r) => (Array.isArray(r.etiquetas) ? r.etiquetas : []))),
+  ].slice(0, 20);
+
+  const recetasFiltradas = (recetas || []).filter((r) => {
+    const texto = filtroTexto.trim().toLowerCase();
+    if (texto) {
+      const enTitulo = r.titulo.toLowerCase().includes(texto);
+      const enEtiquetas = (Array.isArray(r.etiquetas) ? r.etiquetas : []).some((t) =>
+        String(t).toLowerCase().includes(texto),
+      );
+      if (!enTitulo && !enEtiquetas) return false;
+    }
+    if (filtroTiempo && (!r.tiempo_min || r.tiempo_min > Number(filtroTiempo))) return false;
+    if (filtroDificultad && r.dificultad !== filtroDificultad) return false;
+    if (
+      filtroEtiqueta &&
+      !(Array.isArray(r.etiquetas) ? r.etiquetas : []).includes(filtroEtiqueta)
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  // Recetas que un filtro excluyó por no tener el dato (aviso transparente)
+  const ocultasPorDato =
+    recetas && recetas.length > 0
+      ? recetas.filter((r) => {
+          if (filtroTiempo && !r.tiempo_min) return true;
+          if (filtroDificultad && !r.dificultad) return true;
+          return false;
+        }).length
+      : 0;
+
+  const hayFiltros = Boolean(filtroTexto || filtroTiempo || filtroDificultad || filtroEtiqueta);
+
+  function limpiarFiltros() {
+    setFiltroTexto('');
+    setFiltroTiempo('');
+    setFiltroDificultad('');
+    setFiltroEtiqueta('');
+  }
+
   function cargar() {
     api
       .get('/recipes')
@@ -64,7 +115,8 @@ export default function MisRecetas() {
   }
 
   function irAlLibro() {
-    const ids = modoSeleccion && seleccion.length > 0 ? seleccion : recetas.map((r) => r.id);
+    const base = hayFiltros ? recetasFiltradas : recetas;
+    const ids = modoSeleccion && seleccion.length > 0 ? seleccion : base.map((r) => r.id);
     navigate('/libro', { state: { ids } });
   }
 
@@ -111,6 +163,85 @@ export default function MisRecetas() {
           </Link>
         </div>
       </header>
+
+      {/* Filtros avanzados (RF-10): tiempo, dificultad, texto y etiqueta */}
+      {recetas && recetas.length > 0 && (
+        <section className="surface-section" aria-labelledby="filtros-recetas-titulo" role="group">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="filtros-recetas-titulo" className="text-base">
+              <i className="fa-solid fa-filter text-primary" aria-hidden="true" /> Filtrar recetas
+            </h2>
+            {hayFiltros && (
+              <button type="button" className="btn-ghost !px-3 !text-xs" onClick={limpiarFiltros}>
+                <i className="fa-solid fa-xmark" aria-hidden="true" /> Limpiar filtros
+              </button>
+            )}
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="flex flex-col gap-1 text-sm">
+              Texto (título o etiqueta)
+              <input
+                type="search"
+                className="field"
+                value={filtroTexto}
+                onChange={(e) => setFiltroTexto(e.target.value)}
+                placeholder="Ej. pollo, dulce…"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Tiempo máximo
+              <select
+                className="field"
+                value={filtroTiempo}
+                onChange={(e) => setFiltroTiempo(e.target.value)}
+              >
+                <option value="">Sin límite</option>
+                <option value="15">Hasta 15 min</option>
+                <option value="30">Hasta 30 min</option>
+                <option value="45">Hasta 45 min</option>
+                <option value="60">Hasta 60 min</option>
+                <option value="90">Hasta 90 min</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Dificultad
+              <select
+                className="field"
+                value={filtroDificultad}
+                onChange={(e) => setFiltroDificultad(e.target.value)}
+              >
+                <option value="">Cualquiera</option>
+                <option value="facil">Fácil</option>
+                <option value="media">Media</option>
+                <option value="dificil">Difícil</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Etiqueta / dieta
+              <select
+                className="field"
+                value={filtroEtiqueta}
+                onChange={(e) => setFiltroEtiqueta(e.target.value)}
+              >
+                <option value="">Cualquiera</option>
+                {etiquetasDisponibles.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {hayFiltros && (
+            <p className="mt-2 text-xs text-muted-foreground" role="status">
+              Mostrando {recetasFiltradas.length} de {recetas.length} recetas
+              {ocultasPorDato > 0 &&
+                ` · ${ocultasPorDato} sin dato de tiempo/dificultad no pasan el filtro`}
+              .
+            </p>
+          )}
+        </section>
+      )}
 
       {/* Acciones del recetario: selección y libro de cocina (PDF) */}
       {recetas && recetas.length > 0 && (
@@ -166,9 +297,25 @@ export default function MisRecetas() {
         </div>
       )}
 
-      {recetas?.length > 0 && (
+      {recetas?.length > 0 && recetasFiltradas.length === 0 && (
+        <div className="glass-card flex flex-col items-center gap-2 py-10 text-center">
+          <i
+            className="fa-solid fa-filter-circle-xmark text-4xl text-muted-foreground"
+            aria-hidden="true"
+          />
+          <p className="font-medium">Ninguna receta pasa los filtros</p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Ajusta o limpia los filtros para ver tu recetario completo.
+          </p>
+          <button type="button" className="btn-secondary mt-1 !px-3" onClick={limpiarFiltros}>
+            <i className="fa-solid fa-xmark" aria-hidden="true" /> Limpiar filtros
+          </button>
+        </div>
+      )}
+
+      {recetasFiltradas.length > 0 && (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
-          {recetas.map((receta) => {
+          {recetasFiltradas.map((receta) => {
             const elegida = seleccion.includes(receta.id);
             return (
               <li key={receta.id} className="glass-card flex flex-col">

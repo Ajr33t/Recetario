@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
+import bcrypt from 'bcryptjs';
 
 /**
  * Conexión SQLite (demo web y desarrollo).
@@ -184,6 +185,35 @@ function migrarEsquema(db) {
   }
 }
 
+/**
+ * Cuenta de administrador de demo (RF-22 — Fase 9): si no existe ningún
+ * usuario con rol 'admin', se crea uno para poder entrar al panel.
+ * Credenciales por defecto documentadas en README/INFORME_FINAL;
+ * se pueden cambiar con ADMIN_CORREO / ADMIN_PASSWORD en .env.
+ */
+function asegurarAdmin(db) {
+  if (db.prepare("SELECT id FROM users WHERE rol = 'admin' LIMIT 1").get()) return;
+
+  const correo = (process.env.ADMIN_CORREO || 'admin@sazonlab.test').trim().toLowerCase();
+  const contrasena = process.env.ADMIN_PASSWORD || 'SazonLab-Admin-2026';
+  const hash = bcrypt.hashSync(contrasena, 10);
+
+  // Si el correo ya existe como usuario normal, no se toca (unique constraint)
+  const existente = db.prepare('SELECT id FROM users WHERE correo = ?').get(correo);
+  if (!existente) {
+    const r = db
+      .prepare("INSERT INTO users (nombre, correo, contrasena_hash, rol) VALUES (?, ?, ?, 'admin')")
+      .run('Administrador', correo, hash);
+    db.prepare('INSERT OR IGNORE INTO user_preferences (user_id) VALUES (?)').run(
+      Number(r.lastInsertRowid),
+    );
+    console.log(`[SazónLab] Cuenta admin creada: ${correo} (contraseña: ${contrasena})`);
+  } else {
+    db.prepare("UPDATE users SET rol = 'admin' WHERE id = ?").run(existente.id);
+    console.log(`[SazónLab] Cuenta existente promovida a admin: ${correo}`);
+  }
+}
+
 /** Inicializa la conexión y crea el esquema si no existe. */
 export function initDatabase() {
   if (db) return db;
@@ -193,6 +223,7 @@ export function initDatabase() {
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
   migrarEsquema(db);
+  asegurarAdmin(db);
   console.log(`[SazónLab] Base de datos lista en ${DB_PATH}`);
   return db;
 }

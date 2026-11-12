@@ -17,6 +17,9 @@ const NAV_ITEMS_INVITADO = [
   { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
 ];
 
+// Extra del administrador (RF-22): solo se muestra con rol 'admin'
+const NAV_ITEM_ADMIN = { to: '/admin', label: 'Administración', icon: 'fa-user-shield' };
+
 /**
  * <aside> con navegación principal (<nav> con aria-label).
  * - Sin sesión: solo Inicio, Ajustes e Iniciar sesión.
@@ -25,7 +28,11 @@ const NAV_ITEMS_INVITADO = [
  */
 export default function AppSidebar({ open, onClose }) {
   const usuario = useAuthStore((s) => s.usuario);
-  const items = usuario ? NAV_ITEMS_SESION : NAV_ITEMS_INVITADO;
+  const items = usuario
+    ? usuario.rol === 'admin'
+      ? [...NAV_ITEMS_SESION, NAV_ITEM_ADMIN]
+      : NAV_ITEMS_SESION
+    : NAV_ITEMS_INVITADO;
 
   return (
     <>

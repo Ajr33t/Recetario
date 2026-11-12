@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { getDb } from '../db/database.js';
 
 /**
  * Secreto para firmar JWT.
@@ -29,6 +30,12 @@ export function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, obtenerSecreto());
+    // RF-22: una cuenta inactivada o eliminada pierde el acceso de inmediato,
+    // aunque su JWT siga vigente (7 días).
+    const fila = getDb().prepare('SELECT estado FROM users WHERE id = ?').get(Number(payload.sub));
+    if (!fila || fila.estado !== 'activo') {
+      return res.status(401).json({ error: 'La cuenta está desactivada' });
+    }
     req.user = {
       id: Number(payload.sub),
       nombre: payload.nombre,
@@ -39,6 +46,21 @@ export function requireAuth(req, res, next) {
   } catch {
     return res.status(401).json({ error: 'Sesión expirada o token inválido' });
   }
+}
+
+/**
+ * Autorización por rol (RF-02 / RF-22 — Fase 9): exige sesión válida y
+ * un rol incluido en `roles`. Sin sesión → 401; sin el rol → 403.
+ */
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    requireAuth(req, res, () => {
+      if (!roles.includes(req.user?.rol)) {
+        return res.status(403).json({ error: 'No tienes permiso para esta acción' });
+      }
+      return next();
+    });
+  };
 }
 
 /**

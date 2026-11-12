@@ -45,6 +45,65 @@ function guardarHistorial(req, ingredientes) {
   }
 }
 
+/**
+ * Filtros avanzados RF-10 (Fase 9): cuando el cliente envía `excluir`
+ * (ingredientes que no quiere) y/o `dieta` (vegetariana/vegana), se
+ * traen los detalles de las recetas (ingredientes/categoría/etiquetas,
+ * cacheados en TheMealDB) y se filtran antes de responder.
+ *
+ * - Solo se paga este costo cuando se pide: sin parámetros, 0 lookups.
+ * - Cap de 40 por petición (evita ráfagas enormes en Explorar); lo que
+ *   no se alcanza a evaluar se reporta en `sin_dato` y lo decide el
+ *   cliente con aviso visible (nunca se filtra en silencio).
+ * - Se devuelven los resúmenes ya traducidos: el detalle se usa solo
+ *   para decidir, así el usuario nunca ve textos en inglés.
+ */
+const LIMITE_AVANZADO = 40;
+
+async function filtrarAvanzado(recetas, query) {
+  const excluirCrudos = String(query.excluir || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+    .slice(0, 8);
+  const dieta = ['vegetariana', 'vegana'].includes(String(query.dieta || ''))
+    ? String(query.dieta)
+    : '';
+  if (excluirCrudos.length === 0 && !dieta) return { recetas, sinDato: 0 };
+
+  const excluidosIngles = await Promise.all(excluirCrudos.map(aInglesConCache));
+  const candidatas = recetas.slice(0, LIMITE_AVANZADO);
+  const sinDato = recetas.length - candidatas.length; // fuera del cap
+
+  const detalles = await Promise.all(candidatas.map((r) => detallePorId(r.id).catch(() => null)));
+
+  const pasan = [];
+  candidatas.forEach((resumen, i) => {
+    const detalle = detalles[i];
+    if (!detalle) {
+      return; // sin detalle no se puede evaluar → se reporta como sin dato
+    }
+    const nombres = (detalle.ingredientes || []).map((x) => x.nombre.toLowerCase());
+    if (excluidosIngles.some((x) => nombres.includes(x.toLowerCase()))) return;
+
+    if (dieta === 'vegetariana') {
+      const etiquetas = (detalle.etiquetas || []).map((t) => t.toLowerCase());
+      const esVegetariana =
+        (detalle.categoria || '').toLowerCase() === 'vegetarian' ||
+        etiquetas.includes('vegetarian');
+      if (!esVegetariana) return;
+    }
+    if (dieta === 'vegana') {
+      const etiquetas = (detalle.etiquetas || []).map((t) => t.toLowerCase());
+      if (!etiquetas.includes('vegan')) return;
+    }
+    pasan.push(resumen);
+  });
+
+  const fallidos = detalles.filter((d) => !d).length;
+  return { recetas: pasan, sinDato: sinDato + fallidos };
+}
+
 /** GET /api/search?q=pollo — búsqueda por nombre (acepta español o inglés). */
 router.get('/', async (req, res, next) => {
   try {
@@ -53,8 +112,9 @@ router.get('/', async (req, res, next) => {
       return res.status(400).json({ error: 'Escribe al menos 2 caracteres para buscar' });
     }
     const recetas = await traducirResumenes(await buscarPorNombre(await aInglesConCache(q)));
+    const { recetas: filtradas, sinDato } = await filtrarAvanzado(recetas, req.query);
     guardarHistorial(req, [q]);
-    return res.json({ recetas, total: recetas.length });
+    return res.json({ recetas: filtradas, total: filtradas.length, sin_dato: sinDato });
   } catch (err) {
     return next(err);
   }
@@ -98,12 +158,13 @@ router.get('/sugerencias', async (req, res, next) => {
       return res.status(400).json({ error: 'Agrega al menos un ingrediente' });
     }
 
-    const [recetas, chef] = await Promise.all([
-      sugerenciasSinIA(await Promise.all(ingredientes.map(aInglesConCache))).then(
-        traducirResumenes,
-      ),
+    const [recetasBrutas, chef] = await Promise.all([
+      sugerenciasSinIA(await Promise.all(ingredientes.map(aInglesConCache))),
       ideasDelChef(ingredientes, req.query.rest ? String(req.query.rest) : null),
     ]);
+    // RF-10: excluir/dieta se resuelven sobre el detalle (0 coste sin parámetros)
+    const { recetas: recetasFiltradas, sinDato } = await filtrarAvanzado(recetasBrutas, req.query);
+    const recetas = await traducirResumenes(recetasFiltradas);
 
     guardarHistorial(req, ingredientes);
     return res.json({
@@ -112,6 +173,7 @@ router.get('/sugerencias', async (req, res, next) => {
       fuente: chef.fuente, // 'openai' | 'gemini' | 'ninguna'
       total: recetas.length,
       ingredientes,
+      sin_dato: sinDato,
     });
   } catch (err) {
     return next(err);
@@ -145,13 +207,14 @@ router.get('/categorias', async (req, res, next) => {
       return res.status(400).json({ error: 'Elige una categoría o un área' });
     }
     // El cliente envía los valores en español (los mismos de /filtros)
-    const recetas = await traducirResumenes(
-      await explorar({
-        categoria: await aInglesConCache(categoria),
-        area: await aInglesConCache(area),
-      }),
-    );
-    return res.json({ recetas, total: recetas.length });
+    const recetasBrutas = await explorar({
+      categoria: await aInglesConCache(categoria),
+      area: await aInglesConCache(area),
+    });
+    // RF-10: excluir/dieta sobre el detalle (Explorar devuelve resúmenes)
+    const { recetas: recetasFiltradas, sinDato } = await filtrarAvanzado(recetasBrutas, req.query);
+    const recetas = await traducirResumenes(recetasFiltradas);
+    return res.json({ recetas, total: recetas.length, sin_dato: sinDato });
   } catch (err) {
     return next(err);
   }

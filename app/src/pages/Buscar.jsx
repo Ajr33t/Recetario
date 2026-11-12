@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../services/api.js';
+import {
+  obtenerHistorial,
+  guardarBusqueda,
+  vaciarHistorial,
+} from '../services/historialBusquedas.js';
 import CampoAutocomplete from '../components/search/CampoAutocomplete.jsx';
 
 const MODOS = [
@@ -27,6 +32,15 @@ export default function Buscar() {
   const [areaSel, setAreaSel] = useState('');
   const [filtrosCargando, setFiltrosCargando] = useState(false);
   const [filtrosError, setFiltrosError] = useState(false);
+
+  // Filtros avanzados (RF-10 — Fase 9): se envían al servidor
+  const [excluidos, setExcluidos] = useState([]);
+  const [textoExcluido, setTextoExcluido] = useState('');
+  const [dieta, setDieta] = useState('');
+  const [sinDato, setSinDato] = useState(0);
+
+  // Historial de búsquedas (RF-11 — Fase 9): repetir con un clic
+  const [historial, setHistorial] = useState(() => obtenerHistorial());
 
   const [resultados, setResultados] = useState(null); // null = sin buscar
   const [ideas, setIdeas] = useState([]);
@@ -77,30 +91,101 @@ export default function Buscar() {
     setIngredientes((prev) => prev.filter((i) => i !== ing));
   }
 
-  async function ejecutar(event) {
-    event.preventDefault();
+  /** Repite una búsqueda del historial con un clic (RF-11). */
+  async function repetir(h) {
+    setModo(h.tipo);
+    setError('');
+    if (h.tipo === 'ingredientes') {
+      setIngredientes(h.ingredientes);
+      await ejecutar(null, { modo: 'ingredientes', ingredientes: h.ingredientes });
+    } else if (h.tipo === 'nombre') {
+      setNombre(h.nombre);
+      await ejecutar(null, { modo: 'nombre', nombre: h.nombre });
+    } else {
+      setCategoriaSel(h.categoria || '');
+      setAreaSel(h.area || '');
+      await ejecutar(null, { modo: 'categorias', categoria: h.categoria, area: h.area });
+    }
+  }
+
+  /** Agrega/quita ingredientes excluidos (RF-10) y re-filtra si ya hay resultados. */
+  function agregarExcluido() {
+    const valor = textoExcluido.trim().toLowerCase();
+    if (!valor || excluidos.includes(valor)) {
+      setTextoExcluido('');
+      return;
+    }
+    const nuevos = [...excluidos, valor].slice(0, 8);
+    setExcluidos(nuevos);
+    setTextoExcluido('');
+    if (resultados !== null) ejecutar(null, { excluir: nuevos });
+  }
+
+  function quitarExcluido(valor) {
+    const nuevos = excluidos.filter((e) => e !== valor);
+    setExcluidos(nuevos);
+    if (resultados !== null) ejecutar(null, { excluir: nuevos });
+  }
+
+  function cambiarDieta(valor) {
+    setDieta(valor);
+    if (resultados !== null) ejecutar(null, { dieta: valor });
+  }
+
+  /**
+   * Ejecuta la búsqueda. `extras` permite re-ejecutar con valores que
+   * aún no llegaron al estado (historial, filtros avanzados) sin leer
+   * valores obsoletos del cierre.
+   */
+  async function ejecutar(event, extras = {}) {
+    event?.preventDefault?.();
+    const modoActivo = extras.modo ?? modo;
+    const ingActuales = extras.ingredientes ?? ingredientes;
+    const nombreActivo = extras.nombre ?? nombre;
+    const categoriaActiva = extras.categoria ?? categoriaSel;
+    const areaActiva = extras.area ?? areaSel;
+    const excluidosActuales = extras.excluir ?? excluidos;
+    const dietaActual = extras.dieta ?? dieta;
+
     setError('');
     setIdeas([]);
     setCargando(true);
+
+    /** Monta los parámetros de los filtros avanzados (RF-10). */
+    const conFiltros = (params) => {
+      if (excluidosActuales.length) params.set('excluir', excluidosActuales.join(','));
+      if (dietaActual) params.set('dieta', dietaActual);
+      return params;
+    };
+
+    /** Guarda la búsqueda exitosa en el historial (RF-11). */
+    const enHistorial = (entrada) => setHistorial(guardarBusqueda(entrada));
+
     try {
-      if (modo === 'ingredientes') {
-        if (ingredientes.length === 0) {
+      if (modoActivo === 'ingredientes') {
+        if (ingActuales.length === 0) {
           setError('Agrega al menos un ingrediente para buscar.');
           setResultados(null);
           return;
         }
         const datos = await api.get(
-          `/search/sugerencias?i=${encodeURIComponent(ingredientes.join(','))}`,
+          `/search/sugerencias?${conFiltros(new URLSearchParams({ i: ingActuales.join(',') }))}`,
         );
         setResultados(datos.recetas);
         setIdeas(datos.ideas || []);
         setFuenteIA(datos.fuente || 'ninguna');
+        setSinDato(datos.sin_dato || 0);
+        enHistorial({
+          tipo: 'ingredientes',
+          etiqueta: ingActuales.join(', '),
+          ingredientes: ingActuales,
+        });
         // Guarda los ingredientes disponibles: el detalle de receta los usa
         // para marcar en rojo los ingredientes que te faltan (Fase 5)
         try {
           sessionStorage.setItem(
             'sazonlab:ingredientes',
-            JSON.stringify(ingredientes.map((i) => i.toLowerCase())),
+            JSON.stringify(ingActuales.map((i) => i.toLowerCase())),
           );
         } catch {
           /* almacenamiento no disponible: se omite sin romper la búsqueda */
@@ -108,31 +193,43 @@ export default function Buscar() {
         return;
       }
 
-      if (modo === 'nombre') {
-        const q = nombre.trim();
+      if (modoActivo === 'nombre') {
+        const q = nombreActivo.trim();
         if (q.length < 2) {
           setError('Escribe al menos 2 caracteres para buscar.');
           setResultados(null);
           return;
         }
-        const datos = await api.get(`/search?q=${encodeURIComponent(q)}`);
+        const datos = await api.get(`/search?${conFiltros(new URLSearchParams({ q }))}`);
         setResultados(datos.recetas);
+        setSinDato(datos.sin_dato || 0);
+        enHistorial({ tipo: 'nombre', etiqueta: q, nombre: q });
         return;
       }
 
       // categorías
-      if (!categoriaSel && !areaSel) {
+      if (!categoriaActiva && !areaActiva) {
         setError('Elige una categoría o un área para explorar.');
         setResultados(null);
         return;
       }
-      const consulta = categoriaSel
-        ? `c=${encodeURIComponent(categoriaSel)}`
-        : `a=${encodeURIComponent(areaSel)}`;
-      const datos = await api.get(`/search/categorias?${consulta}`);
+      const consulta = categoriaActiva
+        ? `c=${encodeURIComponent(categoriaActiva)}`
+        : `a=${encodeURIComponent(areaActiva)}`;
+      const datos = await api.get(
+        `/search/categorias?${conFiltros(new URLSearchParams(consulta))}`,
+      );
       setResultados(datos.recetas);
+      setSinDato(datos.sin_dato || 0);
+      enHistorial({
+        tipo: 'categorias',
+        etiqueta: categoriaActiva || areaActiva,
+        categoria: categoriaActiva,
+        area: areaActiva,
+      });
     } catch (err) {
       setResultados(null);
+      setSinDato(0);
       setError(
         err instanceof ApiError
           ? err.message
@@ -292,6 +389,79 @@ export default function Buscar() {
           </fieldset>
         )}
 
+        {/* Filtros avanzados (RF-10): excluidos + dieta */}
+        <div
+          className="grid gap-3 sm:grid-cols-2"
+          role="group"
+          aria-labelledby="filtros-avanzados-titulo"
+        >
+          <p id="filtros-avanzados-titulo" className="text-sm font-medium sm:col-span-2">
+            <i className="fa-solid fa-filter text-primary" aria-hidden="true" /> Filtros avanzados
+          </p>
+          <div>
+            <label htmlFor="excluir-input" className="mb-1 block text-sm">
+              Ingredientes excluidos
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="excluir-input"
+                type="text"
+                className="field"
+                value={textoExcluido}
+                onChange={(e) => setTextoExcluido(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    agregarExcluido();
+                  }
+                }}
+                placeholder="Ej. camarón, huevo…"
+                autoComplete="off"
+              />
+              <button type="button" className="btn-secondary !px-3" onClick={agregarExcluido}>
+                <i className="fa-solid fa-plus" aria-hidden="true" /> Agregar
+              </button>
+            </div>
+            {excluidos.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2" role="list" aria-label="Excluidos">
+                {excluidos.map((e) => (
+                  <li key={e}>
+                    <span className="chip">
+                      {e}
+                      <button
+                        type="button"
+                        className="ml-1 rounded-full px-1 hover:text-danger"
+                        aria-label={`Quitar excluido ${e}`}
+                        onClick={() => quitarExcluido(e)}
+                      >
+                        <i className="fa-solid fa-xmark" aria-hidden="true" />
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <label htmlFor="dieta-select" className="mb-1 block text-sm">
+              Dieta
+            </label>
+            <select
+              id="dieta-select"
+              className="field"
+              value={dieta}
+              onChange={(e) => cambiarDieta(e.target.value)}
+            >
+              <option value="">Cualquiera</option>
+              <option value="vegetariana">Vegetariana</option>
+              <option value="vegana">Vegana</option>
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Filtra por la categoría/etiquetas que informa TheMealDB.
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
@@ -311,6 +481,36 @@ export default function Buscar() {
           )}
         </div>
       </form>
+
+      {/* Historial de búsquedas (RF-11) — repetir con un clic */}
+      {historial.length > 0 && (
+        <section className="surface-section" aria-labelledby="historial-titulo">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="historial-titulo" className="text-base">
+              <i className="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true" />{' '}
+              Búsquedas recientes
+            </h2>
+            <button
+              type="button"
+              className="btn-ghost !px-3 !text-xs"
+              onClick={() => {
+                setHistorial(vaciarHistorial());
+              }}
+            >
+              <i className="fa-solid fa-trash" aria-hidden="true" /> Vaciar historial
+            </button>
+          </div>
+          <ul className="mt-3 flex flex-wrap gap-2" role="list">
+            {historial.map((h) => (
+              <li key={h.clave}>
+                <button type="button" className="chip" onClick={() => repetir(h)}>
+                  <i className="fa-solid fa-magnifying-glass" aria-hidden="true" /> {h.etiqueta}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Idea del chef (IA cuando hay clave; si no, aviso discreto) */}
       {ideas.length > 0 && (
@@ -334,6 +534,15 @@ export default function Buscar() {
 
       <section aria-labelledby="resultados-titulo">
         <h2 id="resultados-titulo">Resultados{resultados ? ` (${resultados.length})` : ''}</h2>
+
+        {/* Aviso de datos no evaluables (RF-10): nunca se filtra en silencio */}
+        {resultados && sinDato > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground" role="status">
+            <i className="fa-solid fa-circle-info text-primary" aria-hidden="true" /> {sinDato}{' '}
+            receta{sinDato === 1 ? '' : 's'} sin detalle para evaluar los filtros avanzados (cap de
+            40 por consulta): quita los filtros si quieres verlas.
+          </p>
+        )}
 
         {resultados === null && !cargando && (
           <div className="glass-card mt-3 flex flex-col items-center gap-2 py-10 text-center">

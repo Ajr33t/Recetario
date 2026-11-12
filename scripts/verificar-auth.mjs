@@ -3,7 +3,8 @@
  * Contra http://localhost:3001 (requisito: `npm run dev:server` corriendo).
  *
  * Flujo: registro → login → /me → perfil → cambiar contraseña →
- * recuperación por código → recetas CRUD → controles de seguridad (401/403).
+ * recuperación por código → recetas CRUD → controles de seguridad (401/403)
+ * → panel de administración RF-22 (roles, inactivación, revocación).
  * Uso: npm run verificar:auth
  */
 const BASE = process.env.API_URL || 'http://localhost:3001/api';
@@ -225,6 +226,147 @@ async function main() {
     'la receta ya no aparece en la lista activa',
     !listaTras.datos?.recetas?.some((r) => r.id === idReceta),
   );
+
+  // 10) Panel de administración (RF-22 — Fase 9)
+  const ADMIN_CORREO = process.env.ADMIN_CORREO || 'admin@sazonlab.test';
+  const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'SazonLab-Admin-2026';
+
+  const loginAdmin = await llamar('POST', '/auth/login', {
+    body: { correo: ADMIN_CORREO, contrasena: ADMIN_PASS },
+  });
+  check(
+    'login de administrador (seed)',
+    loginAdmin.status === 200 && loginAdmin.datos?.usuario?.rol === 'admin',
+    `status=${loginAdmin.status} rol=${loginAdmin.datos?.usuario?.rol}`,
+  );
+  const tokenAdmin = loginAdmin.datos?.token;
+  if (!tokenAdmin) {
+    console.log('  (se omite la sección admin: no hay cuenta admin — reinicia dev:server)');
+  } else {
+    const listaAdmin = await llamar('GET', '/admin/usuarios', { token: tokenAdmin });
+    check(
+      'GET /admin/usuarios lista cuentas',
+      listaAdmin.status === 200 && listaAdmin.datos?.usuarios?.length >= 1,
+      `status=${listaAdmin.status} total=${listaAdmin.datos?.usuarios?.length}`,
+    );
+
+    const sinTokenAdmin = await llamar('GET', '/admin/usuarios');
+    check(
+      'GET /admin/usuarios sin token → 401',
+      sinTokenAdmin.status === 401,
+      `status=${sinTokenAdmin.status}`,
+    );
+    const comoUsuario = await llamar('GET', '/admin/usuarios', { token: tokenFinal });
+    check(
+      'GET /admin/usuarios con rol usuario → 403',
+      comoUsuario.status === 403,
+      `status=${comoUsuario.status}`,
+    );
+
+    // Crear cuenta desde el panel
+    const correoAdminCreado = `test-admin-${Date.now()}@sazonlab.test`;
+    const crearCuenta = await llamar('POST', '/admin/usuarios', {
+      token: tokenAdmin,
+      body: {
+        nombre: 'Creada por panel',
+        correo: correoAdminCreado,
+        contrasena: 'panel-clave-99',
+        rol: 'usuario',
+      },
+    });
+    check(
+      'POST /admin/usuarios crea cuenta',
+      crearCuenta.status === 201 && crearCuenta.datos?.usuario?.rol === 'usuario',
+      `status=${crearCuenta.status}`,
+    );
+    const idCreada = crearCuenta.datos?.usuario?.id;
+
+    const dupAdmin = await llamar('POST', '/admin/usuarios', {
+      token: tokenAdmin,
+      body: { nombre: 'Dup', correo, contrasena: 'x'.repeat(10), rol: 'usuario' },
+    });
+    check(
+      'POST /admin/usuarios correo duplicado → 409',
+      dupAdmin.status === 409,
+      `status=${dupAdmin.status}`,
+    );
+
+    const crearComoUsuario = await llamar('POST', '/admin/usuarios', {
+      token: tokenFinal,
+      body: { nombre: 'X', correo: `x-${Date.now()}@t.test`, contrasena: 'x'.repeat(10) },
+    });
+    check(
+      'POST /admin/usuarios con rol usuario → 403',
+      crearComoUsuario.status === 403,
+      `status=${crearComoUsuario.status}`,
+    );
+
+    // Protección de la propia cuenta: no auto-degradarse
+    const idAdmin = loginAdmin.datos?.usuario?.id;
+    const autoDegradar = await llamar('PATCH', `/admin/usuarios/${idAdmin}`, {
+      token: tokenAdmin,
+      body: { rol: 'usuario' },
+    });
+    check(
+      'PATCH auto-degradarse → 400',
+      autoDegradar.status === 400,
+      `status=${autoDegradar.status}`,
+    );
+
+    // Cambiar rol de la cuenta creada
+    const cambiarRol = await llamar('PATCH', `/admin/usuarios/${idCreada}`, {
+      token: tokenAdmin,
+      body: { rol: 'admin' },
+    });
+    check(
+      'PATCH cambia rol a admin',
+      cambiarRol.status === 200 && cambiarRol.datos?.usuario?.rol === 'admin',
+      `status=${cambiarRol.status}`,
+    );
+    const volverUsuario = await llamar('PATCH', `/admin/usuarios/${idCreada}`, {
+      token: tokenAdmin,
+      body: { rol: 'usuario' },
+    });
+    check('PATCH vuelve a usuario', volverUsuario.status === 200, `status=${volverUsuario.status}`);
+
+    // Inactivar: revoca el acceso de inmediato (JWT vigente incluido)
+    const tokenCreada = (
+      await llamar('POST', '/auth/login', {
+        body: { correo: correoAdminCreado, contrasena: 'panel-clave-99' },
+      })
+    ).datos?.token;
+    check('la cuenta creada puede iniciar sesión', Boolean(tokenCreada));
+
+    const desactivar = await llamar('PATCH', `/admin/usuarios/${idCreada}`, {
+      token: tokenAdmin,
+      body: { estado: 'inactivo' },
+    });
+    check('PATCH inactiva la cuenta', desactivar.status === 200, `status=${desactivar.status}`);
+
+    if (tokenCreada) {
+      const revocado = await llamar('GET', '/auth/me', { token: tokenCreada });
+      check(
+        'token vigente de cuenta inactiva → 401 (revocación inmediata)',
+        revocado.status === 401,
+        `status=${revocado.status}`,
+      );
+    }
+    const loginInactiva = await llamar('POST', '/auth/login', {
+      body: { correo: correoAdminCreado, contrasena: 'panel-clave-99' },
+    });
+    check(
+      'login de cuenta inactiva → 403',
+      loginInactiva.status === 403,
+      `status=${loginInactiva.status}`,
+    );
+
+    // Reactivar para dejar la BD limpia
+    const reactivar = await llamar('PATCH', `/admin/usuarios/${idCreada}`, {
+      token: tokenAdmin,
+      body: { estado: 'activo' },
+    });
+    check('PATCH reactiva la cuenta', reactivar.status === 200, `status=${reactivar.status}`);
+  }
 
   console.log(
     `\nResultado: ${fallos === 0 ? 'TODAS LAS COMPROBACIONES PASAN ✅' : `${fallos} FALLO(S) ❌`}`,

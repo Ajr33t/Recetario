@@ -8,6 +8,9 @@
  *  5. Checklist de ingredientes en el detalle (marca + persistencia).
  *  6. Explorar: solo áreas con recetas y la búsqueda devuelve resultados.
  *  7. Página /medidas: conversor funcional y tablas es/en.
+ *  8. RF-10 (Fase 9): filtros avanzados en Buscar (excluidos/dieta) y
+ *     filtros de tiempo/dificultad/texto/etiqueta en Mis recetas.
+ *  9. RF-11 (Fase 9): historial de búsquedas con repetición y vaciado.
  * Requisitos: `npm run dev:app` + `npm run dev:server` y red (registro).
  * Uso: npm run verificar:ui-f5
  */
@@ -267,6 +270,130 @@ app.whenReady().then(async () => {
     `n=${resultadosExplorar}`,
   );
 
+  // ── 9) RF-10 (Fase 9): filtros avanzados en Buscar ──
+  const filtrosAv = await leer(`(() => {
+    const grupo = [...document.querySelectorAll('p')].find(p => /Filtros avanzados/.test(p.textContent));
+    const excluir = document.querySelector('#excluir-input');
+    const dieta = document.querySelector('#dieta-select');
+    return JSON.stringify({
+      presente: Boolean(grupo),
+      excluir: Boolean(excluir),
+      dieta: Boolean(dieta),
+      opciones: dieta ? [...dieta.options].map(o => o.value).filter(Boolean) : [],
+    });
+  })()`);
+  const fa = JSON.parse(filtrosAv);
+  check('RF-10: bloque «Filtros avanzados» en Buscar', fa.presente === true);
+  check('RF-10: campo de ingredientes excluidos', fa.excluir === true);
+  check(
+    'RF-10: select de dieta (vegetariana/vegana)',
+    fa.dieta && fa.opciones.includes('vegetariana') && fa.opciones.includes('vegana'),
+    fa.opciones.join(','),
+  );
+
+  // ── 10) RF-11 (Fase 9): historial de búsquedas ──
+  // Recarga limpia: los resultados empiezan vacíos, el historial persiste
+  await abrir('/buscar');
+  const hist = await leer(`(() => {
+    const h = [...document.querySelectorAll('h2')].find(x => /Búsquedas recientes/.test(x.textContent));
+    if (!h) return JSON.stringify({ presente: false });
+    const sec = h.closest('section');
+    const chips = [...sec.querySelectorAll('ul button')];
+    return JSON.stringify({
+      presente: true,
+      n: chips.length,
+      etiqueta: chips[0]?.textContent.trim() || '',
+      vaciar: [...sec.querySelectorAll('button')].some(b => /Vaciar historial/.test(b.textContent)),
+    });
+  })()`);
+  const hh = JSON.parse(hist);
+  check('RF-11: sección «Búsquedas recientes»', hh.presente === true);
+  check('RF-11: al menos una búsqueda guardada', hh.n >= 1, `n=${hh.n}`);
+  check('RF-11: botón «Vaciar historial»', hh.vaciar === true);
+
+  if (hh.n > 0) {
+    await leer(`(() => {
+      const h = [...document.querySelectorAll('h2')].find(x => /Búsquedas recientes/.test(x.textContent));
+      h.closest('section').querySelector('ul button').click();
+      return true;
+    })()`);
+    let repetidas = 0;
+    for (let i = 0; i < 20 && repetidas === 0; i++) {
+      await dormir(1000);
+      repetidas = await leer(`(() => {
+        const h2 = [...document.querySelectorAll('h2')].find(x => /Resultados/.test(x.textContent))?.textContent || '';
+        const m = h2.match(/\\((\\d+)\\)/);
+        return m ? Number(m[1]) : 0;
+      })()`);
+    }
+    check('RF-11: repetir búsqueda con un clic trae resultados', repetidas > 0, `n=${repetidas}`);
+  }
+
+  // ── 11) RF-10 en Mis recetas: tiempo/dificultad/texto/etiqueta ──
+  await abrir('/mis-recetas');
+  const barra = await leer(`(() => {
+    const h = [...document.querySelectorAll('h2')].find(x => /Filtrar recetas/.test(x.textContent));
+    const selects = [...document.querySelectorAll('main select')];
+    const tiempo = selects.find(s => [...s.options].some(o => /Hasta 30 min/.test(o.textContent)));
+    const dificultad = selects.find(s => [...s.options].some(o => o.value === 'facil'));
+    const etiqueta = selects.find(s => [...s.options].some(o => o.value === '' && /Cualquiera/.test(o.textContent)) && [...s.options].length <= 2);
+    return JSON.stringify({
+      presente: Boolean(h),
+      tiempo: Boolean(tiempo),
+      dificultad: Boolean(dificultad),
+      texto: Boolean(document.querySelector('main input[type=search]')),
+      etiqueta: Boolean(etiqueta),
+    });
+  })()`);
+  const fb = JSON.parse(barra);
+  check('RF-10: barra «Filtrar recetas» en Mis recetas', fb.presente === true);
+  check('RF-10: filtros de tiempo y dificultad', fb.tiempo && fb.dificultad);
+  check('RF-10: filtros de texto y etiqueta', fb.texto && fb.etiqueta);
+
+  // Dificultad fácil: la receta de prueba es «media» → estado vacío
+  await leer(`(() => {
+    const s = [...document.querySelectorAll('main select')].find(x => [...x.options].some(o => o.value === 'facil'));
+    const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set;
+    set.call(s, 'facil');
+    s.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  })()`);
+  await dormir(600);
+  let trasFiltro = await leer('document.body.innerText');
+  check(
+    'RF-10: dificultad que no coincide → estado vacío visible',
+    /Ninguna receta pasa los filtros/.test(trasFiltro),
+  );
+
+  // Dificultad media: vuelve a verse la receta con aviso «Mostrando 1 de 1»
+  await leer(`(() => {
+    const s = [...document.querySelectorAll('main select')].find(x => [...x.options].some(o => o.value === 'facil'));
+    const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set;
+    set.call(s, 'media');
+    s.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  })()`);
+  await dormir(600);
+  trasFiltro = await leer('document.body.innerText');
+  check(
+    'RF-10: dificultad media muestra la receta con recuento',
+    /Mostrando 1 de 1 recetas/.test(trasFiltro) && /Tarta de chocolate/.test(trasFiltro),
+  );
+
+  // Limpiar filtros restaura la lista completa
+  const hayLimpiar = await leer(
+    `[...document.querySelectorAll('main button')].some(b => /Limpiar filtros/.test(b.textContent))`,
+  );
+  check('RF-10: botón «Limpiar filtros»', hayLimpiar === true);
+  await leer(
+    `[...document.querySelectorAll('main button')].find(b => /Limpiar filtros/.test(b.textContent))?.click(); true`,
+  );
+  await dormir(600);
+  const trasLimpiar = await leer(
+    `[...document.querySelectorAll('main button')].some(b => /Limpiar filtros/.test(b.textContent))`,
+  );
+  check('RF-10: limpiar restaura la lista (oculta el botón)', trasLimpiar === false);
+
   // ── 8) Página /medidas: conversor + tablas ──
   await abrir('/medidas');
   const medidasPag = await leer(`(() => {
@@ -297,6 +424,77 @@ app.whenReady().then(async () => {
     /473[.,]176/.test(convertido),
     convertido.trim().slice(0, 70),
   );
+
+  // ── 12) RF-22 (Fase 9): panel de administración ──
+  // 12a) Con sesión de usuario normal → acceso denegado
+  await abrir('/admin');
+  texto = await leer('document.body.innerText');
+  check(
+    'RF-22: usuario normal ve acceso denegado en /admin',
+    /solo para administradores/.test(texto),
+  );
+  const sinItemAdmin = await leer(
+    `![...document.querySelectorAll('aside a')].some(a => /Administración/.test(a.textContent))`,
+  );
+  check('RF-22: el sidebar no muestra «Administración» a usuarios', sinItemAdmin === true);
+
+  // 12b) Con sesión de admin → formulario + listado + item en el sidebar
+  const loginAdmin = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      correo: process.env.ADMIN_CORREO || 'admin@sazonlab.test',
+      contrasena: process.env.ADMIN_PASSWORD || 'SazonLab-Admin-2026',
+    }),
+  }).then((r) => r.json());
+  check('RF-22: login de administrador para la UI', Boolean(loginAdmin.token));
+
+  if (loginAdmin.token) {
+    const authAdmin = JSON.stringify({
+      state: { token: loginAdmin.token, usuario: loginAdmin.usuario },
+      version: 0,
+    });
+    await win.loadURL('http://localhost:5173/#/admin');
+    await dormir(700);
+    await win.webContents.executeJavaScript(
+      `localStorage.setItem('sazonlab-auth', ${JSON.stringify(authAdmin)}); true;`,
+    );
+    await win.webContents.reload();
+    await dormir(2600);
+
+    const panel = await leer(`(() => {
+      const cuerpo = document.body.innerText;
+      return JSON.stringify({
+        titulo: /Administración/.test(cuerpo),
+        crear: Boolean([...document.querySelectorAll('form')].some(f => /Crear cuenta/.test(f.textContent))),
+        tabla: Boolean([...document.querySelectorAll('h2')].find(h => /Usuarios registrados/.test(h.textContent))),
+        filas: document.querySelectorAll('main tbody tr').length,
+        sidebar: [...document.querySelectorAll('aside a')].some(a => /Administración/.test(a.textContent)),
+      });
+    })()`);
+    const pf = JSON.parse(panel);
+    check('RF-22: /admin muestra el título', pf.titulo === true);
+    check('RF-22: formulario «Crear usuario»', pf.crear === true);
+    check('RF-22: tabla de usuarios con filas', pf.tabla && pf.filas >= 1, `filas=${pf.filas}`);
+    check('RF-22: ítem «Administración» en el sidebar del admin', pf.sidebar === true);
+
+    // axe-core sobre el panel (gate: nada serious/critical)
+    const axeSrc = require('axe-core').source;
+    await win.webContents.executeJavaScript(axeSrc, true);
+    const axeRes = JSON.parse(
+      await win.webContents.executeJavaScript(`axe.run(document, {
+        resultTypes: ['violations']
+      }).then(r => JSON.stringify(r.violations.map(v => ({
+        id: v.id, impact: v.impact, nodos: v.nodes.length
+      }))))`),
+    );
+    const graves = axeRes.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    check(
+      'RF-22: panel /admin sin violaciones serious/critical (axe)',
+      graves.length === 0,
+      JSON.stringify(axeRes).slice(0, 160),
+    );
+  }
 
   console.log(`\n${fallos === 0 ? 'TODOS LOS CHECKS PASARON' : `${fallos} CHECK(S) FALLARON`}`);
   app.exit(fallos > 0 ? 1 : 0);

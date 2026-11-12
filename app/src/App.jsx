@@ -19,6 +19,7 @@ import Medidas from './pages/Medidas.jsx';
 import Ajustes from './pages/Ajustes.jsx';
 import Login from './pages/Login.jsx';
 import Perfil from './pages/Perfil.jsx';
+import Admin from './pages/Admin.jsx';
 import Legal from './pages/Legal.jsx';
 
 export default function App() {
@@ -52,6 +53,8 @@ export default function App() {
             <Route path="/ajustes" element={<Ajustes />} />
             <Route path="/login" element={<Login />} />
             <Route path="/perfil" element={<Perfil />} />
+            {/* Panel de administración (RF-22) — solo rol admin */}
+            <Route path="/admin" element={<Admin />} />
             {/* Páginas legales — Fase 7 */}
             <Route path="/privacidad" element={<Legal tipo="privacidad" />} />
             <Route path="/terminos" element={<Legal tipo="terminos" />} />

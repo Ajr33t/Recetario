@@ -7,6 +7,7 @@ import authRouter from './routes/auth.js';
 import recipesRouter from './routes/recipes.js';
 import searchRouter from './routes/search.js';
 import favoritesRouter from './routes/favorites.js';
+import adminRouter from './routes/admin.js';
 import { sondearCobertura } from './services/coberturaAreas.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -21,6 +22,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/recipes', recipesRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/favorites', favoritesRouter);
+app.use('/api/admin', adminRouter);
 
 // 404 y manejo de errores centralizado
 app.use(notFound);

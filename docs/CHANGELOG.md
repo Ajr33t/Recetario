@@ -266,4 +266,26 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
-*(Las fases siguientes se agregarán aquí conforme se completen.)*
+## [Fase 9] — 11/11/2026 — Pruebas finales, corrección de hallazgos e INFORME_FINAL (Sprint 11 · Hito 12)
+
+### Agregado
+- **RF-22 — Panel de administración**: `server/src/routes/admin.js` (`GET/POST/PATCH /api/admin/usuarios`) con middleware `requireRole('admin')` + re-validación del rol/estado en la BD por petición (defensa contra JWT antiguos), protección de la propia cuenta (no auto-degradarse/desactivarse → siempre queda ≥ 1 admin) y auditoría de cada operación. Seed `asegurarAdmin()` en `initDatabase()`: `admin@sazonlab.test` / `SazonLab-Admin-2026` (sobrecribible con `ADMIN_CORREO`/`ADMIN_PASSWORD`).
+- **RF-22 — UI**: `app/src/pages/Admin.jsx` (ruta `/admin`) con creación de cuentas y tabla de usuarios (rol con SweetAlert2, inactivar/activar explicando la revocación inmediata); ítem «Administración» en el sidebar solo para `rol === 'admin'`; vista de acceso denegado para el resto.
+- **Revocación inmediata de sesiones**: `requireAuth` revalida `users.estado` en cada petición → desactivar una cuenta invalida sus JWT vigentes (401) y bloquea el login (403).
+- **RF-10 — Filtros avanzados**: `filtrarAvanzado()` en `server/src/routes/search.js` (excluidos + dieta vegetariana/vegana sobre el detalle enriquecido, cap 40, aviso `sin_dato`, coste 0 sin parámetros) aplicado a `/search`, `/search/sugerencias` y `/search/categorias`; UI de chips de excluidos + select de dieta en Buscar (re-búsqueda automática) y barra de filtros en Mis recetas (texto, tiempo máximo, dificultad, etiqueta) con recuento transparente y estado vacío.
+- **RF-11 — Historial de búsquedas**: `app/src/services/historialBusquedas.js` (localStorage, tope 8, deduplicado) + sección «Búsquedas recientes» en Buscar con repetición en un clic y «Vaciar historial».
+- **`docs/INFORME_FINAL.md`**: cumplimiento **25/25 RF**, arquitectura, batería final, manual de usuario, lecciones aprendidas y pendientes.
+- **`docs/informes/fase-9.md`**: informe de la fase (hallazgos de cumplimiento y su corrección).
+- Suites ampliadas: `verificar:auth` **26 → 41 checks** (flujo admin completo), `verificar:ui-f5` **37 → 58 checks** (RF-10, RF-11 y panel `/admin` con axe).
+
+### Cambiado
+- `README.md`: secciones de administración, filtros avanzados, historial, cuenta admin de demo y resultados de la batería.
+- `server/src/middleware/auth.js`: `requireAuth` pasa a consultar la BD (una fila por petición) y se añade `requireRole(...roles)`.
+
+### Resuelto
+- **Hallazgos de la revisión de cumplimiento**: RF-02 (parcial), RF-10 (parcial), RF-11 y RF-22 estaban asignados en el plan (fases 3/4) pero sin implementar → cerrados en este Sprint 11 («corrección de hallazgos»).
+- **Batería de cierre 100% en verde**: lint/format, 18 unitarias, 11 suites (373 checks), builds de app/landing/exe y endpoints 5173/3001/5174/robots.txt.
+
+---
+
+*(Proyecto cerrado — Fase 9 completa.)*
