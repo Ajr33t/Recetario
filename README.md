@@ -4,7 +4,7 @@ Aplicación de recetario digital que sugiere recetas según los ingredientes dis
 
 > 📄 Especificación de requisitos: [`docs/IEEE_Recetario_Inteligente.md`](docs/IEEE_Recetario_Inteligente.md)
 > 📈 Estado por fase: [`docs/CHANGELOG.md`](docs/CHANGELOG.md) · Informes: [`docs/informes/`](docs/informes/)
-> 🏁 **Informe final (25/25 RF):** [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md)
+> 🏁 **Informe final (25/25 RF):** [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md) · **Acta de cierre:** [`docs/ACTA_DE_CIERRE.md`](docs/ACTA_DE_CIERRE.md)
 
 ## 📦 Entregables
 

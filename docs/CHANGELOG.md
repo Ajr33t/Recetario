@@ -275,6 +275,7 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - **RF-10 — Filtros avanzados**: `filtrarAvanzado()` en `server/src/routes/search.js` (excluidos + dieta vegetariana/vegana sobre el detalle enriquecido, cap 40, aviso `sin_dato`, coste 0 sin parámetros) aplicado a `/search`, `/search/sugerencias` y `/search/categorias`; UI de chips de excluidos + select de dieta en Buscar (re-búsqueda automática) y barra de filtros en Mis recetas (texto, tiempo máximo, dificultad, etiqueta) con recuento transparente y estado vacío.
 - **RF-11 — Historial de búsquedas**: `app/src/services/historialBusquedas.js` (localStorage, tope 8, deduplicado) + sección «Búsquedas recientes» en Buscar con repetición en un clic y «Vaciar historial».
 - **`docs/INFORME_FINAL.md`**: cumplimiento **25/25 RF**, arquitectura, batería final, manual de usuario, lecciones aprendidas y pendientes.
+- **`docs/ACTA_DE_CIERRE.md`**: acta de cierre del proyecto (Hito 12) con la aprobación, los entregables oficiales, el resultado técnico y los pendientes fuera de alcance.
 - **`docs/informes/fase-9.md`**: informe de la fase (hallazgos de cumplimiento y su corrección).
 - Suites ampliadas: `verificar:auth` **26 → 41 checks** (flujo admin completo), `verificar:ui-f5` **37 → 58 checks** (RF-10, RF-11 y panel `/admin` con axe).
 
