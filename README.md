@@ -135,7 +135,7 @@ recetario/
 - 🌐 **Landing oficial** con captura real, «¿Cómo funciona?», SEO (JSON-LD/robots) y **páginas legales** (Privacidad/Términos) en app y landing
 - ⚖️ **Legales con normativa colombiana** en fuente única compartida: Ley 1581/2012, Ley 1480/2011 + 2439/2024, Ley 1755/2015, Ley 527/1999, Ley 1712/2014, Ley 1273/2009, Constitución (hábeas data) y SIC como autoridad de control
 - 🗑️ **Eliminar cuenta** desde la «Zona de peligro» del perfil con **código de confirmación de 6 dígitos enviado al correo** (SweetAlert2 en 3 pasos)
-- 🎨 **Logo propio** de SazónLab (SVG + favicon) e icono personalizado en el `.exe`
+- 🎨 **Logo propio** de SazónLab (SVG + favicon): **olla con vapor** en degradado ámbar/naranja, e icono personalizado en el `.exe`
 - 💎 Estilo Liquid Glass en toda la interfaz
 - 💻 **Modo offline real en el `.exe`**: API de Express embebida (puerto 4731), **SQLite local en `%APPDATA%\SazonLab`** y todos los assets compilados (CSS, Font Awesome, SweetAlert2, JS) dentro del instalador — sin instalar Node ni internet
 

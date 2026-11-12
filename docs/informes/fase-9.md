@@ -144,6 +144,7 @@ categoría y etiquetas). Por eso los filtros se reparten donde el dato existe:
 | «Cambia el logo» | El botón de cuenta y la cabecera del menú usan el **avatar real del usuario**: foto, o su icono de Font Awesome sobre el color elegido (icono genérico como respaldo) | `app/src/components/layout/AppHeader.jsx` |
 | «Pon el .exe visible» | La cabecera y el hero de la landing **descargan el instalador directamente**; la sección de descarga muestra nombre y tamaño; la demo web añade CTA «Descargar para Windows» en el inicio y el pie (oculto dentro del propio `.exe`) | `landing/src/App.jsx`, `app/src/pages/Home.jsx`, `app/src/components/layout/AppFooter.jsx`, `app/src/services/enlaces.js` |
 | `.exe` dentro de la carpeta | `npm run copiar:exe` deja el instalador en la **raíz del proyecto** y en `landing/public/` (se ejecuta al final de `build:exe`) | `scripts/copiar-exe.cjs`, `package.json` |
+| Nuevo logo (gorro de chef azul → olla con vapor ámbar) | Marca rediseñada en SVG y regenerada en cabeceras, favicons, PNG 512, icono de la app y del instalador NSIS | `assets/logo.svg`, `app/public/logo.svg`, `landing/public/logo.svg`, `landing/public/logo-512.png`, `desktop/build/icon.png` |
 
 Extras de accesibilidad del menú nuevo: `role="menu"`/`role="menuitem"`, `aria-expanded`,
 `aria-haspopup`, cierre con **Esc** que devuelve el foco al botón y cierre al pulsar fuera.
