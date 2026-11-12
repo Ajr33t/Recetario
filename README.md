@@ -11,7 +11,9 @@ Aplicación de recetario digital que sugiere recetas según los ingredientes dis
 - 📄 Documento IEEE (`docs/IEEE_Recetario_Inteligente.md`)
 - 🌐 Demo web funcional (`app/`)
 - 🖥️ Página web oficial / landing (`landing/`)
-- 💻 Aplicación de escritorio `.exe` (`desktop/`)
+- 💻 Aplicación de escritorio `.exe` (`desktop/`) → **`SazónLab-Setup-1.0.0.exe` en la raíz de la carpeta** (copia visible; también en `desktop/release/` y en `landing/public/` para la descarga web)
+
+> El instalador pesa ~124,7 MB, por eso **no se versiona en Git** (límite de 100 MB): se regenera con `npm run build:exe` y se deja en la raíz de la carpeta del proyecto.
 
 ## 🛠️ Stack
 
@@ -84,8 +86,9 @@ recetario/
 | `npm run dev:desktop`         | Electron en modo desarrollo                                   |
 | `npm run build:app`           | Build de producción de la demo                                |
 | `npm run build:landing`       | Build de la landing                                           |
-| `npm run build:exe`           | Build web + sincroniza + genera el `.exe` (NSIS)              |
+| `npm run build:exe`           | Build web + sincroniza + genera el `.exe` (NSIS) y lo copia   |
 | `npm run sincronizar:desktop` | Copia `app/dist` y `server/src` a `desktop/` (para el `.exe`) |
+| `npm run copiar:exe`          | Copia el `.exe` a la raíz del proyecto y a `landing/public/`  |
 | `npm run lint` / `lint:fix`   | ESLint                                                        |
 | `npm run format`              | Prettier                                                      |
 
@@ -116,6 +119,8 @@ recetario/
 - 🕘 **Historial de búsquedas**: «Búsquedas recientes» con repetición en un clic y vaciado (RF-11)
 - 🗂️ **Filtros avanzados**: ingredientes excluidos y dieta (vegetariana/vegana) en Buscar; tiempo, dificultad, texto y etiqueta en Mis recetas; categorías y solo las **áreas con recetas reales** en Explorar (RF-10)
 - 🛡️ **Panel de administración** (`/admin`, solo rol admin): crear cuentas, cambiar roles e inactivar/activar usuarios con revocación inmediata de sesiones (RF-02/RF-22)
+- 👤 **Menú de cuenta en la cabecera** (navbar): avatar del usuario (foto o icono con su color), **Mi perfil**, Mis recetas, Favoritos, Administración y Cerrar sesión — «Mi perfil» ya no está en el menú lateral
+- 💾 **Instalador `.exe` visible**: descarga directa desde la cabecera y el hero de la landing, y CTA «Descargar para Windows» en el inicio y el pie de la demo web
 - 📝 CRUD de recetas propias con **historial de versiones restaurables** y **papelera** (30 días)
 - ❤️ Favoritos (propias y de TheMealDB) e importación a tu colección
 - 📤 **Compartir**: enlace, receta como texto, **imagen PNG** y **PDF** con estilos y foto

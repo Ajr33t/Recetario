@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
 import { api } from '../services/api.js';
+import { EXE_URL, ES_ESCRITORIO } from '../services/enlaces.js';
 
 /** Respaldo estático si la API de recetas destacadas no responde. */
 const DESTACADAS_RESPALDO = [
@@ -104,6 +105,18 @@ export default function Home() {
               <i className="fa-solid fa-user-plus" aria-hidden="true" />
               Crear cuenta gratis
             </Link>
+          )}
+          {/* Instalador de escritorio: visible desde la demo web */}
+          {!ES_ESCRITORIO && (
+            <a
+              href={EXE_URL}
+              download="SazónLab-Setup-1.0.0.exe"
+              className="btn-ghost"
+              title="Descargar SazónLab para Windows (instalador .exe)"
+            >
+              <i className="fa-brands fa-windows" aria-hidden="true" />
+              Descargar para Windows
+            </a>
           )}
         </div>
       </section>

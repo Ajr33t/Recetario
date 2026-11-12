@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { EXE_URL, ES_ESCRITORIO } from '../../services/enlaces.js';
 
 /** <footer> con información legal, versión (CU-55) y accesibilidad. */
 export default function AppFooter() {
@@ -54,6 +55,18 @@ export default function AppFooter() {
           >
             Privacidad
           </button>
+          {!ES_ESCRITORIO && (
+            <>
+              <span aria-hidden="true">·</span>
+              <a
+                href={EXE_URL}
+                download="SazónLab-Setup-1.0.0.exe"
+                className="hover:text-foreground hover:underline"
+              >
+                Descargar para Windows
+              </a>
+            </>
+          )}
           <span aria-hidden="true">·</span>
           <span className="chip" aria-label="Versión del sistema">
             <i className="fa-solid fa-code-branch" aria-hidden="true" /> v1.0.0

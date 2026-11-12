@@ -209,7 +209,7 @@ export default function App() {
             <a href="#funciones" className="btn-ghost hidden sm:inline-flex">
               Funciones
             </a>
-            <a href="#descarga" className="btn-primary">
+            <a href={EXE_URL} className="btn-primary" download>
               <i className="fa-solid fa-download" aria-hidden="true" /> Descargar
             </a>
           </nav>
@@ -238,7 +238,7 @@ export default function App() {
             <a href={DEMO_URL} className="btn-primary !px-6 !py-3 text-base" id="demo">
               <i className="fa-solid fa-play" aria-hidden="true" /> Probar la demo web
             </a>
-            <a href="#descarga" className="btn-secondary !px-6 !py-3 text-base">
+            <a href={EXE_URL} download className="btn-secondary !px-6 !py-3 text-base">
               <i className="fa-brands fa-windows" aria-hidden="true" /> Descargar para Windows
             </a>
           </div>
@@ -339,6 +339,10 @@ export default function App() {
             </a>
             <p className="mt-3 text-sm text-muted-foreground">
               Windows 10 o superior · Instalador NSIS · v1.0.0
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Archivo: <code className="font-mono">SazónLab-Setup-1.0.0.exe</code> (124,7 MB) ·
+              incluye la API embebida y la base de datos SQLite local
             </p>
           </div>
         </section>

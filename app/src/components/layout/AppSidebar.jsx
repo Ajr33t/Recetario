@@ -2,12 +2,12 @@ import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore.js';
 
 // Menú completo: disponible cuando hay sesión iniciada
+// («Mi perfil» vive en el menú de cuenta del navbar, no aquí)
 const NAV_ITEMS_SESION = [
   { to: '/', label: 'Inicio', icon: 'fa-house' },
   { to: '/buscar', label: 'Buscar por ingredientes', icon: 'fa-magnifying-glass' },
   { to: '/mis-recetas', label: 'Mis recetas', icon: 'fa-book-open' },
   { to: '/favoritos', label: 'Favoritos', icon: 'fa-heart' },
-  { to: '/perfil', label: 'Mi perfil', icon: 'fa-user-pen' },
   { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
 ];
 
@@ -24,6 +24,8 @@ const NAV_ITEM_ADMIN = { to: '/admin', label: 'Administración', icon: 'fa-user-
  * <aside> con navegación principal (<nav> con aria-label).
  * - Sin sesión: solo Inicio, Ajustes e Iniciar sesión.
  * - Con sesión: se desbloquean Buscar, Mis recetas y Favoritos.
+ * - «Mi perfil» y «Administración» se acceden desde el menú de cuenta
+ *   del navbar (cabecera), no desde el lateral.
  * En móvil se muestra como panel superpuesto; en desktop, estático.
  */
 export default function AppSidebar({ open, onClose }) {

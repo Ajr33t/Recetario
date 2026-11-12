@@ -97,7 +97,7 @@ categoría y etiquetas). Por eso los filtros se reparten donde el dato existe:
 | `npm test` | ✅ 18/18 |
 | `npm run verificar:a11y` | ✅ 11/11 |
 | `npm run verificar:ui-f6` | ✅ 29/29 |
-| `npm run verificar:ui-f5` | ✅ 58/58 (incluye **21 nuevos**: RF-10, RF-11 y panel RF-22) |
+| `npm run verificar:ui-f5` | ✅ 66/66 (incluye **29 nuevos**: RF-10, RF-11, panel RF-22 y menú de cuenta del navbar) |
 | `npm run verificar:contraste` | ✅ 36/36 |
 | `npm run verificar:temas` | ✅ 4/4 |
 | `npm run verificar:busqueda` | ✅ 68/68 |
@@ -109,17 +109,19 @@ categoría y etiquetas). Por eso los filtros se reparten donde el dato existe:
 | `build:app` / `build:landing` | ✅ |
 | Demo `:5173` / API `:3001` / landing `:5174` / robots.txt | ✅ 200 × 4 |
 
-**Total de la batería: 18 unitarias + 11 suites (373 checks) = 391 comprobaciones, todo en verde.**
+**Total de la batería: 18 unitarias + 11 suites (381 checks) = 399 comprobaciones, todo en verde.**
 
 ### Cobertura nueva de la corrección de hallazgos
 
 - `scripts/verificar-auth.mjs` (+15 checks): login admin seed, listado, 401/403, creación 201,
   duplicado 409, no-admin 403, auto-degradación 400, cambio de rol, inactivación → **token
   vigente 401 (revocación inmediata)** y login 403, reactivación.
-- `scripts/verificar-ui-f5.cjs` (+21 checks): bloque de filtros avanzados y select de dieta en
+- `scripts/verificar-ui-f5.cjs` (+29 checks): bloque de filtros avanzados y select de dieta en
   Buscar; historial con chips, repetición con un clic y vaciado; barra de filtros en Mis recetas
   (texto/tiempo/dificultad/etiqueta), estado vacío, recuento «Mostrando X de Y» y limpiar;
-  y **panel `/admin`** (acceso denegado para usuario normal, formulario, tabla, sidebar y axe).
+  **panel `/admin`** (acceso denegado para usuario normal, formulario, tabla, sidebar y axe);
+  y **menú de cuenta del navbar** («Mi perfil» fuera del sidebar, avatar, navegación a `/perfil`
+  e instalador `.exe` visible en la demo y el pie).
 
 ---
 
@@ -134,7 +136,24 @@ categoría y etiquetas). Por eso los filtros se reparten donde el dato existe:
 
 ---
 
-## 8. Pendientes conocidos (heredados y registrados)
+## 8. Ajustes de cierre (peticiones finales del cliente)
+
+| Petición | Cambio | Archivos |
+|----------|--------|----------|
+| «Mi perfil» del menú lateral → navbar | La cabecera abre el **menú de cuenta** con avatar, Mi perfil, Mis recetas, Favoritos, Administración (admin) y Cerrar sesión; el lateral queda con Inicio, Buscar, Mis recetas, Favoritos y Ajustes | `app/src/components/layout/AppHeader.jsx`, `app/src/components/layout/AppSidebar.jsx` |
+| «Cambia el logo» | El botón de cuenta y la cabecera del menú usan el **avatar real del usuario**: foto, o su icono de Font Awesome sobre el color elegido (icono genérico como respaldo) | `app/src/components/layout/AppHeader.jsx` |
+| «Pon el .exe visible» | La cabecera y el hero de la landing **descargan el instalador directamente**; la sección de descarga muestra nombre y tamaño; la demo web añade CTA «Descargar para Windows» en el inicio y el pie (oculto dentro del propio `.exe`) | `landing/src/App.jsx`, `app/src/pages/Home.jsx`, `app/src/components/layout/AppFooter.jsx`, `app/src/services/enlaces.js` |
+| `.exe` dentro de la carpeta | `npm run copiar:exe` deja el instalador en la **raíz del proyecto** y en `landing/public/` (se ejecuta al final de `build:exe`) | `scripts/copiar-exe.cjs`, `package.json` |
+
+Extras de accesibilidad del menú nuevo: `role="menu"`/`role="menuitem"`, `aria-expanded`,
+`aria-haspopup`, cierre con **Esc** que devuelve el foco al botón y cierre al pulsar fuera.
+
+Verificación: `verificar:ui-f5` incorpora **7 checks nuevos** (perfil fuera del sidebar, menú de
+cuenta con avatar, navegación a `/perfil`, `.exe` visible en demo y pie).
+
+---
+
+## 9. Pendientes conocidos (heredados y registrados)
 
 - **Code signing del `.exe`**: sin certificado, SmartScreen lo marcará como desconocido.
 - **`sitemap.xml`**: se generará cuando exista dominio de publicación (el `robots.txt` ya lo referencia).

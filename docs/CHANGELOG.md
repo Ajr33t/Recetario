@@ -282,9 +282,15 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - `README.md`: secciones de administración, filtros avanzados, historial, cuenta admin de demo y resultados de la batería.
 - `server/src/middleware/auth.js`: `requireAuth` pasa a consultar la BD (una fila por petición) y se añade `requireRole(...roles)`.
 
+### Ajustes de cierre (peticiones finales del cliente)
+- **«Mi perfil» sale del menú lateral y entra en el menú de cuenta del navbar**: la cabecera abre un desplegable con el avatar del usuario, **Mi perfil**, Mis recetas, Favoritos, Administración (si es admin) y Cerrar sesión; el lateral conserva Inicio, Buscar, Mis recetas, Favoritos y Ajustes.
+- **Logo del perfil en el navbar**: el botón de cuenta y la cabecera del menú muestran la **foto del usuario**, o su avatar de Font Awesome sobre su color elegido (o el icono por defecto), en lugar del icono genérico.
+- **Instalador `.exe` visible**: la cabecera y el hero de la landing **descargan el `.exe` directamente** (antes solo bajaban al ancla de descarga) y la sección de descarga muestra el nombre y el tamaño del archivo; la demo web muestra un CTA «Descargar para Windows» en el inicio y en el pie (se oculta dentro del propio `.exe`).
+- **`.exe` visible dentro de la carpeta**: nuevo script `npm run copiar:exe` (`scripts/copiar-exe.cjs`) que deja el instalador en la **raíz del proyecto** (`SazónLab-Setup-1.0.0.exe`) y en `landing/public/`; `build:exe` ya lo ejecuta al final. Sigue sin versionarse en Git (124,7 MB > límite de 100 MB).
+
 ### Resuelto
 - **Hallazgos de la revisión de cumplimiento**: RF-02 (parcial), RF-10 (parcial), RF-11 y RF-22 estaban asignados en el plan (fases 3/4) pero sin implementar → cerrados en este Sprint 11 («corrección de hallazgos»).
-- **Batería de cierre 100% en verde**: lint/format, 18 unitarias, 11 suites (373 checks), builds de app/landing/exe y endpoints 5173/3001/5174/robots.txt.
+- **Batería de cierre 100% en verde**: lint/format, 18 unitarias, 11 suites (381 checks), builds de app/landing/exe y endpoints 5173/3001/5174/robots.txt.
 
 ---
 

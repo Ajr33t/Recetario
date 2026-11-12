@@ -32,6 +32,7 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
   const [perfilAbierto, setPerfilAbierto] = useState(false);
   const [notisAbiertas, setNotisAbiertas] = useState(false);
   const campanaRef = useRef(null);
+  const perfilRef = useRef(null);
   const navigate = useNavigate();
   const mode = useThemeStore((s) => s.mode);
   const highContrast = useThemeStore((s) => s.highContrast);
@@ -55,6 +56,19 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [notisAbiertas]);
+
+  // Esc cierra el menú de cuenta y devuelve el foco al botón de perfil
+  useEffect(() => {
+    if (!perfilAbierto) return;
+    const onKey = (event) => {
+      if (event.key === 'Escape') {
+        setPerfilAbierto(false);
+        perfilRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [perfilAbierto]);
 
   function handleSearch(event) {
     event.preventDefault();
@@ -262,13 +276,29 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
             <div className="relative">
               <button
                 type="button"
-                className="btn-secondary !px-3"
+                ref={perfilRef}
+                className="btn-secondary !px-2.5"
                 onClick={() => setPerfilAbierto((abierto) => !abierto)}
                 aria-expanded={perfilAbierto}
                 aria-haspopup="menu"
                 aria-label={`Menú de cuenta de ${usuario.nombre}`}
               >
-                <i className="fa-solid fa-circle-user" aria-hidden="true" />
+                {/* Logo del perfil: foto del usuario, su avatar o el icono por defecto */}
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-white"
+                  style={{ background: usuario.color_perfil || 'rgb(var(--primary))' }}
+                  aria-hidden="true"
+                >
+                  {usuario.avatar_imagen ? (
+                    <img
+                      src={usuario.avatar_imagen}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <i className={`fa-solid ${usuario.avatar || 'fa-user'} text-xs`} />
+                  )}
+                </span>
                 <span className="hidden sm:inline">{usuario.nombre}</span>
                 <i
                   className={`fa-solid fa-chevron-down text-xs transition-transform duration-200 ${
@@ -289,11 +319,43 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
                   />
                   <div
                     role="menu"
-                    className="glass absolute right-0 z-50 mt-2 w-56 rounded-xl p-3 text-sm"
+                    aria-label="Menú de cuenta"
+                    className="glass absolute right-0 z-50 mt-2 w-60 rounded-xl p-3 text-sm"
                   >
-                    <p className="font-semibold">{usuario.nombre}</p>
-                    <p className="truncate text-xs text-muted-foreground">{usuario.correo}</p>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-white"
+                        style={{ background: usuario.color_perfil || 'rgb(var(--primary))' }}
+                        aria-hidden="true"
+                      >
+                        {usuario.avatar_imagen ? (
+                          <img
+                            src={usuario.avatar_imagen}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <i className={`fa-solid ${usuario.avatar || 'fa-user'}`} />
+                        )}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{usuario.nombre}</p>
+                        <p className="truncate text-xs text-muted-foreground">{usuario.correo}</p>
+                      </div>
+                    </div>
                     <hr className="my-2 border-border" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="nav-link w-full"
+                      onClick={() => {
+                        setPerfilAbierto(false);
+                        navigate('/perfil');
+                      }}
+                    >
+                      <i className="fa-solid fa-user-pen w-5 text-center" aria-hidden="true" />
+                      Mi perfil
+                    </button>
                     <button
                       type="button"
                       role="menuitem"
@@ -306,6 +368,32 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
                       <i className="fa-solid fa-book-open w-5 text-center" aria-hidden="true" />
                       Mis recetas
                     </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="nav-link w-full"
+                      onClick={() => {
+                        setPerfilAbierto(false);
+                        navigate('/favoritos');
+                      }}
+                    >
+                      <i className="fa-solid fa-heart w-5 text-center" aria-hidden="true" />
+                      Favoritos
+                    </button>
+                    {usuario.rol === 'admin' && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="nav-link w-full"
+                        onClick={() => {
+                          setPerfilAbierto(false);
+                          navigate('/admin');
+                        }}
+                      >
+                        <i className="fa-solid fa-user-shield w-5 text-center" aria-hidden="true" />
+                        Administración
+                      </button>
+                    )}
                     <button
                       type="button"
                       role="menuitem"

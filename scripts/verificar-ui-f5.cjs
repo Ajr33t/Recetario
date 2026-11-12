@@ -11,6 +11,8 @@
  *  8. RF-10 (Fase 9): filtros avanzados en Buscar (excluidos/dieta) y
  *     filtros de tiempo/dificultad/texto/etiqueta en Mis recetas.
  *  9. RF-11 (Fase 9): historial de búsquedas con repetición y vaciado.
+ * 10. Cierre: «Mi perfil» en el menú de cuenta del navbar (fuera del
+ *     sidebar) con avatar, e instalador .exe visible en la demo.
  * Requisitos: `npm run dev:app` + `npm run dev:server` y red (registro).
  * Uso: npm run verificar:ui-f5
  */
@@ -495,6 +497,75 @@ app.whenReady().then(async () => {
       JSON.stringify(axeRes).slice(0, 160),
     );
   }
+
+  // ── 13) Menú de cuenta en el navbar + instalador .exe visible ──
+  await abrir('/');
+  const sidebarTexto = await leer(`document.querySelector('aside')?.innerText || ''`);
+  check(
+    'navbar: el sidebar ya NO muestra «Mi perfil»',
+    !/Mi perfil/.test(sidebarTexto),
+    sidebarTexto.slice(0, 60),
+  );
+
+  await leer(`(() => {
+    const b = document.querySelector('header button[aria-haspopup="menu"]');
+    if (!b) return false;
+    b.click();
+    return true;
+  })()`);
+  await dormir(800);
+  const menuCta = await leer(`(() => {
+    const m = document.querySelector('header [role=menu]');
+    if (!m) return JSON.stringify({ abierto: false });
+    return JSON.stringify({
+      abierto: true,
+      items: [...m.querySelectorAll('[role=menuitem]')].map((b) => b.textContent.trim()),
+      avatar: Boolean(m.querySelector('span img, span i.fa-solid')),
+    });
+  })()`);
+  const mc = JSON.parse(menuCta);
+  check('navbar: el menú de cuenta se abre', mc.abierto === true);
+  check(
+    'navbar: el menú incluye «Mi perfil»',
+    mc.items?.some((t) => /Mi perfil/.test(t)),
+    (mc.items || []).join(' | '),
+  );
+  check(
+    'navbar: el menú incluye «Mis recetas», «Favoritos» y «Cerrar sesión»',
+    mc.items?.some((t) => /Mis recetas/.test(t)) &&
+      mc.items?.some((t) => /Favoritos/.test(t)) &&
+      mc.items?.some((t) => /Cerrar sesión/.test(t)),
+  );
+  check('navbar: el menú muestra el avatar del usuario', mc.avatar === true);
+
+  await leer(`(() => {
+    const m = document.querySelector('header [role=menu]');
+    const b = [...m.querySelectorAll('[role=menuitem]')].find((x) => /Mi perfil/.test(x.textContent));
+    b.click();
+    return true;
+  })()`);
+  await dormir(1200);
+  const hashPerfil = await leer('location.hash');
+  check('navbar: «Mi perfil» abre la página de perfil', /#\/perfil/.test(hashPerfil), hashPerfil);
+
+  const exeDemo = await leer(`(() => {
+    const enlaces = [...document.querySelectorAll('a')].filter((a) =>
+      /Descargar para Windows/.test(a.textContent),
+    );
+    const pie = document.querySelector('footer')?.innerText || '';
+    return JSON.stringify({
+      n: enlaces.length,
+      href: enlaces[0]?.getAttribute('href') || '',
+      pie: /Descargar para Windows/.test(pie),
+    });
+  })()`);
+  const ed = JSON.parse(exeDemo);
+  check(
+    'demo: el instalador .exe es visible (CTA del inicio + pie de página)',
+    ed.n >= 1 && ed.pie === true,
+    `enlaces=${ed.n} pie=${ed.pie}`,
+  );
+  check('demo: el CTA del .exe apunta al instalador', /\.exe$/.test(ed.href), ed.href);
 
   console.log(`\n${fallos === 0 ? 'TODOS LOS CHECKS PASARON' : `${fallos} CHECK(S) FALLARON`}`);
   app.exit(fallos > 0 ? 1 : 0);

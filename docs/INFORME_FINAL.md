@@ -110,14 +110,14 @@ recetario/  (monorepo npm workspaces)
 | `verificar:recetas` | ✅ 39/39 |
 | `verificar:auth` (incluye panel admin RF-22) | ✅ 41/41 |
 | `verificar:cuenta` | ✅ 27/27 |
-| `verificar:ui-f5` (incluye RF-10/RF-11 y panel RF-22) | ✅ 58/58 |
+| `verificar:ui-f5` (incluye RF-10/RF-11, panel RF-22 y menú de cuenta) | ✅ 66/66 |
 | `verificar:ui-f6` | ✅ 29/29 |
 | `verificar:landing` (+ axe 5 estados) | ✅ 38/38 + 5/5 |
 | `verificar:desktop` (sobre el `.exe` real) | ✅ 22/22 |
 | `build:app` / `build:landing` | ✅ |
 | Endpoints (5173, 3001, 5174, robots.txt) | ✅ 200 × 4 |
 
-**≈ 391 comprobaciones automatizadas en verde** (18 unitarias + 11 suites). Reproducir con:
+**≈ 399 comprobaciones automatizadas en verde** (18 unitarias + 11 suites). Reproducir con:
 `npm run dev:server` + `npm run dev:app` en una terminal y la batería en otra
 (`lint`, `test`, `verificar:*`, `build:*`).
 
@@ -149,8 +149,13 @@ incluye la API y SQLite local.**
 4. **Compartir**: en detalle de receta → enlace, texto, imagen PNG o PDF.
 5. **Personalizar**: `Ajustes` → 12 temas × 3 modos, tamaño de fuente, reducir movimiento,
    tour de bienvenida, exportar/importar JSON, zona de peligro (eliminar cuenta con código al correo).
-6. **Administrador** (rol `admin`): ítem **Administración** en el sidebar → crear cuentas,
-   cambiar roles e inactivar/activar usuarios.
+6. **Mi cuenta**: el menú de cuenta de la **cabecera** (avatar) abre «Mi perfil» (foto, avatar,
+   color, nombre y bio), Mis recetas, Favoritos, Administración (si eres admin) y Cerrar sesión.
+   «Mi perfil» ya no está en el menú lateral (queda Inicio, Buscar, Mis recetas, Favoritos y Ajustes).
+7. **Administrador** (rol `admin`): ítem **Administración** (sidebar y menú de cuenta) → crear
+   cuentas, cambiar roles e inactivar/activar usuarios.
+8. **Escritorio**: la cabecera y el hero de la landing descargan el instalador `.exe`; en la demo
+   web hay un botón «Descargar para Windows» en el inicio y en el pie.
 
 > **Cuenta admin de demo:** `admin@sazonlab.test` / `SazonLab-Admin-2026`
 > (cambiable con `ADMIN_CORREO` / `ADMIN_PASSWORD` en `server/.env`; se crea automáticamente
