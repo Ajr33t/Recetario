@@ -10,7 +10,7 @@
   --background: 242 247 251;
   --foreground: 15 23 42;
   --card: 255 255 255;
-  --primary: 2 132 199;
+  --primary: 3 105 161;
   --primary-foreground: 255 255 255;
   --accent: 14 165 233;
   --muted: 226 232 240;
@@ -94,6 +94,10 @@ h3 {
 
   .glass-card-hover {
     @apply glass-card transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .surface-section {
+    @apply glass-card p-5;
   }
 
   .btn {

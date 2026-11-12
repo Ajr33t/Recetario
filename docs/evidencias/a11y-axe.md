@@ -1,6 +1,6 @@
 # Evidencia — axe-core WCAG 2.1 AA (Fase 6)
 
-**Fecha:** 2026-11-11
+**Fecha:** 2026-11-12
 **Herramienta:** axe-core (etiquetas wcag2a, wcag2aa, wcag21a, wcag21aa) sobre Chromium (Electron)
 **Criterio de fallo:** cualquier violación de impacto `serious` o `critical`.
 

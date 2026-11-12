@@ -96,6 +96,7 @@ recetario/
 | `npm run verificar:recetas`   | CRUD, versiones, papelera, favoritos, export/import     |
 | `npm run verificar:ui-f5`     | UI Fase 5: JSON, libro, compartir, checklist, medidas   |
 | `npm run verificar:ui-f6`     | UI Fase 6: tour, campana de notificaciones, toasts      |
+| `npm run verificar:landing`   | Landing oficial: secciones, legales, SEO, axe           |
 | `npm run capturas`            | Capturas de evidencia (galería de temas)                |
 
 > Las suites UI necesitan la demo (`dev:server` + `dev:app`) corriendo; las de red necesitan internet para TheMealDB.
@@ -115,6 +116,7 @@ recetario/
 - 🔔 **Notificaciones**: toasts glass propios + campana con historial en la cabecera
 - 🧭 **Tour de bienvenida** de 6 pasos (repetible desde Ajustes)
 - 🧩 Estructura semántica (`<header>`, `<aside>`, `<main>`, `<footer>`) + ARIA
+- 🌐 **Landing oficial** con captura real, «¿Cómo funciona?», SEO (JSON-LD/robots) y **páginas legales** (Privacidad/Términos) en app y landing
 - 💎 Estilo Liquid Glass en toda la interfaz
 - 💻 Versión `.exe` con modo offline básico (SQLite)
 

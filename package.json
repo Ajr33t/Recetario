@@ -33,6 +33,7 @@
     "verificar:recetas": "node scripts/verificar-recetas.mjs",
     "verificar:ui-f5": "electron scripts/verificar-ui-f5.cjs",
     "verificar:ui-f6": "electron scripts/verificar-ui-f6.cjs",
+    "verificar:landing": "electron scripts/verificar-landing.cjs",
     "verificar:a11y": "electron scripts/verificar-a11y.cjs",
     "capturas": "electron scripts/capturas.cjs"
   },

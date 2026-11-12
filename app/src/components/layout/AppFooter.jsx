@@ -39,13 +39,21 @@ export default function AppFooter() {
             Medidas
           </button>
           <span aria-hidden="true">·</span>
-          <a href="#" className="hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => navigate('/terminos')}
+            className="hover:text-foreground hover:underline"
+          >
             Términos
-          </a>
+          </button>
           <span aria-hidden="true">·</span>
-          <a href="#" className="hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => navigate('/privacidad')}
+            className="hover:text-foreground hover:underline"
+          >
             Privacidad
-          </a>
+          </button>
           <span aria-hidden="true">·</span>
           <span className="chip" aria-label="Versión del sistema">
             <i className="fa-solid fa-code-branch" aria-hidden="true" /> v1.0.0

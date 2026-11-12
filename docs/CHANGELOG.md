@@ -216,4 +216,25 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
+## [Fase 7] — 11/11/2026 — Landing page oficial + páginas legales (Sprint 10)
+
+### Agregado
+- **Landing completa** (`landing/src/App.jsx`): hero con **captura real** de la app (`landing/public/captura-app.png`) dentro de un marco tipo navegador, sección **«¿Cómo funciona?»** (3 pasos), 6 funciones, descarga y pie con enlaces vivos — cero `href="#"`.
+- **Enlaces reales**: demo → `http://localhost:5173/`, descarga → `./SazónLab-Setup-1.0.0.exe` (artefacto que copiará la Fase 8).
+- **Vistas legales en la landing** por hash (`#/privacidad`, `#/terminos`), sin react-router, con el mismo texto que la app.
+- **Páginas legales en la app**: `app/src/pages/Legal.jsx` (dos documentos: datos recolectados, almacenamiento, terceros TheMealDB/IA, derechos; uso, propiedad, aviso de IA, responsabilidad) con rutas `/privacidad` y `/terminos`.
+- **SEO**: `landing/public/robots.txt` + JSON-LD (`SoftwareApplication`, `inLanguage: es`) + Open Graph + Twitter Card + canonical en `landing/index.html`.
+- **Suite** `npm run verificar:landing` (`scripts/verificar-landing.cjs`, 35 checks + axe en 5 estados) con capturas de evidencia (`landing-01-inicio.png`, `landing-02-privacidad.png`, `app-05-terminos.png`).
+
+### Cambiado
+- **Pie de la app**: «Términos» y «Privacidad» dejan de ser enlaces muertos (`<a href="#">`) y navegan con botón + `navigate()` (patrón HashRouter ya usado en Medidas).
+- Landing: `--primary` de `2 132 199` a `3 105 161` (sky-700) — el anterior daba 4.1:1 con texto blanco (axe `serious` en `.btn-primary`).
+- CSS de la landing: nueva clase `.surface-section` (usada por las páginas legales).
+
+### Resuelto
+- **Pendiente de la Fase 5** — enlaces legales del pie que no llevaban a ninguna parte.
+- **axe `color-contrast` en la landing** (3 nodos): contraste AA insuficiente del primario en los botones.
+
+---
+
 *(Las fases siguientes se agregarán aquí conforme se completen.)*
