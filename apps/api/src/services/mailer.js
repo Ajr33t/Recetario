@@ -1,22 +1,34 @@
+import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
 /**
  * Envío de correos de SazónLab (Fase 3 + Fase 10 — correo real).
  *
  * Transportes, en orden de preferencia:
- * 1. SMTP (nodemailer): `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
- *    — funciona con Gmail (contraseña de aplicación), Outlook/365 y SMTP
- *    corporativo. Es el modo recomendado para un despliegue real.
- * 2. RESEND_API_KEY: API de Resend (fetch nativo, sin librería).
- * 3. DEMO: sin proveedor configurado, el código se imprime en la consola y
- *    la UI lo muestra (solo fuera de producción) para poder probar el flujo.
+ * 1. **Resend** (`RESEND_API_KEY`): envío con el SDK oficial y **plantillas
+ *    publicadas en Resend** (`RESEND_PLANTILLA_*`), de modo que el texto del
+ *    correo se edita en el panel de Resend sin desplegar la app.
+ * 2. **SMTP** (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`): nodemailer;
+ *    funciona con Gmail (contraseña de aplicación), Outlook/365 y SMTP
+ *    corporativo.
+ * 3. **DEMO**: sin proveedor configurado, el código se imprime en la consola
+ *    y la UI lo muestra (solo fuera de producción) para probar el flujo.
  *
- * Todos los correos se mandan en español y con un **enlace de un clic**
- * además del código de 6 dígitos.
+ * Todos los correos van en español y con un **enlace de un clic** además del
+ * código de 6 dígitos.
  */
-import nodemailer from 'nodemailer';
 
-const remitente = () => process.env.MAIL_FROM || 'SazónLab <no-reply@sazonlab.app>';
+const remitente = () => process.env.MAIL_FROM || 'SazónLab <onboarding@resend.dev>';
 
-/** Envuelve el texto en una plantilla HTML mínima y legible. */
+/** Instancia perezosa del cliente de Resend. */
+let clienteResend = null;
+function obtenerResend() {
+  if (!process.env.RESEND_API_KEY) return null;
+  if (!clienteResend) clienteResend = new Resend(process.env.RESEND_API_KEY);
+  return clienteResend;
+}
+
+/** Envuelve el texto en una plantilla HTML mínima y legible (si no hay plantilla). */
 function plantillaHtml({ titulo, texto, enlace, pie }) {
   const boton = enlace
     ? `<p style="margin:24px 0"><a href="${enlace}" style="background:#f59e0b;color:#1f2937;
@@ -38,31 +50,83 @@ function plantillaHtml({ titulo, texto, enlace, pie }) {
 }
 
 /** Construye el mensaje (texto plano + HTML) según el motivo. */
-function construirMensaje({ correo, codigo, motivo, enlace }) {
+function construirMensaje({ correo, codigo, motivo, enlace, nombre }) {
   const esEliminacion = motivo === 'eliminacion';
-  const titulo = esEliminacion
-    ? 'Confirmar la eliminación de tu cuenta'
-    : 'Restablecer tu contraseña';
+  const asunto = esEliminacion
+    ? 'SazónLab — código para eliminar tu cuenta'
+    : 'SazónLab — tu código de recuperación';
   const texto = esEliminacion
-    ? `Hola, tu código para eliminar definitivamente tu cuenta es: ${codigo}\n\nVence en 15 minutos y la acción no se puede deshacer. Si no pediste esto, ignora este mensaje.`
-    : `Hola, tu código para restablecer tu contraseña es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este mensaje.`;
+    ? `Hola${nombre ? ` ${nombre}` : ''}, tu código para eliminar definitivamente tu cuenta es: ${codigo}\n\nVence en 15 minutos y la acción no se puede deshacer. Si no pediste esto, ignora este mensaje.`
+    : `Hola${nombre ? ` ${nombre}` : ''}, tu código para restablecer tu contraseña es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este mensaje.`;
   const pie = esEliminacion
     ? 'Si no solicitaste la eliminación, no hagas nada: tu cuenta seguirá intacta.'
     : 'Si no solicitaste el cambio, ignora este correo: tu contraseña seguirá igual.';
 
   return {
-    asunto: esEliminacion
-      ? 'SazónLab — código para eliminar tu cuenta'
-      : 'SazónLab — tu código de recuperación',
+    asunto,
     texto,
     html: plantillaHtml({
-      titulo,
-      texto: esEliminacion ? texto : `${texto}`,
+      titulo: esEliminacion ? 'Confirmar la eliminación' : 'Restablecer tu contraseña',
+      texto,
       enlace,
       pie,
     }),
     destinatario: correo,
+    codigo,
+    enlace,
+    nombre: nombre || '',
+    esEliminacion,
   };
+}
+
+/** Plantilla de Resend configurada para este motivo (si existe). */
+function plantillaDe(motivo) {
+  const id =
+    motivo === 'eliminacion'
+      ? process.env.RESEND_PLANTILLA_ELIMINACION
+      : process.env.RESEND_PLANTILLA_RECUPERACION;
+  return id || null;
+}
+
+/** Envía con Resend (SDK oficial). Devuelve el id del correo o null si falla. */
+async function enviarConResend(mensaje) {
+  const resend = obtenerResend();
+  if (!resend) return null;
+
+  const plantilla = plantillaDe(mensaje.esEliminacion ? 'eliminacion' : 'recuperacion');
+  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+
+  const base = {
+    from: remitente(),
+    to: [mensaje.destinatario],
+    subject: mensaje.asunto,
+  };
+
+  const payload = plantilla
+    ? {
+        ...base,
+        template: {
+          id: plantilla,
+          variables: {
+            NOMBRE: mensaje.nombre,
+            CODIGO: mensaje.codigo,
+            ENLACE: mensaje.enlace || '',
+            APP_URL: appUrl,
+          },
+        },
+      }
+    : { ...base, text: mensaje.texto, html: mensaje.html };
+
+  // Clave de idempotencia (SDK ≥ 6): una por intento (patrón <evento>/<entidad>).
+  // Evita correos duplicados si se reintenta la misma petición.
+  const idempotencyKey = `${mensaje.esEliminacion ? 'eliminacion' : 'recuperacion'}/${mensaje.destinatario}-${mensaje.codigo}`;
+
+  const { data, error } = await resend.emails.send(payload, { idempotencyKey });
+  if (error) {
+    console.warn(`[SazónLab] Resend falló: ${error.message}`);
+    return null;
+  }
+  return data?.id || null;
 }
 
 /** Envía por SMTP con nodemailer (si hay configuración SMTP). */
@@ -84,30 +148,13 @@ async function enviarSmtp(mensaje) {
   return { id: info.messageId };
 }
 
-/** Envía con la API de Resend (fetch nativo). */
-async function enviarResend(mensaje, apiKey) {
-  const respuesta = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: remitente(),
-      to: [mensaje.destinatario],
-      subject: mensaje.asunto,
-      text: mensaje.texto,
-      html: mensaje.html,
-    }),
-  });
-  if (!respuesta.ok) throw new Error(`Resend respondió ${respuesta.status}`);
-  return { id: 'resend' };
-}
-
 /**
  * Estado del servicio de correo (para el panel de Ajustes y las suites).
- * @returns {{activo: boolean, transporte: 'smtp'|'resend'|'demo'}}
+ * @returns {{activo: boolean, transporte: 'resend'|'smtp'|'demo'}}
  */
 export function estadoCorreo() {
-  if (process.env.SMTP_HOST) return { activo: true, transporte: 'smtp' };
   if (process.env.RESEND_API_KEY) return { activo: true, transporte: 'resend' };
+  if (process.env.SMTP_HOST) return { activo: true, transporte: 'smtp' };
   return { activo: false, transporte: 'demo' };
 }
 
@@ -116,11 +163,29 @@ export function estadoCorreo() {
  * @param {string} correo destino
  * @param {string} codigo código de 6 dígitos
  * @param {'recuperacion'|'eliminacion'} [motivo]
- * @param {{enlace?: string}} [opciones] enlace de un clic
- * @returns {Promise<{demo: boolean, transporte: string}>}
+ * @param {{enlace?: string, nombre?: string}} [opciones]
+ * @returns {Promise<{demo: boolean, transporte: string, id?: string}>}
  */
 export async function enviarCodigoCorreo(correo, codigo, motivo = 'recuperacion', opciones = {}) {
-  const mensaje = construirMensaje({ correo, codigo, motivo, enlace: opciones.enlace });
+  const mensaje = construirMensaje({
+    correo,
+    codigo,
+    motivo,
+    enlace: opciones.enlace,
+    nombre: opciones.nombre,
+  });
+
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const id = await enviarConResend(mensaje);
+      if (id) {
+        console.log(`[SazónLab] Correo enviado por Resend a ${correo} (${motivo}) · ${id}`);
+        return { demo: false, transporte: 'resend', id };
+      }
+    } catch (err) {
+      console.warn(`[SazónLab] Error Resend (${err.message}); se intenta otro transporte.`);
+    }
+  }
 
   if (process.env.SMTP_HOST) {
     try {
@@ -128,17 +193,7 @@ export async function enviarCodigoCorreo(correo, codigo, motivo = 'recuperacion'
       console.log(`[SazónLab] Correo enviado por SMTP a ${correo} (${motivo}).`);
       return { demo: false, transporte: 'smtp' };
     } catch (err) {
-      console.warn(`[SazónLab] Error SMTP (${err.message}); se intenta otro transporte.`);
-    }
-  }
-
-  if (process.env.RESEND_API_KEY) {
-    try {
-      await enviarResend(mensaje, process.env.RESEND_API_KEY);
-      console.log(`[SazónLab] Correo enviado por Resend a ${correo} (${motivo}).`);
-      return { demo: false, transporte: 'resend' };
-    } catch (err) {
-      console.warn(`[SazónLab] Error Resend (${err.message}); modo demo.`);
+      console.warn(`[SazónLab] Error SMTP (${err.message}); se usa otro transporte.`);
     }
   }
 

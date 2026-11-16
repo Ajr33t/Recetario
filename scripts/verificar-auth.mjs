@@ -13,6 +13,7 @@ const correo = `test-auth-${Date.now()}@sazonlab.test`;
 const pass0 = 'clave-inicial-123';
 const pass1 = 'clave-nueva-456';
 const pass2 = 'clave-final-789';
+const pass3 = 'clave-enlace-321';
 
 let fallos = 0;
 
@@ -120,9 +121,9 @@ async function main() {
   );
   const codigo = olvido.datos?.codigo;
   check(
-    'modo demo entrega el código para probar el flujo',
+    'el código se entrega en desarrollo (demo o transporte real)',
     Boolean(codigo) && /^\d{6}$/.test(codigo),
-    codigo ? `codigo=${codigo}` : 'sin código (¿RESEND_API_KEY configurado?)',
+    codigo ? `codigo=${codigo}` : 'sin código (¿RESEND_API_KEY / SMTP configurados en producción?)',
   );
 
   if (codigo) {
@@ -148,8 +149,33 @@ async function main() {
     );
   }
 
-  const tokenFinal = (await llamar('POST', '/auth/login', { body: { correo, contrasena: pass2 } }))
-    .datos?.token;
+  // Recuperación por enlace (token): flujo alternativo con un clic.
+  // Va después del flujo por código porque cada pedido invalida el anterior.
+  const olvido2 = await llamar('POST', '/auth/olvide-contrasena', { body: { correo } });
+  const enlace = olvido2.datos?.enlace;
+  const tokenEnlace = enlace ? String(enlace).split('token=')[1] : '';
+  let contrasenaVigente = pass2;
+  if (tokenEnlace) {
+    const porToken = await llamar('POST', '/auth/restablecer-contrasena', {
+      body: { token: tokenEnlace, contrasena: pass3 },
+    });
+    check(
+      'restablecer con el token del enlace → ok',
+      porToken.status === 200,
+      `status=${porToken.status}`,
+    );
+    const loginToken = await llamar('POST', '/auth/login', {
+      body: { correo, contrasena: pass3 },
+    });
+    check('login con la contraseña fijada por el enlace', loginToken.status === 200);
+    contrasenaVigente = pass3;
+  } else {
+    check('el enlace de un clic se entrega en desarrollo', false, 'sin enlace');
+  }
+
+  const tokenFinal = (
+    await llamar('POST', '/auth/login', { body: { correo, contrasena: contrasenaVigente } })
+  ).datos?.token;
 
   // 7) Recetas: CRUD protegido por usuario
   const crear = await llamar('POST', '/recipes', {

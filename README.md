@@ -6,6 +6,7 @@ Aplicación de recetario digital que sugiere recetas según los ingredientes dis
 > 📈 Estado por fase: [`docs/CHANGELOG.md`](docs/CHANGELOG.md) · Informes: [`docs/informes/`](docs/informes/)
 > 🏁 **Informe final (25/25 RF):** [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md) · **Acta de cierre:** [`docs/ACTA_DE_CIERRE.md`](docs/ACTA_DE_CIERRE.md)
 > 📘 **Manual de usuario:** [MD](docs/MANUAL_USUARIO.md) · [PDF](docs/MANUAL_USUARIO.pdf)
+> ✉️ **Correo (dominio propio):** [guía de DNS y Zoho](docs/CONFIGURAR_CORREO.md)
 
 ## 📦 Entregables
 
@@ -135,7 +136,7 @@ recetario/
 
 - 🔍 Búsqueda por ingredientes con sugerencia IA (OpenAI/Gemini opcional)
 - 🤖 **Chatbot con IA**: IA **local con Ollama** (sin internet, sin enviar datos) → OpenAI/Gemini → **asistente local** que siempre responde; historial en el servidor y en cualquier dispositivo
-- ✉️ **Recuperación de contraseña por correo real**: SMTP (Gmail/Outlook) o Resend, con **código de 6 dígitos y enlace de un clic**; se configura **una vez** para todos los usuarios
+- ✉️ **Recuperación de contraseña por correo real**: SMTP (Gmail/Outlook) o **Resend** (con plantillas editables desde su panel), con **código de 6 dígitos y enlace de un clic**; se configura **una vez** para todos los usuarios
 - ☁️ **Nube con PostgreSQL**: `DATABASE_URL` apunta a tu PostgreSQL (Neon/Supabase…) y SazónLab replica recetas, favoritos y preferencias (SQLite queda como caché offline)
 - 📱 **Responsive de verdad**: probado a 390×844 (celular), 768×1024 (tablet) y 1280×900, sin desbordes y con áreas táctiles cómodas
 - 📘 **Manual de usuario** en Markdown y PDF (8 páginas)

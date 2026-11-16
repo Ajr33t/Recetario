@@ -269,25 +269,37 @@ Ejemplo: 2 tazas = 473,176 ml.
 Para que la recuperación de contraseña llegue de verdad al correo de cada
 usuario hace falta **un solo proveedor de correo** (lo configura el administrador):
 
-**Ajustes → Correo de recuperación** (solo administradores):
+### Opción A — Resend (recomendada, 3.000 correos/mes gratis)
 
-1. Elige el proveedor:
-   - **Gmail**: `smtp.gmail.com`, puerto **465**, seguro ✔.
-     Activa la verificación en 2 pasos y crea una **contraseña de aplicación**.
-   - **Outlook / Microsoft 365**: `smtp.office365.com`, puerto **587**.
-   - **Otro SMTP**: host y puerto de tu proveedor.
-   - **Resend** (API): pega tu clave `re_…` (3.000 correos/mes gratis).
-2. Escribe tu correo y la contraseña de aplicación.
-3. **«Guardar configuración»** y luego **«Enviar correo de prueba»**.
+1. Crea cuenta en <https://resend.com> y una **clave de API de envío**
+   (*API Keys → Create*, permiso *Sending access*).
+2. En SazónLab: *Ajustes → Correo de recuperación* → proveedor **Resend** →
+   pega la clave → **Guardar configuración** → **Enviar correo de prueba**.
+3. Cuando tengas dominio propio, añádelo en Resend (*Domains → Add*) y ponle
+   los registros DNS que te indique. Después solo cambia `MAIL_FROM`:
+   `SazónLab <no-reply@tudominio.com>`. **El código no cambia.**
 
-✅ A partir de ese momento **todos los usuarios** reciben su código y su enlace
-automáticamente; no hay que hacer nada más por usuario.
+> Las plantillas del correo viven en el panel de Resend: puedes editar el texto
+> (saludo, colores, textos) **sin desplegar la aplicación**.
+
+### Opción B — SMTP (Gmail, Outlook o tu servidor)
+
+**Ajustes → Correo de recuperación** → proveedor:
+
+| Proveedor | Servidor | Puerto | Notas |
+|-----------|----------|--------|-------|
+| Gmail | `smtp.gmail.com` | 465 (seguro ✔) | Activa la verificación en 2 pasos y crea una **contraseña de aplicación**. |
+| Outlook / Microsoft 365 | `smtp.office365.com` | 587 | Puede pedir habilitar SMTP autenticado. |
+| Otro | el que te dé tu proveedor | 587 o 465 | — |
+
+Escribe tu correo y la **contraseña de aplicación** (no tu contraseña normal) y
+pulsa «Guardar configuración».
+
+✅ Con cualquiera de las dos opciones, **todos los usuarios** reciben su código y
+su enlace automáticamente; no hay que hacer nada más por usuario.
 
 > Sin proveedor configurado, SazónLab funciona en **modo demo**: el código se
 > muestra en pantalla y en la consola del servidor.
-
-También puedes configurarlo por archivo (`apps/api/.env`, ver
-`apps/api/.env.example`) o con la variable de entorno correspondiente.
 
 ---
 

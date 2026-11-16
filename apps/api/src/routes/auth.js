@@ -130,7 +130,7 @@ router.post('/olvide-contrasena', async (req, res) => {
 
   const correoLimpio = String(correo).trim().toLowerCase();
   const db = getDb();
-  const usuario = db.prepare('SELECT id FROM users WHERE correo = ?').get(correoLimpio);
+  const usuario = db.prepare('SELECT id, nombre FROM users WHERE correo = ?').get(correoLimpio);
 
   let demo = false;
   let codigoDev = null;
@@ -149,10 +149,14 @@ router.post('/olvide-contrasena', async (req, res) => {
     ).run(correoLimpio, hashCodigo(codigo), hashCodigo(token), 'recuperacion', expira);
 
     const enlace = `${URL_APP}/#/recuperar?token=${token}`;
-    const resultado = await enviarCodigoCorreo(correoLimpio, codigo, 'recuperacion', { enlace });
+    const resultado = await enviarCodigoCorreo(correoLimpio, codigo, 'recuperacion', {
+      enlace,
+      nombre: usuario.nombre,
+    });
     demo = resultado.demo;
-    // Solo en desarrollo se devuelve el código y el enlace para verlos en pantalla
-    if (demo && process.env.NODE_ENV !== 'production') {
+    // En desarrollo se muestran el código y el enlace aunque el envío sea real
+    // (en producción nunca se devuelven).
+    if (process.env.NODE_ENV !== 'production') {
       codigoDev = codigo;
       enlaceDev = enlace;
     }
@@ -370,9 +374,11 @@ router.post('/solicitar-eliminacion', requireAuth, async (req, res) => {
     'INSERT INTO password_reset (correo, codigo_hash, proposito, expira_en) VALUES (?, ?, ?, ?)',
   ).run(fila.correo, hashCodigo(codigo), 'eliminacion', expira);
 
-  const resultado = await enviarCodigoCorreo(fila.correo, codigo, 'eliminacion');
+  const resultado = await enviarCodigoCorreo(fila.correo, codigo, 'eliminacion', {
+    nombre: fila.nombre,
+  });
   let codigoDev = null;
-  if (resultado.demo && process.env.NODE_ENV !== 'production') codigoDev = codigo;
+  if (process.env.NODE_ENV !== 'production') codigoDev = codigo;
 
   registrarAuditoria(fila.correo, 'solicitar_eliminacion', null, req.ip);
   return res.json({

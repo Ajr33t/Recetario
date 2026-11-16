@@ -56,7 +56,10 @@ router.post('/prueba', requireAuth, async (req, res) => {
   const codigo = String(Math.floor(100000 + Math.random() * 900000));
   const enlace = `${process.env.APP_URL || 'http://localhost:5173'}/#/recuperar?token=prueba`;
 
-  const resultado = await enviarCodigoCorreo(destino, codigo, 'recuperacion', { enlace });
+  const resultado = await enviarCodigoCorreo(destino, codigo, 'recuperacion', {
+    enlace,
+    nombre: req.user?.nombre,
+  });
   return res.json({
     ok: true,
     enviado: !resultado.demo,

@@ -64,7 +64,7 @@ sigue siendo la caché local** porque el `.exe` debe funcionar **sin internet**
 | Modo | Configuración | Notas |
 |------|---------------|-------|
 | **SMTP** | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `MAIL_FROM` | nodemailer; Gmail (465/secure), Outlook (587), SMTP corporativo |
-| **Resend** | `RESEND_API_KEY` | API por `fetch`, sin librería |
+| **Resend** | `RESEND_API_KEY` + `RESEND_PLANTILLA_*` + `MAIL_FROM` | SDK oficial (`resend`), plantillas publicadas en Resend (el copy se edita sin desplegar), clave de idempotencia por intento |
 | **Demo** | — | el código se muestra en pantalla y en la consola |
 
 ### 3.2 Configuración «una vez para todos»
@@ -86,9 +86,13 @@ sigue siendo la caché local** porque el `.exe` debe funcionar **sin internet**
 
 ### 3.4 Verificación
 
-`server/src/services/mailer.test.js` levanta un **servidor SMTP real** (mínimo,
-en `node:net`) y comprueba que el correo sale con el código y el enlace
-(`✔ 23/23` pruebas unitarias).
+- `server/src/services/mailer.test.js` levanta un **servidor SMTP real** (mínimo,
+  en `node:net`) y comprueba que el correo sale con el código y el enlace
+  (✔ 23/23 pruebas unitarias).
+- **Resend (producción)**: envío real verificado extremo a extremo desde el flujo
+  de la app (`POST /api/auth/olvide-contrasena`) → correo **delivered**, sin
+  variables de plantilla sin rellenar y con **idempotencia** comprobada (dos
+  envíos con la misma clave devuelven el mismo id → no se duplica).
 
 ---
 

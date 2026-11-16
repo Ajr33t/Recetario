@@ -275,6 +275,7 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 - **RF-10 — Filtros avanzados**: `filtrarAvanzado()` en `server/src/routes/search.js` (excluidos + dieta vegetariana/vegana sobre el detalle enriquecido, cap 40, aviso `sin_dato`, coste 0 sin parámetros) aplicado a `/search`, `/search/sugerencias` y `/search/categorias`; UI de chips de excluidos + select de dieta en Buscar (re-búsqueda automática) y barra de filtros en Mis recetas (texto, tiempo máximo, dificultad, etiqueta) con recuento transparente y estado vacío.
 - **RF-11 — Historial de búsquedas**: `app/src/services/historialBusquedas.js` (localStorage, tope 8, deduplicado) + sección «Búsquedas recientes» en Buscar con repetición en un clic y «Vaciar historial».
 - **`docs/INFORME_FINAL.md`**: cumplimiento **25/25 RF**, arquitectura, batería final, manual de usuario, lecciones aprendidas y pendientes.
+- **`docs/CONFIGURAR_CORREO.md`**: guía para activar el envío desde el dominio propio (`sazonlab.com`) — registros DNS para Resend, alternativa con Zoho SMTP y comprobaciones.
 - **`docs/ACTA_DE_CIERRE.md`**: acta de cierre del proyecto (Hito 12) con la aprobación, los entregables oficiales, el resultado técnico y los pendientes fuera de alcance.
 - **`docs/informes/fase-9.md`**: informe de la fase (hallazgos de cumplimiento y su corrección).
 - Suites ampliadas: `verificar:auth` **26 → 41 checks** (flujo admin completo), `verificar:ui-f5` **37 → 58 checks** (RF-10, RF-11 y panel `/admin` con axe).
@@ -299,7 +300,8 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 ## [Fase 10] — 15/11/2026 — Nube, IA local, chatbot, correo real, responsive y manual (ampliación del cierre)
 
 ### Agregado
-- **Correo de recuperación que sí funciona**: `services/mailer.js` con **SMTP (nodemailer)** y **Resend**, plantillas HTML con botón de un clic, y **enlace de token** (`/#/recuperar?token=…`) además del código de 6 dígitos; nueva página `/recuperar` y campo `token_hash` en `password_reset`.
+- **Correo de recuperación que sí funciona**: `services/mailer.js` con **SMTP (nodemailer)** y **Resend** (SDK oficial, con **plantillas publicadas en Resend** — el copy se edita en su panel sin desplegar), plantillas HTML con botón de un clic, y **enlace de token** (`/#/recuperar?token=…`) además del código de 6 dígitos; nueva página `/recuperar` y campo `token_hash` en `password_reset`.
+- **Resend configurado en el proyecto**: clave de **solo envío** en `apps/api/.env`, remitente `SazónLab <onboarding@resend.dev>` (el dominio propio se añade después sin tocar código) y **clave de idempotencia por intento** para que un reintento no duplique el correo.
 - **Configuración del correo desde la app** (Ajustes → *Correo de recuperación*, solo admins): proveedor (Gmail/Outlook/otro/Resend), host, puerto, usuario, contraseña de aplicación y remitente → se guarda en `apps/api/.env` y **se aplica en caliente**; botón «Enviar correo de prueba». **Se configura una vez y todos los usuarios reciben su correo automáticamente.**
 - **IA local con Ollama** (`services/ollama.js`): lista de modelos, chat y detección (`OLLAMA_HOST`/`OLLAMA_MODELO`); la cadena de IA queda **Ollama → OpenAI → Gemini → respaldo**.
 - **Chatbot** (`/chat`): `services/chat.js` + `routes/chat.js` + `app/src/pages/Chat.jsx` con historial en servidor, chips de sugerencias y **asistente local determinista** (responde con tus recetas, el catálogo, las medidas y los temas) para que siempre funcione.

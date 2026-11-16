@@ -198,7 +198,7 @@ async function main() {
         signal: AbortSignal.timeout(1500),
       });
       return r.ok;
-    }, 20000);
+    }, 45000); // el primer arranque tras recompilar lo analiza el antivirus: margen amplio
     check('API embebida responde en 127.0.0.1:4731', saludOk);
     if (saludOk) {
       const salud = await (await fetch(`http://127.0.0.1:${PUERTO_API}/api/health`)).json();
