@@ -114,7 +114,9 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
 
   // palettes.js es ESM dentro del workspace app (type: module)
-  const palettes = await import(pathToFileURL(path.join(ROOT, 'app/src/themes/palettes.js')).href);
+  const palettes = await import(
+    pathToFileURL(path.join(ROOT, 'apps/web/src/themes/palettes.js')).href
+  );
   const { THEMES, getPalette } = palettes;
 
   // --- 1) Galería 6×6 --------------------------------------------------
@@ -133,9 +135,9 @@ async function main() {
   gal.close();
 
   // --- 2) Capturas de la app real --------------------------------------
-  const appDist = path.join(ROOT, 'app/dist/index.html');
+  const appDist = path.join(ROOT, 'apps/web/dist/index.html');
   if (!fs.existsSync(appDist)) {
-    console.warn('⚠️  app/dist no existe — corre "npm run build:app" antes.');
+    console.warn('⚠️  apps/web/dist no existe — corre "npm run build:app" antes.');
     return;
   }
 

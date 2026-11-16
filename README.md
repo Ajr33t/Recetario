@@ -5,23 +5,26 @@ Aplicación de recetario digital que sugiere recetas según los ingredientes dis
 > 📄 Especificación de requisitos: [`docs/IEEE_Recetario_Inteligente.md`](docs/IEEE_Recetario_Inteligente.md)
 > 📈 Estado por fase: [`docs/CHANGELOG.md`](docs/CHANGELOG.md) · Informes: [`docs/informes/`](docs/informes/)
 > 🏁 **Informe final (25/25 RF):** [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md) · **Acta de cierre:** [`docs/ACTA_DE_CIERRE.md`](docs/ACTA_DE_CIERRE.md)
+> 📘 **Manual de usuario:** [MD](docs/MANUAL_USUARIO.md) · [PDF](docs/MANUAL_USUARIO.pdf)
 
 ## 📦 Entregables
 
 - 📄 Documento IEEE (`docs/IEEE_Recetario_Inteligente.md`)
-- 🌐 Demo web funcional (`app/`)
-- 🖥️ Página web oficial / landing (`landing/`)
-- 💻 Aplicación de escritorio `.exe` (`desktop/`) → **`SazónLab-Setup-1.0.0.exe` en la raíz de la carpeta** (copia visible; también en `desktop/release/` y en `landing/public/` para la descarga web)
+- 📘 Manual de usuario (MD + PDF) (`docs/MANUAL_USUARIO.md`)
+- 🌐 Demo web funcional (`apps/web/`)
+- 🖥️ Página web oficial / landing (`apps/landing/`)
+- 💻 Aplicación de escritorio `.exe` (`apps/desktop/`) → **`SazónLab-Setup-1.0.0.exe` en la raíz de la carpeta** (copia visible; también en `apps/desktop/release/` y en `apps/landing/public/` para la descarga web)
 
 > El instalador pesa ~124,7 MB, por eso **no se versiona en Git** (límite de 100 MB): se regenera con `npm run build:exe` y se deja en la raíz de la carpeta del proyecto.
 
 ## 🛠️ Stack
 
-- **Frontend:** React 19 + Vite 7 + TailwindCSS 3 (glassmorphism)
+- **Frontend:** React 19 + Vite 7 + TailwindCSS 3 (glassmorphism) · responsivo (celular, tablet, escritorio)
 - **Estado:** Zustand
 - **Backend:** Node.js + Express 4 (proxy de APIs + auth JWT/bcrypt)
-- **APIs:** TheMealDB (fallback gratuito) + OpenAI/Gemini (sugerencia IA, opcional)
-- **BD:** SQLite local (Electron y demo) + PostgreSQL opcional vía `DATABASE_URL`
+- **APIs:** TheMealDB (fallback gratuito) + OpenAI/Gemini + **Ollama (IA local, sin internet)**
+- **BD:** **PostgreSQL en la nube** (vía `DATABASE_URL`, con sincronización) + SQLite local como caché/offline
+- **Correo:** SMTP (nodemailer) o Resend para la recuperación de contraseña
 - **Escritorio:** Electron 44 + electron-builder (NSIS)
 - **Iconos:** Font Awesome · **Alertas:** SweetAlert2 · **Toasts/modales:** sistema propio
 
@@ -31,7 +34,7 @@ Aplicación de recetario digital que sugiere recetas según los ingredientes dis
 # Requisitos: Node.js >= 22
 git clone <url>
 cd recetario
-npm install
+npm install --ignore-scripts   # --ignore-scripts es importante (better-sqlite3/electron)
 
 # Demo web (2 terminales)
 npm run dev:server   # API en http://localhost:3001
@@ -45,32 +48,45 @@ npm run dev:desktop
 
 # Empaquetar .exe (compila la UI, sincroniza server+renderer y arma el NSIS)
 npm run build:exe
+
+# Manual de usuario en PDF (desde docs/MANUAL_USUARIO.md)
+npm run manual:pdf
 ```
 
 > 🛡️ **Cuenta admin de demo** (se crea sola si no hay ningún administrador):
-> `admin@sazonlab.test` / `SazonLab-Admin-2026` — cámbiala con `ADMIN_CORREO` / `ADMIN_PASSWORD`
-> en `server/.env` antes de un despliegue real. Detalle en [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md).
+> `admin@sazonlab.test` / `admin1234` — cámbiala con `ADMIN_CORREO` / `ADMIN_PASSWORD`
+> en `apps/api/.env` antes de un despliegue real. Detalle en [`docs/INFORME_FINAL.md`](docs/INFORME_FINAL.md).
+
+> ✉️ **Correo de recuperación real**: configúralo **una vez** en
+> _Ajustes → Correo de recuperación_ (Gmail, Outlook, otro SMTP o Resend) y
+> **todos los usuarios** reciben su código y su enlace automáticamente.
+> Detalle en el [manual](docs/MANUAL_USUARIO.md#11-correo-configúralo-una-vez-y-funciona-para-todos-).
 
 ## 📁 Estructura
 
 ```
 recetario/
-├── app/            # React + Vite (demo web + renderer Electron)
-│   └── src/
-│       ├── components/   # layout, ui (ToastHost, Modal), onboarding, tema
-│       ├── pages/        # rutas de la app
-│       ├── services/     # api, toast, exportarReceta
-│       ├── store/        # Zustand (tema, auth, a11y)
-│       ├── styles/       # index.css (Liquid Glass + @media print)
-│       └── themes/       # 12 paletas × 3 modos
-├── server/         # Node.js + Express + SQLite
-├── desktop/        # Electron + electron-builder
-├── landing/        # Página web oficial
-├── scripts/        # Suites de verificación (Node + Electron)
+├── apps/
+│   ├── web/         # React + Vite (demo web + renderer Electron)
+│   │   └── src/
+│   │       ├── components/   # layout, ui (ToastHost, Modal), onboarding, tema
+│   │       ├── pages/        # rutas de la app (incluye Chat y Recuperar)
+│   │       ├── services/     # api, toast, exportarReceta, historial, enlaces
+│   │       ├── store/        # Zustand (tema, auth, a11y)
+│   │       ├── styles/       # index.css (Liquid Glass + @media print)
+│   │       └── themes/       # 12 paletas × 3 modos
+│   ├── api/         # Node.js + Express + SQLite (+ PostgreSQL en la nube)
+│   ├── desktop/     # Electron + electron-builder (genera el .exe)
+│   └── landing/     # Página web oficial (+ manual en PDF)
 ├── docs/
-│   ├── informes/   # Informe por fase (fase-0 … fase-9)
+│   ├── informes/   # Informe por fase (fase-0 … fase-10)
 │   ├── evidencias/ # Contraste, axe-core, checklist WCAG, capturas
+│   ├── MANUAL_USUARIO.md / .pdf
+│   ├── INFORME_FINAL.md · ACTA_DE_CIERRE.md
 │   └── CHANGELOG.md
+├── scripts/         # Suites de verificación (Node + Electron) y generadores
+├── assets/          # logo de la marca (SVG fuente)
+├── legal/           # textos legales compartidos
 └── README.md
 ```
 
@@ -78,19 +94,20 @@ recetario/
 
 ### Desarrollo y build
 
-| Script                        | Descripción                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `npm run dev:app`             | Demo web (Vite, puerto 5173)                                  |
-| `npm run dev:server`          | API Express (puerto 3001)                                     |
-| `npm run dev:landing`         | Landing oficial (puerto 5174)                                 |
-| `npm run dev:desktop`         | Electron en modo desarrollo                                   |
-| `npm run build:app`           | Build de producción de la demo                                |
-| `npm run build:landing`       | Build de la landing                                           |
-| `npm run build:exe`           | Build web + sincroniza + genera el `.exe` (NSIS) y lo copia   |
-| `npm run sincronizar:desktop` | Copia `app/dist` y `server/src` a `desktop/` (para el `.exe`) |
-| `npm run copiar:exe`          | Copia el `.exe` a la raíz del proyecto y a `landing/public/`  |
-| `npm run lint` / `lint:fix`   | ESLint                                                        |
-| `npm run format`              | Prettier                                                      |
+| Script                        | Descripción                                                       |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `npm run dev:app`             | Demo web (Vite, puerto 5173)                                      |
+| `npm run dev:server`          | API Express (puerto 3001)                                         |
+| `npm run dev:landing`         | Landing oficial (puerto 5174)                                     |
+| `npm run dev:desktop`         | Electron en modo desarrollo                                       |
+| `npm run build:app`           | Build de producción de la demo                                    |
+| `npm run build:landing`       | Build de la landing                                               |
+| `npm run build:exe`           | Build web + sincroniza + genera el `.exe` (NSIS) y lo copia       |
+| `npm run sincronizar:desktop` | Copia `apps/web/dist` y `apps/api/src` a `apps/desktop/`          |
+| `npm run copiar:exe`          | Copia el `.exe` a la raíz del proyecto y a `apps/landing/public/` |
+| `npm run manual:pdf`          | Genera el manual de usuario en PDF (`docs/MANUAL_USUARIO.pdf`)    |
+| `npm run lint` / `lint:fix`   | ESLint                                                            |
+| `npm run format`              | Prettier                                                          |
 
 ### Verificación (batería por fase)
 
@@ -108,6 +125,7 @@ recetario/
 | `npm run verificar:landing`   | Landing oficial: secciones, legales, SEO, axe           |
 | `npm run verificar:cuenta`    | Eliminar cuenta con código al correo (API + UI + axe)   |
 | `npm run verificar:desktop`   | `.exe` empaquetado: API embebida, SQLite local y UI     |
+| `npm run verificar:movil`     | Responsive: celular/tablet/escritorio sin desbordes     |
 | `npm run logo`                | Regenera el PNG512 del logo (Electron, sin deps)        |
 | `npm run capturas`            | Capturas de evidencia (galería de temas)                |
 
@@ -116,6 +134,11 @@ recetario/
 ## 🎨 Características
 
 - 🔍 Búsqueda por ingredientes con sugerencia IA (OpenAI/Gemini opcional)
+- 🤖 **Chatbot con IA**: IA **local con Ollama** (sin internet, sin enviar datos) → OpenAI/Gemini → **asistente local** que siempre responde; historial en el servidor y en cualquier dispositivo
+- ✉️ **Recuperación de contraseña por correo real**: SMTP (Gmail/Outlook) o Resend, con **código de 6 dígitos y enlace de un clic**; se configura **una vez** para todos los usuarios
+- ☁️ **Nube con PostgreSQL**: `DATABASE_URL` apunta a tu PostgreSQL (Neon/Supabase…) y SazónLab replica recetas, favoritos y preferencias (SQLite queda como caché offline)
+- 📱 **Responsive de verdad**: probado a 390×844 (celular), 768×1024 (tablet) y 1280×900, sin desbordes y con áreas táctiles cómodas
+- 📘 **Manual de usuario** en Markdown y PDF (8 páginas)
 - 🕘 **Historial de búsquedas**: «Búsquedas recientes» con repetición en un clic y vaciado (RF-11)
 - 🗂️ **Filtros avanzados**: ingredientes excluidos y dieta (vegetariana/vegana) en Buscar; tiempo, dificultad, texto y etiqueta en Mis recetas; categorías y solo las **áreas con recetas reales** en Explorar (RF-10)
 - 🛡️ **Panel de administración** (`/admin`, solo rol admin): crear cuentas, cambiar roles e inactivar/activar usuarios con revocación inmediata de sesiones (RF-02/RF-22)

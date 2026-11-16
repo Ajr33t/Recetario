@@ -446,7 +446,7 @@ app.whenReady().then(async () => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       correo: process.env.ADMIN_CORREO || 'admin@sazonlab.test',
-      contrasena: process.env.ADMIN_PASSWORD || 'SazonLab-Admin-2026',
+      contrasena: process.env.ADMIN_PASSWORD || 'admin1234',
     }),
   }).then((r) => r.json());
   check('RF-22: login de administrador para la UI', Boolean(loginAdmin.token));

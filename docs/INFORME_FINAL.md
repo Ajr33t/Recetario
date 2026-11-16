@@ -30,6 +30,12 @@ Se entregan los 4 productos del alcance:
 fase**: panel de administración, filtros avanzados e historial de búsquedas (detalles en
 [`informes/fase-9.md`](informes/fase-9.md)).
 
+**Ampliación final (Fase 10):** a petición del cliente se sumó el envío **real** de correos de
+recuperación (SMTP/Resend + enlace de un clic), **PostgreSQL en la nube** con sincronización,
+**IA local (Ollama) con chatbot**, **responsive** verificado para celular y tablet, el **manual
+de usuario en MD y PDF** y una **raíz de proyecto reorganizada** (`apps/{web,api,desktop,landing}`).
+Detalle en [`informes/fase-10.md`](informes/fase-10.md).
+
 ---
 
 ## 2. Cumplimiento de requisitos funcionales (RF-01 … RF-25)
@@ -70,16 +76,21 @@ fase**: panel de administración, filtros avanzados e historial de búsquedas (d
 
 ```
 recetario/  (monorepo npm workspaces)
-├── app/        React 19 + Vite 7 + TailwindCSS 3 → demo web (5173) y renderer Electron
-│   └── src/    pages/ · components/ (layout semántico) · services/ (api, toast, historial)
-│               store/ (Zustand: tema, auth, a11y) · themes/ (12 × 3) · styles/ (Liquid Glass)
-├── server/     Node.js + Express 4 + SQLite (better-sqlite3) → API (3001 / 4731 en .exe)
-│   └── src/    routes/ (auth, recipes, search, favorites, admin…) · middleware/ (auth, errores)
-│               services/ (mealdb, ia, traductor, mailer) · db/ (esquema + seed admin)
-├── desktop/    Electron 44 + electron-builder NSIS → SazónLab-Setup-1.0.0.exe
-├── landing/    Página oficial (Vite, 5174) + descarga del .exe
-├── scripts/    11 suites de verificación (Node + Electron + axe-core) + pruebas unitarias
-└── docs/       IEEE · informes por fase · INFORME_FINAL · CHANGELOG · evidencias
+├── apps/
+│   ├── web/     React 19 + Vite 7 + TailwindCSS 3 → demo web (5173) y renderer Electron
+│   │   └── src/ pages/ · components/ (layout semántico) · services/ (api, toast, historial)
+│   │            store/ (Zustand: tema, auth, a11y) · themes/ (12 × 3) · styles/ (Liquid Glass)
+│   ├── api/     Node.js + Express 4 + SQLite (better-sqlite3) → API (3001 / 4731 en .exe)
+│   │   └── src/ routes/ (auth, recipes, search, favorites, admin, chat, correo, nube)
+│   │            services/ (mealdb, ia, ollama, chat, mailer, nube, traductor)
+│   │            db/ (esquema + seed admin + postgres + estado)
+│   ├── desktop/ Electron 44 + electron-builder NSIS → SazónLab-Setup-1.0.0.exe
+│   └── landing/ Página oficial (Vite, 5174) + descarga del .exe y del manual en PDF
+├── scripts/     12 suites de verificación (Node + Electron + axe-core) y generadores
+├── assets/      logo de la marca (SVG fuente)
+├── legal/       textos legales compartidos (fuente única)
+├── docs/        IEEE · informes por fase · INFORME_FINAL · ACTA_DE_CIERRE
+│                · MANUAL_USUARIO (MD+PDF) · evidencias · CHANGELOG
 ```
 
 | Decisión técnica | Motivo |
@@ -87,7 +98,9 @@ recetario/  (monorepo npm workspaces)
 | **HashRouter** + `base: './'` | La misma build corre en web (con proxy `/api`) y desde `file://` en Electron, sin configuración extra. |
 | **Vite proxy** `/api → :3001` en dev; Express sirve `app/dist` en prod | Misma origen en producción → sin CORS. |
 | **Temas por variables CSS** (`data-theme` + `data-mode`) | 12 paletas × 3 modos con vista previa instantánea y persistencia; contraste AA verificado por suite. |
-| **SQLite único** (`better-sqlite3`) | Web/demo y `.exe` usan el mismo código; PostgreSQL vía `DATABASE_URL` es un reemplazo de capa (decisión Fase 0). |
+| **SQLite local + PostgreSQL en la nube** | El `.exe` necesita **offline**, así que SQLite queda como caché local; con `DATABASE_URL` la nube es el almacén de verdad y se replica en ambos sentidos (*última escritura gana*). |
+| **IA local primero (Ollama)** | La IA del asistente no necesita internet ni claves; si no hay Ollama, se usa OpenAI/Gemini y, si tampoco, un asistente local determinista que **siempre responde**. |
+| **Correo: SMTP o Resend, configurado una vez** | El envío real de la recuperación de contraseña se configura en un solo lugar (Ajustes o `.env`) y sirve para todos los usuarios. |
 | **API embebida en Electron** (`fork` + `ELECTRON_RUN_AS_NODE`) | El `.exe` no necesita Node instalado; puerto fijo 4731 descubierto por `?apiPort=`; sin procesos huérfanos. |
 | **`npmRebuild: false`** | El prebuild oficial de `better-sqlite3` carga en Electron 44 (verificado `ABI-OK`): sin Python/node-gyp en la máquina de build. |
 | **TheMealDB + IA opcional** | TheMealDB siempre responde (sin clave); OpenAI/Gemini solo con API key → fallback elegante. |
@@ -102,7 +115,7 @@ recetario/  (monorepo npm workspaces)
 | Suite | Resultado |
 |-------|-----------|
 | `npm run lint` / `format` | ✅ 0 errores |
-| `npm test` (unitarias `node --test`) | ✅ 18/18 |
+| `npm test` (unitarias `node --test`) | ✅ 23/23 (18 + 2 de correo SMTP real + 3 de nube con PostgreSQL embebido) |
 | `verificar:a11y` (axe-core, 11 estados) | ✅ 11/11 |
 | `verificar:contraste` (12 temas × 3 modos) | ✅ 36/36 |
 | `verificar:temas` (Electron) | ✅ 4/4 |
@@ -112,12 +125,13 @@ recetario/  (monorepo npm workspaces)
 | `verificar:cuenta` | ✅ 27/27 |
 | `verificar:ui-f5` (incluye RF-10/RF-11, panel RF-22 y menú de cuenta) | ✅ 66/66 |
 | `verificar:ui-f6` | ✅ 29/29 |
+| `verificar:movil` (responsive: celular/tablet/escritorio) | ✅ 33/33 |
 | `verificar:landing` (+ axe 5 estados) | ✅ 38/38 + 5/5 |
 | `verificar:desktop` (sobre el `.exe` real) | ✅ 22/22 |
-| `build:app` / `build:landing` | ✅ |
+| `build:app` / `build:landing` / `manual:pdf` | ✅ |
 | Endpoints (5173, 3001, 5174, robots.txt) | ✅ 200 × 4 |
 
-**≈ 399 comprobaciones automatizadas en verde** (18 unitarias + 11 suites). Reproducir con:
+**≈ 415 comprobaciones automatizadas en verde** (23 unitarias + 12 suites). Reproducir con:
 `npm run dev:server` + `npm run dev:app` en una terminal y la batería en otra
 (`lint`, `test`, `verificar:*`, `build:*`).
 
@@ -157,7 +171,7 @@ incluye la API y SQLite local.**
 8. **Escritorio**: la cabecera y el hero de la landing descargan el instalador `.exe`; en la demo
    web hay un botón «Descargar para Windows» en el inicio y en el pie.
 
-> **Cuenta admin de demo:** `admin@sazonlab.test` / `SazonLab-Admin-2026`
+> **Cuenta admin de demo:** `admin@sazonlab.test` / `admin1234`
 > (cambiable con `ADMIN_CORREO` / `ADMIN_PASSWORD` en `server/.env`; se crea automáticamente
 > si no existe ningún administrador).
 
@@ -200,11 +214,13 @@ incluye la API y SQLite local.**
 | **Code signing** del `.exe` | SmartScreen mostrará «app desconocida» | Comprar certificado EV/OV y firmar en `electron-builder` |
 | **`sitemap.xml`** | SEO de la landing cuando haya dominio | Generarlo en el build de landing (el `robots.txt` ya lo referencia) |
 | **Contraseña admin de demo** | Credenciales publicadas | En producción: cambiar `ADMIN_PASSWORD` o retirar el seed |
-| **PostgreSQL/Firestore** | La capa de BD es reemplazable (decisión Fase 0) | Implementar el adaptador cuando haya entorno productivo |
-| **Claves de IA** | Sin claves, las ideas del chef usan respaldo TheMealDB | Configurar `OPENAI_API_KEY`/`GEMINI_API_KEY` para IA real |
-| **Correo real** | Recuperación/eliminación usan modo demo (código en pantalla) | Configurar `RESEND_API_KEY` para envío real |
+| **PostgreSQL en producción** | La capa ya replica con PostgreSQL (Fase 10), pero sin `DATABASE_URL` todo vive en SQLite local | Definir `DATABASE_URL` (Neon/Supabase) y decidir la cadencia de sincronización automática |
+| **Claves de IA / Ollama** | Sin IA externa, el chatbot usa el asistente local determinista | Configurar `OPENAI_API_KEY`/`GEMINI_API_KEY` o instalar Ollama para IA real |
+| **Correo real** | Ya implementado (SMTP/Resend + enlace); falta activarlo en producción | Configurar el proveedor en Ajustes → Correo de recuperación (una vez) o en `apps/api/.env` |
 
 ---
 
-*Informe generado en la Fase 9 (cierre del proyecto). Consolidación de los informes
-`docs/informes/fase-0.md` … `fase-9.md`.*
+*Informe generado en la Fase 9 (cierre del proyecto) y ampliado en la Fase 10
+(correo real, PostgreSQL en la nube, IA local con chatbot, responsive, manual en
+MD/PDF y reorganización de carpetas). Consolidación de los informes
+`docs/informes/fase-0.md` … `fase-10.md`.*

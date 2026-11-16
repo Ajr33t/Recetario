@@ -31,7 +31,7 @@ const hexToRgb = (hex) => {
 
 app.whenReady().then(async () => {
   const { getPalette } = await import(
-    pathToFileURL(path.join(__dirname, '../app/src/themes/palettes.js')).href
+    pathToFileURL(path.join(__dirname, '../apps/web/src/themes/palettes.js')).href
   );
   const win = new BrowserWindow({
     width: 1100,

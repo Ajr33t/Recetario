@@ -229,7 +229,7 @@ async function main() {
 
   // 10) Panel de administración (RF-22 — Fase 9)
   const ADMIN_CORREO = process.env.ADMIN_CORREO || 'admin@sazonlab.test';
-  const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'SazonLab-Admin-2026';
+  const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'admin1234';
 
   const loginAdmin = await llamar('POST', '/auth/login', {
     body: { correo: ADMIN_CORREO, contrasena: ADMIN_PASS },

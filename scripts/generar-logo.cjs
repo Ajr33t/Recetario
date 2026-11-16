@@ -3,8 +3,8 @@
  * Usa Electron (ya instalado) como rasterizador: sin dependencias nuevas.
  *
  * Salidas:
- *  - desktop/build/icon.png     → icono de la app y del instalador NSIS
- *  - landing/public/logo-512.png → respaldo/og del logo
+ *  - apps/desktop/build/icon.png     → icono de la app y del instalador NSIS
+ *  - apps/landing/public/logo-512.png → respaldo/og del logo
  *
  * Uso: npm run logo   (o: electron scripts/generar-logo.cjs)
  */
@@ -40,11 +40,11 @@ app.whenReady().then(async () => {
   const imagen = await win.webContents.capturePage();
   const png = imagen.toPNG();
 
-  fs.mkdirSync(path.join(raiz, 'desktop', 'build'), { recursive: true });
-  fs.writeFileSync(path.join(raiz, 'desktop', 'build', 'icon.png'), png);
-  fs.writeFileSync(path.join(raiz, 'landing', 'public', 'logo-512.png'), png);
+  fs.mkdirSync(path.join(raiz, 'apps', 'desktop', 'build'), { recursive: true });
+  fs.writeFileSync(path.join(raiz, 'apps', 'desktop', 'build', 'icon.png'), png);
+  fs.writeFileSync(path.join(raiz, 'apps', 'landing', 'public', 'logo-512.png'), png);
 
-  console.log('OK: desktop/build/icon.png + landing/public/logo-512.png (512×512)');
+  console.log('OK: apps/desktop/build/icon.png + apps/landing/public/logo-512.png (512×512)');
   app.exit(0);
 });
 

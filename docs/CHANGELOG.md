@@ -269,7 +269,7 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 ## [Fase 9] — 11/11/2026 — Pruebas finales, corrección de hallazgos e INFORME_FINAL (Sprint 11 · Hito 12)
 
 ### Agregado
-- **RF-22 — Panel de administración**: `server/src/routes/admin.js` (`GET/POST/PATCH /api/admin/usuarios`) con middleware `requireRole('admin')` + re-validación del rol/estado en la BD por petición (defensa contra JWT antiguos), protección de la propia cuenta (no auto-degradarse/desactivarse → siempre queda ≥ 1 admin) y auditoría de cada operación. Seed `asegurarAdmin()` en `initDatabase()`: `admin@sazonlab.test` / `SazonLab-Admin-2026` (sobrecribible con `ADMIN_CORREO`/`ADMIN_PASSWORD`).
+- **RF-22 — Panel de administración**: `server/src/routes/admin.js` (`GET/POST/PATCH /api/admin/usuarios`) con middleware `requireRole('admin')` + re-validación del rol/estado en la BD por petición (defensa contra JWT antiguos), protección de la propia cuenta (no auto-degradarse/desactivarse → siempre queda ≥ 1 admin) y auditoría de cada operación. Seed `asegurarAdmin()` en `initDatabase()`: `admin@sazonlab.test` / `admin1234` (sobrecribible con `ADMIN_CORREO`/`ADMIN_PASSWORD`).
 - **RF-22 — UI**: `app/src/pages/Admin.jsx` (ruta `/admin`) con creación de cuentas y tabla de usuarios (rol con SweetAlert2, inactivar/activar explicando la revocación inmediata); ítem «Administración» en el sidebar solo para `rol === 'admin'`; vista de acceso denegado para el resto.
 - **Revocación inmediata de sesiones**: `requireAuth` revalida `users.estado` en cada petición → desactivar una cuenta invalida sus JWT vigentes (401) y bloquea el login (403).
 - **RF-10 — Filtros avanzados**: `filtrarAvanzado()` en `server/src/routes/search.js` (excluidos + dieta vegetariana/vegana sobre el detalle enriquecido, cap 40, aviso `sin_dato`, coste 0 sin parámetros) aplicado a `/search`, `/search/sugerencias` y `/search/categorias`; UI de chips de excluidos + select de dieta en Buscar (re-búsqueda automática) y barra de filtros en Mis recetas (texto, tiempo máximo, dificultad, etiqueta) con recuento transparente y estado vacío.
@@ -296,4 +296,31 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
-*(Proyecto cerrado — Fase 9 completa.)*
+## [Fase 10] — 15/11/2026 — Nube, IA local, chatbot, correo real, responsive y manual (ampliación del cierre)
+
+### Agregado
+- **Correo de recuperación que sí funciona**: `services/mailer.js` con **SMTP (nodemailer)** y **Resend**, plantillas HTML con botón de un clic, y **enlace de token** (`/#/recuperar?token=…`) además del código de 6 dígitos; nueva página `/recuperar` y campo `token_hash` en `password_reset`.
+- **Configuración del correo desde la app** (Ajustes → *Correo de recuperación*, solo admins): proveedor (Gmail/Outlook/otro/Resend), host, puerto, usuario, contraseña de aplicación y remitente → se guarda en `apps/api/.env` y **se aplica en caliente**; botón «Enviar correo de prueba». **Se configura una vez y todos los usuarios reciben su correo automáticamente.**
+- **IA local con Ollama** (`services/ollama.js`): lista de modelos, chat y detección (`OLLAMA_HOST`/`OLLAMA_MODELO`); la cadena de IA queda **Ollama → OpenAI → Gemini → respaldo**.
+- **Chatbot** (`/chat`): `services/chat.js` + `routes/chat.js` + `app/src/pages/Chat.jsx` con historial en servidor, chips de sugerencias y **asistente local determinista** (responde con tus recetas, el catálogo, las medidas y los temas) para que siempre funcione.
+- **PostgreSQL en la nube** (`db/postgres.js` + `services/nube.js` + `routes/nube.js`): esquema remoto con `JSONB`, sincronización bidireccional *última escritura gana* y panel «Sistema, IA y nube» en Ajustes con «Sincronizar con la nube».
+- **Suite responsive** `npm run verificar:movil` (`scripts/verificar-movil.cjs`, **33 checks**): 7 páginas × 3 tamaños (390×844, 768×1024, 1280×900) sin desbordamiento horizontal, menú táctil, buscador y chat.
+- **Manual de usuario** en `docs/MANUAL_USUARIO.md` y **`docs/MANUAL_USUARIO.pdf`** (8 páginas A4, `npm run manual:pdf` con `marked` + `printToPDF` de Electron), publicado también en la landing.
+- **`apps/api/.env.example`** ampliado (SMTP, Resend, Ollama, `DATABASE_URL`, `APP_URL`).
+
+### Cambiado
+- **Organización de la raíz**: `app/`, `server/`, `desktop/` y `landing/` pasan a `apps/{web,api,desktop,landing}` (con `git mv`, sin perder historial); se actualizan workspaces, scripts, ESLint, Prettier, Tailwind, imports del módulo legal y utilidades.
+- **Buscador global en móvil**: segunda fila a ancho completo (`#buscador-global-movil`); el logotipo textual se oculta en pantallas pequeñas para evitar desbordes.
+- **Menús del navbar con cierre automático**: scroll, redimensionado, cambio de ruta, pérdida de foco y `Esc`.
+- **Credenciales de administrador más cortas**: `admin@sazonlab.test` / `admin1234`, restablecidas en cada arranque para que nunca se desincronicen con la documentación.
+- `apps/desktop/package.json`: se añaden `nodemailer` y `pg` (la API embebida los necesita).
+- `package.json`: `verificar:movil`, `manual:pdf` y `copiar:exe` como scripts del proyecto.
+
+### Resuelto
+- **Recuperación de contraseña por correo**: antes solo funcionaba en modo demo (código en pantalla); ahora hay envío real, enlace de un clic, configuración guiada y prueba automatizada con un servidor SMTP real.
+- **«Base de datos sólida»**: PostgreSQL en la nube como almacén de verdad, conservando SQLite como caché/offline (imprescindible para el `.exe` sin internet).
+- **Desbordamiento horizontal en celular**: detectado por la suite responsive y corregido en la cabecera.
+
+---
+
+*(Proyecto cerrado — Fase 10 completa.)*

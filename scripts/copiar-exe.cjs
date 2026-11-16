@@ -1,7 +1,7 @@
 /**
  * Copia el instalador de escritorio generado a los dos destinos visibles:
  *   1. la raíz del proyecto  → «SazónLab-Setup-1.0.0.exe» (a la vista)
- *   2. landing/public/       → el enlace de descarga de la página oficial
+ *   2. apps/landing/public/       → el enlace de descarga de la página oficial
  *
  * El .exe pesa ~124,7 MB: NO se versiona en Git (límite de 100 MB), por eso
  * se regenera con `npm run build:exe` y se reparte con este script.
@@ -11,10 +11,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const RAIZ = path.resolve(__dirname, '..');
-const RELEASE = path.join(RAIZ, 'desktop', 'release');
+const RELEASE = path.join(RAIZ, 'apps', 'desktop', 'release');
 const NOMBRE = 'SazónLab-Setup-1.0.0.exe';
 
-/** Último .exe generado en desktop/release (evita depender del nombre exacto). */
+/** Último .exe generado en apps/desktop/release (evita depender del nombre exacto). */
 function buscarInstalador() {
   if (!fs.existsSync(RELEASE)) return null;
   const candidatos = fs
@@ -29,12 +29,14 @@ function buscarInstalador() {
 function main() {
   const origen = buscarInstalador();
   if (!origen) {
-    console.error('[SazónLab] No hay instalador en desktop/release — ejecuta: npm run build:exe');
+    console.error(
+      '[SazónLab] No hay instalador en apps/desktop/release — ejecuta: npm run build:exe',
+    );
     process.exitCode = 1;
     return;
   }
 
-  const destinos = [path.join(RAIZ, NOMBRE), path.join(RAIZ, 'landing', 'public', NOMBRE)];
+  const destinos = [path.join(RAIZ, NOMBRE), path.join(RAIZ, 'apps', 'landing', 'public', NOMBRE)];
 
   for (const destino of destinos) {
     fs.mkdirSync(path.dirname(destino), { recursive: true });

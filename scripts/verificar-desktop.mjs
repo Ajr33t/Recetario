@@ -25,10 +25,11 @@ const require = createRequire(import.meta.url);
 const asar = require('@electron/asar');
 
 const raiz = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const EXE = path.join(raiz, 'desktop', 'release', 'win-unpacked', 'SazonLab.exe');
-const ASAR = path.join(raiz, 'desktop', 'release', 'win-unpacked', 'resources', 'app.asar');
+const EXE = path.join(raiz, 'apps', 'desktop', 'release', 'win-unpacked', 'SazonLab.exe');
+const ASAR = path.join(raiz, 'apps', 'desktop', 'release', 'win-unpacked', 'resources', 'app.asar');
 const UNPACKED = path.join(
   raiz,
+  'apps',
   'desktop',
   'release',
   'win-unpacked',

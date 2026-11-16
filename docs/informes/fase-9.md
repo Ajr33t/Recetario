@@ -43,7 +43,7 @@ documentarlos como pendientes.
 |----------|---------|
 | `requireRole(...roles)` | Middleware nuevo en `server/src/middleware/auth.js`: 401 sin sesión, 403 sin el rol. |
 | Re-validación en `requireAuth` | Cada petición consulta `users.estado` en la BD: **desactivar una cuenta revoca sus JWT de inmediato** (aunque el token tenga 7 días de vigencia). |
-| Seed de administrador | `asegurarAdmin()` en `initDatabase()`: si no existe ningún `rol='admin'`, crea `admin@sazonlab.test` (contraseña `SazonLab-Admin-2026`, sobrecribible con `ADMIN_CORREO` / `ADMIN_PASSWORD` en `.env`). |
+| Seed de administrador | `asegurarAdmin()` en `initDatabase()`: si no existe ningún `rol='admin'`, crea `admin@sazonlab.test` (contraseña `admin1234`, sobrecribible con `ADMIN_CORREO` / `ADMIN_PASSWORD` en `.env`). |
 | `server/src/routes/admin.js` | `GET /api/admin/usuarios` (listado con rol, estado y nº de recetas), `POST /api/admin/usuarios` (crear con rol elegido), `PATCH /api/admin/usuarios/:id` (cambiar rol y/o estado). |
 | Protecciones | Todo montado tras `soloAdmin` = `requireRole('admin')` **+ re-validación del rol en la BD** (defensa contra JWT emitidos antes de degradar a un admin). No auto-degradarse ni auto-desactivarse (siempre queda ≥ 1 admin activo). 409 en correo duplicado, 400 en validaciones, 404 en usuario inexistente. |
 | Auditoría | Cada creación/cambio queda en `registrarAuditoria`. |

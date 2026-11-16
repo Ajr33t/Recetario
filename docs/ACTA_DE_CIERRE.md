@@ -24,7 +24,7 @@ MVP (documento IEEE, demo web, landing oficial e instalador `.exe` de escritorio
 | Entregable IEEE | Archivo | Estado |
 |-----------------|---------|--------|
 | Sistema en producción | Demo web `:5173` + landing `:5174` + instalador `.exe` | ✅ |
-| Manual de usuario | [`docs/INFORME_FINAL.md` §5](INFORME_FINAL.md) | ✅ |
+| Manual de usuario | [`docs/MANUAL_USUARIO.md`](MANUAL_USUARIO.md) · [`docs/MANUAL_USUARIO.pdf`](MANUAL_USUARIO.pdf) | ✅ |
 | Informe final (trazabilidad RF) | [`docs/INFORME_FINAL.md`](INFORME_FINAL.md) | ✅ |
 | Documentación final | [`docs/informes/fase-0.md` … `fase-9.md`](informes/) + [`docs/CHANGELOG.md`](CHANGELOG.md) | ✅ |
 | Pruebas y accesibilidad | 11 suites (`npm run verificar:*`) + axe-core + contraste 36/36 | ✅ |
@@ -38,7 +38,7 @@ MVP (documento IEEE, demo web, landing oficial e instalador `.exe` de escritorio
 | Métrica | Resultado |
 |---------|-----------|
 | Requisitos funcionales | **25/25 en cumplimiento** (17 ALTA · 7 MEDIA · 1 BAJA) |
-| Pruebas automatizadas | **399** checks en verde (18 unitarias + 11 suites) |
+| Pruebas automatizadas | **415** checks en verde (23 unitarias + 12 suites) |
 | Accesibilidad | axe-core sin violaciones serious/critical en 16 estados; contraste **36/36** AA |
 | Temas | 12 × 3 modos (36 combinaciones) con persistencia |
 | Escritorio | Instalador NSIS **124,7 MB** con API embebida + SQLite local (offline real) |
@@ -60,6 +60,22 @@ Brechas detectadas en la revisión de cumplimiento y **cerradas antes del cierre
 Ajustes de cierre solicitados por el cliente: **«Mi perfil» movido del menú lateral al navbar**
 (con avatar real del usuario como logo) e **instalador `.exe` visible dentro de la carpeta**
 (raíz del proyecto + `landing/public/`, con descarga directa desde la landing).
+
+### Ampliación posterior (Fase 10)
+
+Tras el cierre, el cliente solicitó una ampliación que quedó **integrada y verificada**:
+
+| Petición | Estado |
+|----------|--------|
+| Recuperación de contraseñas **por correo que funcione** | ✅ SMTP (nodemailer) / Resend + enlace de un clic + configuración en la app + prueba automatizada con SMTP real |
+| «Conectado a una nube» | ✅ **PostgreSQL** (`DATABASE_URL`) con sincronización bidireccional y panel de estado |
+| **IA local** y **chatbot** | ✅ Ollama (local, sin internet) → OpenAI/Gemini → asistente local determinista; historial en servidor |
+| «Base de datos sólida» | ✅ PostgreSQL como almacén de verdad; SQLite queda como caché/offline (necesario para el `.exe`) |
+| **Responsive** para tablet y celular | ✅ Suite propia (33 checks) en 390×844, 768×1024 y 1280×900 |
+| **Manuales de usuario en MD y PDF** | ✅ `docs/MANUAL_USUARIO.md` + `docs/MANUAL_USUARIO.pdf` (8 páginas) |
+| **Organizar las carpetas** | ✅ Raíz limpia: `apps/{web,api,desktop,landing}` + `docs/`, `scripts/`, `assets/`, `legal/` |
+| Menús del navbar con **cierre automático** | ✅ Scroll, redimensionado, cambio de ruta, foco y `Esc` |
+| Credenciales de administrador más cortas | ✅ `admin@sazonlab.test` / `admin1234` |
 
 ---
 

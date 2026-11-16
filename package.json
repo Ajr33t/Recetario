@@ -2,30 +2,30 @@
   "name": "sazonlab",
   "version": "1.0.0",
   "private": true,
-  "description": "SazónLab — Recetario Inteligente (monorepo: app, server, desktop, landing)",
+  "description": "SazónLab — Recetario Inteligente (monorepo: apps/web, apps/api, apps/desktop, apps/landing)",
   "license": "MIT",
   "workspaces": [
-    "app",
-    "server",
-    "desktop",
-    "landing"
+    "apps/web",
+    "apps/api",
+    "apps/desktop",
+    "apps/landing"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "dev:app": "npm run dev --workspace app",
-    "dev:server": "npm run dev --workspace server",
-    "dev:landing": "npm run dev --workspace landing",
-    "dev:desktop": "npm run start --workspace desktop",
-    "build:app": "npm run build --workspace app",
-    "build:landing": "npm run build --workspace landing",
+    "dev:app": "npm run dev --workspace apps/web",
+    "dev:server": "npm run dev --workspace apps/api",
+    "dev:landing": "npm run dev --workspace apps/landing",
+    "dev:desktop": "npm run start --workspace apps/desktop",
+    "build:app": "npm run build --workspace apps/web",
+    "build:landing": "npm run build --workspace apps/landing",
     "sincronizar:desktop": "node scripts/sincronizar-desktop.cjs",
     "copiar:exe": "node scripts/copiar-exe.cjs",
-    "build:exe": "npm run build:app && npm run sincronizar:desktop && npm run dist --workspace desktop && npm run copiar:exe",
+    "build:exe": "npm run build:app && npm run sincronizar:desktop && npm run dist --workspace apps/desktop && npm run copiar:exe",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "node --test app/src",
+    "test": "node --test apps/web/src apps/api/src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verificar:contraste": "node scripts/verificar-contraste.mjs",
@@ -40,7 +40,9 @@
     "verificar:desktop": "node scripts/verificar-desktop.mjs",
     "verificar:a11y": "electron scripts/verificar-a11y.cjs",
     "capturas": "electron scripts/capturas.cjs",
-    "logo": "electron scripts/generar-logo.cjs"
+    "logo": "electron scripts/generar-logo.cjs",
+    "verificar:movil": "electron scripts/verificar-movil.cjs",
+    "manual:pdf": "electron scripts/generar-manual-pdf.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -49,6 +51,10 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
+    "pg-mem": "^3.0.14",
     "prettier": "^3.9.10"
+  },
+  "dependencies": {
+    "marked": "^18.2.0"
   }
 }

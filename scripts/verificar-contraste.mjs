@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { THEMES, getPalette } from '../app/src/themes/palettes.js';
+import { THEMES, getPalette } from '../apps/web/src/themes/palettes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SALIDA = path.resolve(__dirname, '../docs/evidencias/contraste-36.md');

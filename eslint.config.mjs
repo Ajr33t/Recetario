@@ -10,14 +10,14 @@ export default [
       '**/dist/**',
       '**/release/**',
       'docs/**',
-      'desktop/renderer/**',
-      'desktop/server/**',
+      'apps/desktop/renderer/**',
+      'apps/desktop/server/**',
     ],
   },
   js.configs.recommended,
   {
     // React (renderer web y landing)
-    files: ['app/**/*.{js,jsx}', 'landing/**/*.{js,jsx}', 'legal/**/*.{js,jsx}'],
+    files: ['apps/web/**/*.{js,jsx}', 'apps/landing/**/*.{js,jsx}', 'legal/**/*.{js,jsx}'],
     plugins: { react, 'react-hooks': reactHooks },
     languageOptions: {
       ecmaVersion: 'latest',
@@ -35,7 +35,7 @@ export default [
   },
   {
     // Backend, proceso principal de Electron y scripts de verificación (Node.js)
-    files: ['server/**/*.js', 'desktop/*.js', 'scripts/**/*.{js,mjs,cjs}'],
+    files: ['apps/api/**/*.js', 'apps/desktop/*.js', 'scripts/**/*.{js,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

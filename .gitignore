@@ -4,8 +4,8 @@ node_modules/
 # Builds
 dist/
 release/
-desktop/renderer/
-desktop/server/
+apps/desktop/renderer/
+apps/desktop/server/
 *.tsbuildinfo
 # Artefactos pesados generados (el .exe pesa >100 MB: límite de GitHub)
 *.exe
@@ -20,7 +20,7 @@ desktop/server/
 *.db-journal
 *.db-wal
 *.db-shm
-server/data/
+apps/api/data/
 
 # Logs
 *.log
