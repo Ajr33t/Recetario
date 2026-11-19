@@ -38,8 +38,8 @@ export function Privacidad() {
       <section className="surface-section mt-4" aria-labelledby="priv-1">
         <h2 id="priv-1">1. Responsable del tratamiento</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          <strong>SazónLab — Recetario Inteligente</strong>, proyecto académico desarrollado con el
-          Centro de Procesos Industriales y Construcción del SENA. Correo de contacto:{' '}
+          <strong>SazónLab — Recetario Inteligente</strong>, proyecto académico de código abierto
+          desarrollado en Colombia. Correo de contacto:{' '}
           <strong>{CONTACTO}</strong>.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -81,7 +81,7 @@ export function Privacidad() {
           </li>
           <li>
             <strong>Ley 1712 de 2014</strong>: transparencia y derecho de acceso a la información
-            pública, por ser el SENA una entidad pública.
+            pública.
           </li>
           <li>
             <strong>Ley 1755 de 2015</strong>: derecho de petición (PQRSD) por medios electrónicos.
@@ -294,11 +294,10 @@ export function Privacidad() {
       <section className="surface-section mt-4" aria-labelledby="priv-14">
         <h2 id="priv-14">14. Transparencia (Ley 1712 de 2014)</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Por tratarse de un proyecto ligado a una entidad pública (SENA), apoyamos el derecho de
-          acceso a la información pública: el código fuente y la documentación del proyecto se
-          encuentran bajo licencia MIT y los informes están en el repositorio. Si necesitas
-          información pública específica, presenta tu petición por los canales de la Ley 1712 o al
-          correo de contacto.
+          Apoyamos el derecho de acceso a la información pública: el código fuente y la
+          documentación del proyecto se encuentran bajo licencia MIT y los informes están en el
+          repositorio. Si necesitas información pública específica, presenta tu petición por los
+          canales de la Ley 1712 o al correo de contacto.
         </p>
       </section>
 

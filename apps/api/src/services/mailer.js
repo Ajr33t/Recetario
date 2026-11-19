@@ -19,6 +19,8 @@ import { Resend } from 'resend';
  */
 
 const remitente = () => process.env.MAIL_FROM || 'SazónLab <onboarding@resend.dev>';
+/** Soporte/comunicaciones: a este correo responden los usuarios (Fase 11). */
+const SOPORTE = process.env.MAIL_REPLY_TO || 'sazonlab2356@gmail.com';
 
 /** Instancia perezosa del cliente de Resend. */
 let clienteResend = null;
@@ -28,59 +30,100 @@ function obtenerResend() {
   return clienteResend;
 }
 
-/** Envuelve el texto en una plantilla HTML mínima y legible (si no hay plantilla). */
-function plantillaHtml({ titulo, texto, enlace, pie }) {
+/** Envuelve el texto en una plantilla HTML con el estilo SazónLab
+ *  (tonos tierra + cristal líquido) cuando no hay plantilla en Resend. */
+function plantillaHtml({ titulo, texto, enlace, pie, destinatario }) {
   const boton = enlace
-    ? `<p style="margin:24px 0"><a href="${enlace}" style="background:#f59e0b;color:#1f2937;
-        padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:600">
-        ${titulo}</a></p>
-       <p style="font-size:12px;color:#6b7280">Si el botón no funciona, copia esta dirección:<br>
-        <span style="word-break:break-all">${enlace}</span></p>`
+    ? `<p style="margin:26px 0;text-align:center">
+        <a href="${enlace}" style="background-image:linear-gradient(180deg,#e8a94e 0%,#b45309 100%);
+          background-color:#b45309;color:#ffffff;padding:15px 32px;border-radius:14px;
+          text-decoration:none;font-weight:700;font-size:16px;display:inline-block;
+          box-shadow:0 10px 24px rgba(180,83,9,.35), inset 0 1px 0 rgba(255,255,255,.5);
+          border:1px solid #92400e;">${titulo}</a></p>
+       <p style="font-size:12px;color:#9a7b56;text-align:center">¿No funciona? Copia esta dirección:<br>
+        <span style="word-break:break-all;color:#a16207">${enlace}</span></p>`
     : '';
-  return `<!doctype html><html lang="es"><body style="margin:0;padding:24px;background:#f8fafc;
-    font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937">
-    <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;padding:28px;
-      box-shadow:0 8px 30px rgba(15,23,42,.08)">
-      <h1 style="margin:0 0 12px;font-size:20px">🍳 SazónLab</h1>
-      <p style="white-space:pre-line;line-height:1.6;font-size:15px">${texto}</p>
-      ${boton}
-      <p style="margin-top:28px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;
-        padding-top:12px">${pie}</p>
+  const aviso = destinatario
+    ? `<p style="margin-top:18px;background:#f3ece1;border:1px dashed #cbb491;border-radius:12px;
+        padding:14px 18px;font-size:12.5px;line-height:1.7;color:#7a6349">
+        <strong style="color:#4a2f1d">🔒 Confidencialidad:</strong> este correo fue enviado únicamente a
+        <strong>${destinatario}</strong>. Si tú no eres esa persona, <strong>elimínalo de inmediato</strong>:
+        no debe ser entregado, reenviado ni divulgado.</p>`
+    : '';
+  return `<!doctype html><html lang="es"><body style="margin:0;padding:40px 12px;background-color:#efe6d8;
+    background-image:radial-gradient(circle at 15% 10%, rgba(217,119,6,.14), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(120,74,43,.16), transparent 45%);
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#3f2d1e">
+    <div style="max-width:560px;margin:0 auto;background-color:#ffffff;
+      background-image:linear-gradient(180deg,#ffffff 0%,#fdfaf5 100%);border:1px solid #ffffff;
+      border-radius:24px;overflow:hidden;box-shadow:0 24px 60px rgba(74,45,29,.18), inset 0 1px 0 #ffffff">
+      <div style="background-color:#5b3a22;background-image:linear-gradient(135deg,#6b4423 0%,#4a2f1d 60%,#3b2417 100%);padding:26px 32px">
+        <p style="margin:0;font-size:12px;letter-spacing:1.8px;text-transform:uppercase;color:#f0b45f;font-weight:700">🍳 SazónLab</p>
+        <p style="margin:8px 0 0 0;font-size:24px;font-weight:700;color:#ffffff">${titulo}</p>
+      </div>
+      <div style="height:5px;background-image:linear-gradient(90deg,#7c4f2c,#e0a458,#7c4f2c)"></div>
+      <div style="padding:28px 32px;background-color:#fdfaf5">
+        <p style="white-space:pre-line;line-height:1.7;font-size:15px;color:#6b5540;margin:0 0 4px">${texto}</p>
+        ${boton}
+        <p style="margin-top:24px;background:#fbf5ea;border-left:4px solid #d97706;border-radius:12px;
+          padding:14px 18px;font-size:13px;line-height:1.7;color:#6b5540">${pie}</p>
+        ${aviso}
+      </div>
+      <div style="padding:18px 32px;background-color:#f0e6d6;border-top:1px solid #e3d5bd">
+        <p style="margin:0;font-size:12px;line-height:1.8;color:#8a6c4f">${'©'} 2026 SazónLab · Recetario Inteligente</p>
+      </div>
     </div></body></html>`;
 }
 
 /** Construye el mensaje (texto plano + HTML) según el motivo. */
 function construirMensaje({ correo, codigo, motivo, enlace, nombre }) {
   const esEliminacion = motivo === 'eliminacion';
+  const esVerificacion = motivo === '2fa';
   const asunto = esEliminacion
     ? 'SazónLab — código para eliminar tu cuenta'
-    : 'SazónLab — tu código de recuperación';
+    : esVerificacion
+      ? 'SazónLab — tu código de verificación en dos pasos'
+      : 'SazónLab — tu código de recuperación';
   const texto = esEliminacion
     ? `Hola${nombre ? ` ${nombre}` : ''}, tu código para eliminar definitivamente tu cuenta es: ${codigo}\n\nVence en 15 minutos y la acción no se puede deshacer. Si no pediste esto, ignora este mensaje.`
-    : `Hola${nombre ? ` ${nombre}` : ''}, tu código para restablecer tu contraseña es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este mensaje.`;
+    : esVerificacion
+      ? `Hola${nombre ? ` ${nombre}` : ''}, tu código de verificación en dos pasos es: ${codigo}\n\nVence en 5 minutos y solo se usa una vez. Si no pediste iniciar sesión, ignora este mensaje.`
+      : `Hola${nombre ? ` ${nombre}` : ''}, tu código para restablecer tu contraseña es: ${codigo}\n\nVence en 15 minutos. Si no pediste esto, ignora este mensaje.`;
+  const confidencialidad = `\n\nConfidencialidad: este correo fue enviado únicamente a ${correo}. Si tú no eres esa persona, elimínalo de inmediato: no debe ser entregado, reenviado ni divulgado.`;
   const pie = esEliminacion
     ? 'Si no solicitaste la eliminación, no hagas nada: tu cuenta seguirá intacta.'
-    : 'Si no solicitaste el cambio, ignora este correo: tu contraseña seguirá igual.';
+    : esVerificacion
+      ? 'Si no solicitaste iniciar sesión, ignora este correo: nadie puede entrar sin este código.'
+      : 'Si no solicitaste el cambio, ignora este correo: tu contraseña seguirá igual.';
 
   return {
     asunto,
-    texto,
+    texto: texto + confidencialidad,
     html: plantillaHtml({
-      titulo: esEliminacion ? 'Confirmar la eliminación' : 'Restablecer tu contraseña',
+      titulo: esEliminacion
+        ? 'Confirmar la eliminación'
+        : esVerificacion
+          ? 'Verificar mi identidad'
+          : 'Restablecer tu contraseña',
       texto,
       enlace,
       pie,
+      destinatario: correo,
     }),
     destinatario: correo,
     codigo,
     enlace,
     nombre: nombre || '',
     esEliminacion,
+    motivo,
   };
 }
 
 /** Plantilla de Resend configurada para este motivo (si existe). */
 function plantillaDe(motivo) {
+  // La verificación en dos pasos no usa plantilla de Resend: lleva HTML propio
+  // (el copy cambia cada vez y no queremos dependencia entre deploys).
+  if (motivo === '2fa') return null;
   const id =
     motivo === 'eliminacion'
       ? process.env.RESEND_PLANTILLA_ELIMINACION
@@ -93,11 +136,12 @@ async function enviarConResend(mensaje) {
   const resend = obtenerResend();
   if (!resend) return null;
 
-  const plantilla = plantillaDe(mensaje.esEliminacion ? 'eliminacion' : 'recuperacion');
+  const plantilla = plantillaDe(mensaje.motivo || 'recuperacion');
   const appUrl = process.env.APP_URL || 'http://localhost:5173';
 
   const base = {
     from: remitente(),
+    replyTo: SOPORTE,
     to: [mensaje.destinatario],
     subject: mensaje.asunto,
   };
@@ -112,6 +156,7 @@ async function enviarConResend(mensaje) {
             CODIGO: mensaje.codigo,
             ENLACE: mensaje.enlace || '',
             APP_URL: appUrl,
+            DESTINATARIO: mensaje.destinatario,
           },
         },
       }
@@ -119,7 +164,7 @@ async function enviarConResend(mensaje) {
 
   // Clave de idempotencia (SDK ≥ 6): una por intento (patrón <evento>/<entidad>).
   // Evita correos duplicados si se reintenta la misma petición.
-  const idempotencyKey = `${mensaje.esEliminacion ? 'eliminacion' : 'recuperacion'}/${mensaje.destinatario}-${mensaje.codigo}`;
+  const idempotencyKey = `${mensaje.motivo || 'recuperacion'}/${mensaje.destinatario}-${mensaje.codigo}`;
 
   const { data, error } = await resend.emails.send(payload, { idempotencyKey });
   if (error) {
@@ -140,6 +185,7 @@ async function enviarSmtp(mensaje) {
   });
   const info = await transporte.sendMail({
     from: remitente(),
+    replyTo: SOPORTE,
     to: mensaje.destinatario,
     subject: mensaje.asunto,
     text: mensaje.texto,

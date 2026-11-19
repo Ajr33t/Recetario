@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../services/api.js';
 import { exito } from '../services/toast.js';
+import CampoContrasena from '../components/ui/CampoContrasena.jsx';
 
 /**
  * Recuperación de contraseña por **enlace de un clic** (Fase 10).
@@ -90,30 +91,21 @@ export default function Recuperar() {
       </header>
 
       <form className="glass-card flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-        <label className="block text-sm font-medium" htmlFor="nueva-clave">
-          Contraseña nueva
-        </label>
-        <input
+        <CampoContrasena
+          label="Contraseña nueva"
           id="nueva-clave"
           name="contrasena"
-          type="password"
-          className="field"
           autoComplete="new-password"
           minLength={8}
           required
           value={contrasena}
           onChange={(e) => setContrasena(e.target.value)}
+          hint="Mínimo 8 caracteres."
         />
-        <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
-
-        <label className="block text-sm font-medium" htmlFor="confirmar-clave">
-          Repite la contraseña
-        </label>
-        <input
+        <CampoContrasena
+          label="Repite la contraseña"
           id="confirmar-clave"
           name="confirmacion"
-          type="password"
-          className="field"
           autoComplete="new-password"
           required
           value={confirmacion}

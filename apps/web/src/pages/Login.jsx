@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../services/api.js';
 import { useAuthStore } from '../store/authStore.js';
+import CampoContrasena from '../components/ui/CampoContrasena.jsx';
 
 /**
  * Inicio de sesión (RF-01/RF-02/RF-03) — Fase 3: JWT + bcrypt en el servidor.
@@ -13,6 +14,7 @@ export default function Login() {
   const [modo, setModo] = useState('login'); // 'login' | 'registro' | 'recuperar'
   const [paso, setPaso] = useState('correo'); // recuperar: 'correo' | 'codigo'
   const [correoRecuperacion, setCorreoRecuperacion] = useState('');
+  const [correo2fa, setCorreo2fa] = useState(''); // 2FA: correo pendiente de código
   const [codigoDemo, setCodigoDemo] = useState(''); // modo demo: código visible
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -59,10 +61,44 @@ export default function Login() {
 
     const datos = Object.fromEntries(new FormData(event.currentTarget));
 
+    // Consentimientos del registro (Ley 1581 de 2012 — hábeas data + cookies)
+    if (modo === 'registro') {
+      const aceptaTratamiento = datos.aceptaTratamiento === 'on';
+      const aceptaCookies = datos.aceptaCookies === 'on';
+      if (!aceptaTratamiento || !aceptaCookies) {
+        setError(
+          'Debes autorizar el tratamiento de tus datos (Ley 1581 de 2012) y aceptar las cookies para crear la cuenta.',
+        );
+        setEnviando(false);
+        return;
+      }
+      datos.aceptaTratamiento = aceptaTratamiento;
+      datos.aceptaCookies = aceptaCookies;
+    }
+
     try {
+      // Verificación en dos pasos (2FA): validar el código del correo (Fase 11)
+      if (modo === 'login' && paso === '2fa') {
+        const respuesta = await api.post('/auth/verificar-2fa', {
+          correo: correo2fa,
+          codigo: datos.codigo,
+        });
+        setAuth({ token: respuesta.token, usuario: respuesta.usuario });
+        navigate('/', { replace: true });
+        return;
+      }
+
       if (modo === 'login' || modo === 'registro') {
         const ruta = modo === 'login' ? '/auth/login' : '/auth/registro';
         const respuesta = await api.post(ruta, datos);
+        // Con 2FA activo el servidor pide el código antes de entregar el token
+        if (respuesta.requiere2fa) {
+          setCorreo2fa(respuesta.correo || datos.correo);
+          setCodigoDemo(respuesta.demo && respuesta.codigo ? respuesta.codigo : '');
+          setPaso('2fa');
+          setAviso(respuesta.mensaje || 'Enviamos un código de verificación a tu correo.');
+          return;
+        }
         setAuth({ token: respuesta.token, usuario: respuesta.usuario });
         navigate('/', { replace: true });
         return;
@@ -74,10 +110,11 @@ export default function Login() {
           correo: datos.correo,
         });
         setCorreoRecuperacion(datos.correo);
-        if (respuesta.codigo) {
-          setCodigoDemo(respuesta.codigo); // modo demo: se muestra en pantalla
-          setPaso('codigo');
-        } else {
+        // El código solo se muestra en pantalla si aún no hay correo configurado;
+        // con SMTP/Resend activo el usuario lo recibe por correo y no se muestra.
+        setCodigoDemo(respuesta.demo && respuesta.codigo ? respuesta.codigo : '');
+        setPaso('codigo');
+        if (!respuesta.codigo) {
           setAviso(
             'Si el correo existe, recibirás un código de 6 dígitos. Revisa tu bandeja de entrada.',
           );
@@ -111,14 +148,22 @@ export default function Login() {
           aria-hidden="true"
         >
           <i
-            className={`fa-solid ${esRegistro ? 'fa-user-plus' : esRecuperar ? 'fa-key' : 'fa-user'}`}
+            className={`fa-solid ${paso === '2fa' ? 'fa-shield-halved' : esRegistro ? 'fa-user-plus' : esRecuperar ? 'fa-key' : 'fa-user'}`}
           />
         </span>
         <h1>
-          {esRegistro ? 'Crear cuenta' : esRecuperar ? 'Restablecer contraseña' : 'Iniciar sesión'}
+          {paso === '2fa'
+            ? 'Verificación en dos pasos'
+            : esRegistro
+              ? 'Crear cuenta'
+              : esRecuperar
+                ? 'Restablecer contraseña'
+                : 'Iniciar sesión'}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {esRegistro
+          {paso === '2fa'
+            ? `Por seguridad te enviamos un código de 6 dígitos a ${correo2fa}. Escríbelo para terminar de entrar.`
+            : esRegistro
             ? 'Crea tu cuenta gratis y tus recetas quedarán guardadas en la nube: las ves desde cualquier dispositivo.'
             : esRecuperar
               ? 'Te enviaremos un código de 6 dígitos y un enlace de un clic a tu correo para confirmar que eres tú.'
@@ -146,8 +191,8 @@ export default function Login() {
           </div>
         )}
 
-        {/* Recuperación: el correo se congela en el paso 2 */}
-        {!(esRecuperar && paso === 'codigo') && (
+        {/* Recuperación: el correo se congela en el paso 2; en 2FA ya está definido */}
+        {!(esRecuperar && paso === 'codigo') && paso !== '2fa' && (
           <div>
             <label htmlFor="correo" className="mb-1 block text-sm font-medium">
               Correo electrónico
@@ -175,7 +220,7 @@ export default function Login() {
                   {' '}
                   · <span className="font-mono font-bold">{codigoDemo}</span>{' '}
                   <span className="text-xs text-muted-foreground">
-                    (modo demo: sin servidor de correo configurado)
+                    (sin servidor de correo configurado todavía)
                   </span>
                 </>
               )}
@@ -200,45 +245,126 @@ export default function Login() {
           </>
         )}
 
-        {/* Contraseña: en recuperación solo en el paso 2 */}
-        {!(esRecuperar && paso === 'correo') && (
-          <div>
-            <label htmlFor="contrasena" className="mb-1 block text-sm font-medium">
-              {esRecuperar ? 'Nueva contraseña' : 'Contraseña'}
+        {/* 2FA: paso del código enviado al correo (Fase 11) */}
+        {paso === '2fa' && (
+          <>
+            <p className="rounded-xl bg-primary/10 p-3 text-sm" role="status">
+              <i className="fa-solid fa-envelope text-primary" aria-hidden="true" /> Código enviado
+              a <strong>{correo2fa}</strong>
+              {codigoDemo && (
+                <>
+                  {' '}
+                  · <span className="font-mono font-bold">{codigoDemo}</span>{' '}
+                  <span className="text-xs text-muted-foreground">(modo demostración)</span>
+                </>
+              )}
+            </p>
+            <div>
+              <label htmlFor="codigo" className="mb-1 block text-sm font-medium">
+                Código de 6 dígitos
+              </label>
+              <input
+                id="codigo"
+                name="codigo"
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                className="field text-center font-mono text-lg tracking-[0.4em]"
+                placeholder="000000"
+                autoComplete="one-time-code"
+                autoFocus
+                required
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Vence en 5 minutos. Revisa tu bandeja de entrada (y spam).
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* Contraseña: en recuperación solo en el paso 2; en 2FA no se pide */}
+        {!(esRecuperar && paso === 'correo') && paso !== '2fa' && (
+          <CampoContrasena
+            label={esRecuperar ? 'Nueva contraseña' : 'Contraseña'}
+            id="contrasena"
+            name="contrasena"
+            autoComplete={esRegistro || esRecuperar ? 'new-password' : 'current-password'}
+            placeholder="••••••••"
+            minLength={8}
+            required
+            hint={esRegistro || esRecuperar ? 'Mínimo 8 caracteres.' : undefined}
+          />
+        )}
+
+        {/* Consentimientos legales — solo al crear la cuenta (Fase 11) */}
+        {esRegistro && (
+          <div className="flex flex-col gap-3 rounded-xl bg-[rgb(var(--muted)/0.5)] p-3 text-sm">
+            <label className="flex cursor-pointer items-start gap-2">
+              <input
+                type="checkbox"
+                name="aceptaTratamiento"
+                required
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[rgb(var(--primary))]"
+              />
+              <span className="leading-snug">
+                Autorizo el <strong>tratamiento de mis datos personales</strong> conforme a la{' '}
+                <strong>Ley 1581 de 2012</strong> (hábeas data) y a la{' '}
+                <Link to="/privacidad" className="text-primary underline">
+                  Política de Privacidad
+                </Link>
+                .
+              </span>
             </label>
-            <input
-              id="contrasena"
-              name="contrasena"
-              type="password"
-              className="field"
-              autoComplete={esRegistro || esRecuperar ? 'new-password' : 'current-password'}
-              placeholder="••••••••"
-              minLength={8}
-              required
-            />
-            {(esRegistro || esRecuperar) && (
-              <p className="mt-1 text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
-            )}
+            <label className="flex cursor-pointer items-start gap-2">
+              <input
+                type="checkbox"
+                name="aceptaCookies"
+                required
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[rgb(var(--primary))]"
+              />
+              <span className="leading-snug">
+                Acepto el uso de <strong>cookies</strong> y los{' '}
+                <Link to="/terminos" className="text-primary underline">
+                  Términos del servicio
+                </Link>
+                .
+              </span>
+            </label>
           </div>
         )}
 
         <button type="submit" className="btn-primary" disabled={enviando}>
           <i
-            className={`fa-solid ${enviando ? 'fa-spinner fa-spin' : esRegistro ? 'fa-user-plus' : esRecuperar ? 'fa-paper-plane' : 'fa-right-to-bracket'}`}
+            className={`fa-solid ${enviando ? 'fa-spinner fa-spin' : paso === '2fa' ? 'fa-shield-halved' : esRegistro ? 'fa-user-plus' : esRecuperar ? 'fa-paper-plane' : 'fa-right-to-bracket'}`}
             aria-hidden="true"
           />
           {enviando
             ? 'Un momento…'
-            : esRegistro
-              ? 'Crear cuenta'
-              : esRecuperar
-                ? paso === 'correo'
-                  ? 'Enviar código'
-                  : 'Restablecer contraseña'
-                : 'Entrar'}
+            : paso === '2fa'
+              ? 'Verificar código'
+              : esRegistro
+                ? 'Crear cuenta'
+                : esRecuperar
+                  ? paso === 'correo'
+                    ? 'Enviar código'
+                    : 'Restablecer contraseña'
+                  : 'Entrar'}
         </button>
 
-        {esRecuperar ? (
+        {paso === '2fa' ? (
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              setPaso('correo');
+              setError('');
+              setAviso('');
+            }}
+          >
+            <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Volver a iniciar sesión
+          </button>
+        ) : esRecuperar ? (
           <>
             <button type="button" className="btn-ghost" onClick={() => cambiarModo('login')}>
               <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Volver a iniciar sesión
@@ -260,7 +386,7 @@ export default function Login() {
           </button>
         )}
 
-        {!esRecuperar && !esRegistro && (
+        {!esRecuperar && !esRegistro && paso !== '2fa' && (
           <button
             type="button"
             className="text-center text-sm text-muted-foreground underline hover:text-foreground"

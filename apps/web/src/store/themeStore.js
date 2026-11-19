@@ -7,7 +7,7 @@ import { applyTheme, applyA11y } from '../themes/engine.js';
  * - theme: id del tema (12 disponibles)
  * - mode: 'claro' | 'oscuro' (los 2 modos base)
  * - highContrast: interruptor INDEPENDIENTE; activo prevalece sobre el modo
- * - a11y: { fontSize, reduceMotion, dyslexia, underlineLinks }
+ * - a11y: { fontSize, reduceMotion, dyslexia, underlineLinks, colorBlind }
  * Persistencia: localStorage en web; en Electron se replica vía
  * archivo de configuración en la Fase 8.
  *
@@ -20,6 +20,7 @@ const A11Y_POR_DEFECTO = {
   reduceMotion: false,
   dyslexia: false,
   underlineLinks: false,
+  colorBlind: 'ninguno', // 'ninguno' | 'rojo-verde' | 'tritanopia' (Fase 11)
 };
 
 /** Aplica tema + modo + alto contraste + accesibilidad juntos. */

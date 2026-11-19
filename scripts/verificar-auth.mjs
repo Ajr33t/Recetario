@@ -23,6 +23,13 @@ const check = (nombre, cond, detalle = '') => {
 };
 
 async function llamar(metodo, ruta, { token, body } = {}) {
+  // Consentimientos del registro (Ley 1581 de 2012 / cookies): los registros
+  // de prueba los aceptan; pásalos explícitos (aceptaTratamiento: false) para
+  // comprobar que el servidor los rechaza.
+  if (ruta === '/auth/registro' && body && !('aceptaTratamiento' in body)) {
+    body.aceptaTratamiento = true;
+    body.aceptaCookies = true;
+  }
   const respuesta = await fetch(`${BASE}${ruta}`, {
     method: metodo,
     headers: {
@@ -64,6 +71,36 @@ async function main() {
     body: { nombre: 'X', correo: 'no-es-correo', contrasena: '123' },
   });
   check('registro inválido → 400', regInvalido.status === 400, `status=${regInvalido.status}`);
+
+  // Consentimientos obligatorios (Ley 1581 de 2012 — hábeas data + cookies)
+  const regSinConsentimiento = await llamar('POST', '/auth/registro', {
+    body: {
+      nombre: 'Sin Consentimiento',
+      correo: `consent-${Date.now()}@sazonlab.test`,
+      contrasena: pass0,
+      aceptaTratamiento: false,
+      aceptaCookies: true,
+    },
+  });
+  check(
+    'registro sin autorizar tratamiento de datos (Ley 1581) → 400',
+    regSinConsentimiento.status === 400,
+    `status=${regSinConsentimiento.status}`,
+  );
+  const regSinCookies = await llamar('POST', '/auth/registro', {
+    body: {
+      nombre: 'Sin Cookies',
+      correo: `cookies-${Date.now()}@sazonlab.test`,
+      contrasena: pass0,
+      aceptaTratamiento: true,
+      aceptaCookies: false,
+    },
+  });
+  check(
+    'registro sin aceptar cookies → 400',
+    regSinCookies.status === 400,
+    `status=${regSinCookies.status}`,
+  );
 
   // 2) Login
   const login = await llamar('POST', '/auth/login', { body: { correo, contrasena: pass0 } });
@@ -392,6 +429,140 @@ async function main() {
       body: { estado: 'activo' },
     });
     check('PATCH reactiva la cuenta', reactivar.status === 200, `status=${reactivar.status}`);
+
+    // Restablecer contraseña desde el panel (Fase 11)
+    const resetCorto = await llamar(
+      'POST',
+      `/admin/usuarios/${idCreada}/restablecer-contrasena`,
+      { token: tokenAdmin, body: { contrasena: 'corta' } },
+    );
+    check(
+      'restablecer-contrasena con clave corta → 400',
+      resetCorto.status === 400,
+      `status=${resetCorto.status}`,
+    );
+
+    const resetUsuario = await llamar(
+      'POST',
+      `/admin/usuarios/${idCreada}/restablecer-contrasena`,
+      { token: tokenFinal, body: { contrasena: 'clave-robo-123' } },
+    );
+    check(
+      'restablecer-contrasena con rol usuario → 403',
+      resetUsuario.status === 403,
+      `status=${resetUsuario.status}`,
+    );
+
+    const resetOk = await llamar('POST', `/admin/usuarios/${idCreada}/restablecer-contrasena`, {
+      token: tokenAdmin,
+      body: { contrasena: 'panel-clave-nueva-1' },
+    });
+    check(
+      'POST /admin/usuarios/:id/restablecer-contrasena ok',
+      resetOk.status === 200 && resetOk.datos?.ok === true,
+      `status=${resetOk.status}`,
+    );
+    const loginReset = await llamar('POST', '/auth/login', {
+      body: { correo: correoAdminCreado, contrasena: 'panel-clave-nueva-1' },
+    });
+    check(
+      'la cuenta entra con la contraseña restablecida por el admin',
+      loginReset.status === 200 && Boolean(loginReset.datos?.token),
+      `status=${loginReset.status}`,
+    );
+    const loginVieja = await llamar('POST', '/auth/login', {
+      body: { correo: correoAdminCreado, contrasena: 'panel-clave-99' },
+    });
+    check(
+      'la contraseña anterior deja de servir',
+      loginVieja.status === 401,
+      `status=${loginVieja.status}`,
+    );
+  }
+
+  // 11) Verificación en dos pasos (2FA por correo — Fase 11)
+  const act2fa = await llamar('POST', '/auth/2fa/activar', {
+    token: tokenFinal,
+    body: { contrasena: contrasenaVigente },
+  });
+  check(
+    'POST /auth/2fa/activar con contraseña ok',
+    act2fa.status === 200 && Boolean(act2fa.datos?.codigo),
+    `status=${act2fa.status} demo=${act2fa.datos?.demo}`,
+  );
+
+  const act2faSinPass = await llamar('POST', '/auth/2fa/activar', { token: tokenFinal, body: {} });
+  check(
+    'POST /auth/2fa/activar sin contraseña → 400',
+    act2faSinPass.status === 400,
+    `status=${act2faSinPass.status}`,
+  );
+
+  const codigo2fa = act2fa.datos?.codigo;
+  if (codigo2fa) {
+    const conf2fa = await llamar('POST', '/auth/2fa/confirmar', {
+      token: tokenFinal,
+      body: { codigo: codigo2fa },
+    });
+    check(
+      'POST /auth/2fa/confirmar activa el 2FA',
+      conf2fa.status === 200,
+      `status=${conf2fa.status}`,
+    );
+
+    const login2fa = await llamar('POST', '/auth/login', {
+      body: { correo, contrasena: contrasenaVigente },
+    });
+    check(
+      'login con 2FA activo pide el código (sin token aún)',
+      login2fa.status === 200 &&
+        login2fa.datos?.requiere2fa === true &&
+        !login2fa.datos?.token,
+      `status=${login2fa.status}`,
+    );
+
+    // El login genera su propio código (uso 'login'); el de activación ya no sirve aquí
+    const codigoLogin = login2fa.datos?.codigo;
+    check(
+      'el login devuelve su código en desarrollo',
+      Boolean(codigoLogin) && /^\d{6}$/.test(codigoLogin),
+      codigoLogin ? `codigo=${codigoLogin}` : 'sin código',
+    );
+
+    const codigoMalo2fa = await llamar('POST', '/auth/verificar-2fa', {
+      body: { correo, codigo: '000000' },
+    });
+    check(
+      'POST /auth/verificar-2fa con código incorrecto → 400',
+      codigoMalo2fa.status === 400,
+      `status=${codigoMalo2fa.status}`,
+    );
+
+    const verif2fa = await llamar('POST', '/auth/verificar-2fa', {
+      body: { correo, codigo: codigoLogin },
+    });
+    check(
+      'POST /auth/verificar-2fa completa el login con token',
+      verif2fa.status === 200 && Boolean(verif2fa.datos?.token),
+      `status=${verif2fa.status}`,
+    );
+
+    const apagar = await llamar('POST', '/auth/2fa/desactivar', {
+      token: verif2fa.datos?.token,
+      body: { contrasena: contrasenaVigente },
+    });
+    check('POST /auth/2fa/desactivar ok', apagar.status === 200, `status=${apagar.status}`);
+
+    const directo = await llamar('POST', '/auth/login', {
+      body: { correo, contrasena: contrasenaVigente },
+    });
+    check(
+      'tras desactivar el login vuelve a ser directo',
+      directo.status === 200 && Boolean(directo.datos?.token),
+      `status=${directo.status}`,
+    );
+  } else {
+    check('el código 2FA se entrega en desarrollo', false, 'sin código');
   }
 
   console.log(

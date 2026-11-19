@@ -135,6 +135,13 @@ recetario/
 ## 🎨 Características
 
 - 🔍 Búsqueda por ingredientes con sugerencia IA (OpenAI/Gemini opcional)
+- 🔐 **Verificación en dos pasos (2FA por correo)**: código de 6 dígitos de 5 minutos en cada inicio, activable desde Perfil → Seguridad (contraseña + confirmación) — con máximo 5 intentos
+- ⚖️ **Consentimiento Ley 1581 en el registro**: autorización de tratamiento de datos (hábeas data) y de cookies **obligatoria en cliente y servidor**, archivada con la cuenta
+- 🛡️ **Panel admin**: además de roles y estados, **restablece la contraseña de cualquier cuenta** (la clave anterior deja de servir al instante, con auditoría)
+- 🎭 **Modo daltónico** (rojo–verde / tritanopia): recolorea estados y acentos para que el significado no dependa del color — en Ajustes → Accesibilidad
+- 👁️ **Ojo en todos los campos de contraseña** (mostrar/ocultar) con `aria-pressed` y etiquetas en español
+- 💬 **Botón flotante del asistente** visible en cualquier pantalla del navegador
+- 📬 **Soporte `sazonlab2356@gmail.com`** en los pies de página y como `replyTo` de todos los correos, con **aviso de confidencialidad** en cada envío
 - 🤖 **Chatbot con IA**: IA **local con Ollama** (sin internet, sin enviar datos) → OpenAI/Gemini → **asistente local** que siempre responde; historial en el servidor y en cualquier dispositivo
 - ✉️ **Recuperación de contraseña por correo real**: SMTP (Gmail/Outlook) o **Resend** (con plantillas editables desde su panel), con **código de 6 dígitos y enlace de un clic**; se configura **una vez** para todos los usuarios
 - ☁️ **Nube con PostgreSQL**: `DATABASE_URL` apunta a tu PostgreSQL (Neon/Supabase…) y SazónLab replica recetas, favoritos y preferencias (SQLite queda como caché offline)
@@ -170,5 +177,3 @@ MIT
 ## 👥 Créditos
 
 - Alejandro Rua Toro
-- José Germán Estrada Clavijo
-- SENA — Centro de Procesos Industriales y Construcción

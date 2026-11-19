@@ -41,7 +41,13 @@ app.whenReady().then(async () => {
   const reg = await fetch(`${API}/auth/registro`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nombre: 'UI Fase 5', correo, contrasena: 'clave-ui-123456' }),
+    body: JSON.stringify({
+      nombre: 'UI Fase 5',
+      correo,
+      contrasena: 'clave-ui-123456',
+      aceptaTratamiento: true,
+      aceptaCookies: true,
+    }),
   }).then((r) => r.json());
   check('registro de cuenta de prueba', Boolean(reg.token));
 

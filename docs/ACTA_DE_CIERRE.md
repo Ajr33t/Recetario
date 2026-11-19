@@ -12,7 +12,7 @@
 | Rol | Nombre | Aprobación |
 |-----|--------|-----------|
 | Product Owner / Cliente | Alejandro Rua Toro | ✅ APROBADO (Fases 0–9) |
-| Producto / Desarrollo | SENA — Centro de Procesos Industriales y Construcción | ✅ Entregado |
+| Producto / Desarrollo | Alejandro Rua Toro | ✅ Entregado |
 
 **Alcance aprobado:** las 9 fases del plan (Fases 0 a 9), con entrega total de los 4 productos del
 MVP (documento IEEE, demo web, landing oficial e instalador `.exe` de escritorio).

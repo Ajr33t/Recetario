@@ -15,6 +15,7 @@ const router = Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_RONDS = 10;
 const CODIGO_TTL_MIN = 15; // vigencia del código de recuperación
+const CODIGO_2FA_TTL_MIN = 5; // vigencia del código de verificación en dos pasos
 // Origen público de la app: se usa para los enlaces de un clic del correo
 const URL_APP = process.env.APP_URL || 'http://localhost:5173';
 
@@ -29,6 +30,7 @@ function usuarioPublico(row) {
     avatar_imagen: row.avatar_imagen || null,
     color_perfil: row.color_perfil || null,
     bio: row.bio || '',
+    dos_factores: Number(row.dos_factores) === 1,
     creado_en: row.creado_en || null,
   };
 }
@@ -36,9 +38,53 @@ function usuarioPublico(row) {
 /** Hash SHA-256 del código (nunca se guarda el código en claro). */
 const hashCodigo = (codigo) => createHash('sha256').update(String(codigo)).digest('hex');
 
-/** POST /api/auth/registro — crea la cuenta y devuelve el token. */
+/**
+ * Genera y guarda (en hash) un código de verificación en dos pasos.
+ * Un código vigente por correo y uso: pedir otro invalida al anterior.
+ * @returns {string} código de 6 dígitos
+ */
+function crearCodigo2fa(db, correo, uso) {
+  const codigo = String(randomInt(100000, 1000000));
+  const expira = new Date(Date.now() + CODIGO_2FA_TTL_MIN * 60_000).toISOString();
+  db.prepare('DELETE FROM two_factor WHERE correo = ? AND uso = ?').run(correo, uso);
+  db.prepare(
+    'INSERT INTO two_factor (correo, codigo_hash, uso, expira_en) VALUES (?, ?, ?, ?)',
+  ).run(correo, hashCodigo(codigo), uso, expira);
+  return codigo;
+}
+
+/**
+ * Valida un código de 2FA. Incrementa intentos y borra el código agotado.
+ * @returns {{ok: true} | {ok: false, status: number, error: string}}
+ */
+function validarCodigo2fa(db, correo, codigo, uso) {
+  const registro = db
+    .prepare('SELECT * FROM two_factor WHERE correo = ? AND uso = ? ORDER BY creado_en DESC LIMIT 1')
+    .get(correo, uso);
+
+  if (!registro) return { ok: false, status: 400, error: 'Solicita un código nuevo' };
+  if (registro.intentos >= 5) {
+    db.prepare('DELETE FROM two_factor WHERE id = ?').run(registro.id);
+    return { ok: false, status: 429, error: 'Demasiados intentos: pide un código nuevo' };
+  }
+  if (new Date(registro.expira_en) < new Date()) {
+    db.prepare('DELETE FROM two_factor WHERE id = ?').run(registro.id);
+    return { ok: false, status: 400, error: 'El código expiró: pide uno nuevo' };
+  }
+  if (registro.codigo_hash !== hashCodigo(codigo)) {
+    db.prepare('UPDATE two_factor SET intentos = intentos + 1 WHERE id = ?').run(registro.id);
+    return { ok: false, status: 400, error: 'El código no es correcto' };
+  }
+
+  db.prepare('DELETE FROM two_factor WHERE id = ?').run(registro.id);
+  return { ok: true };
+}
+
+/** POST /api/auth/registro — crea la cuenta y devuelve el token.
+ *  Exige las autorizaciones de la Ley 1581 de 2012 (tratamiento de datos /
+ *  hábeas data) y de cookies; quedan archivadas junto con la cuenta. */
 router.post('/registro', (req, res) => {
-  const { nombre, correo, contrasena } = req.body || {};
+  const { nombre, correo, contrasena, aceptaTratamiento, aceptaCookies } = req.body || {};
 
   if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
     return res.status(400).json({ error: 'El nombre debe tener al menos 2 caracteres' });
@@ -48,6 +94,15 @@ router.post('/registro', (req, res) => {
   }
   if (!contrasena || typeof contrasena !== 'string' || contrasena.length < 8) {
     return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  }
+  if (aceptaTratamiento !== true) {
+    return res.status(400).json({
+      error:
+        'Debes autorizar el tratamiento de tus datos personales (Ley 1581 de 2012 / hábeas data)',
+    });
+  }
+  if (aceptaCookies !== true) {
+    return res.status(400).json({ error: 'Debes aceptar las cookies y los términos del servicio' });
   }
 
   const db = getDb();
@@ -59,8 +114,12 @@ router.post('/registro', (req, res) => {
 
   const hash = bcrypt.hashSync(contrasena, SALT_RONDS);
   const resultado = db
-    .prepare('INSERT INTO users (nombre, correo, contrasena_hash) VALUES (?, ?, ?)')
-    .run(nombre.trim(), correoLimpio, hash);
+    .prepare(
+      `INSERT INTO users (nombre, correo, contrasena_hash, consentimiento_datos,
+                          consentimiento_cookies, consentimiento_en)
+       VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+    )
+    .run(nombre.trim(), correoLimpio, hash, 1, 1);
 
   const usuario = {
     id: Number(resultado.lastInsertRowid),
@@ -71,6 +130,7 @@ router.post('/registro', (req, res) => {
     avatar_imagen: null,
     color_perfil: null,
     bio: '',
+    dos_factores: false,
     creado_en: null,
   };
 
@@ -81,8 +141,9 @@ router.post('/registro', (req, res) => {
   return res.status(201).json({ token: firmarToken(usuario), usuario });
 });
 
-/** POST /api/auth/login — verifica credenciales y devuelve el token. */
-router.post('/login', (req, res) => {
+/** POST /api/auth/login — verifica credenciales y devuelve el token.
+ *  Con 2FA activo responde { requiere2fa: true } hasta validar el código. */
+router.post('/login', async (req, res) => {
   const { correo, contrasena } = req.body || {};
 
   if (!correo || !contrasena) {
@@ -101,8 +162,59 @@ router.post('/login', (req, res) => {
     return res.status(403).json({ error: 'La cuenta está desactivada' });
   }
 
+  // Verificación en dos pasos (2FA): si la cuenta la tiene activa, antes del
+  // token se envía un código de 6 dígitos al correo (vence en 5 minutos).
+  if (Number(fila.dos_factores) === 1) {
+    const codigo = crearCodigo2fa(db, correoLimpio, 'login');
+    const resultado = await enviarCodigoCorreo(correoLimpio, codigo, '2fa', {
+      nombre: fila.nombre,
+    });
+    registrarAuditoria(correoLimpio, 'login_pendiente_2fa', null, req.ip);
+    // En desarrollo se muestra el código (igual que en la recuperación);
+    // en producción jamás se devuelve.
+    const dev = process.env.NODE_ENV !== 'production' ? codigo : null;
+    return res.json({
+      ok: true,
+      requiere2fa: true,
+      correo: correoLimpio,
+      demo: resultado.demo,
+      mensaje: 'Enviamos un código de verificación a tu correo.',
+      ...(dev ? { codigo: dev } : {}),
+    });
+  }
+
   const usuario = usuarioPublico(fila);
   registrarAuditoria(correoLimpio, 'login', null, req.ip);
+  return res.json({ token: firmarToken(usuario), usuario });
+});
+
+/**
+ * POST /api/auth/verificar-2fa — valida el código del correo y completa el
+ * login (devuelve el token). { correo, codigo }
+ */
+router.post('/verificar-2fa', (req, res) => {
+  const { correo, codigo } = req.body || {};
+  if (!correo || !EMAIL_RE.test(String(correo).trim())) {
+    return res.status(400).json({ error: 'Correo electrónico inválido' });
+  }
+  if (!codigo || !/^\d{6}$/.test(String(codigo))) {
+    return res.status(400).json({ error: 'El código debe tener 6 dígitos' });
+  }
+
+  const correoLimpio = String(correo).trim().toLowerCase();
+  const db = getDb();
+  const fila = db.prepare('SELECT * FROM users WHERE correo = ?').get(correoLimpio);
+  if (!fila || fila.estado !== 'activo' || Number(fila.dos_factores) !== 1) {
+    return res.status(400).json({ error: 'Solicita un código nuevo' });
+  }
+
+  const comprobacion = validarCodigo2fa(db, correoLimpio, String(codigo), 'login');
+  if (!comprobacion.ok) {
+    return res.status(comprobacion.status).json({ error: comprobacion.error });
+  }
+
+  const usuario = usuarioPublico(fila);
+  registrarAuditoria(correoLimpio, 'login_2fa', null, req.ip);
   return res.json({ token: firmarToken(usuario), usuario });
 });
 
@@ -440,6 +552,85 @@ router.post('/eliminar-cuenta', requireAuth, (req, res) => {
 
   registrarAuditoria(fila.correo, 'eliminar_cuenta', null, req.ip);
   return res.json({ ok: true, mensaje: 'Cuenta eliminada definitivamente.' });
+});
+
+/**
+ * ── Verificación en dos pasos (2FA por correo) — Fase 11 ──────────────────
+ * El usuario activa/desactiva con su contraseña; activar exige además
+ * confirmar un código de 6 dígitos enviado a su correo.
+ */
+
+/** POST /api/auth/2fa/activar — envía el código de confirmación. */
+router.post('/2fa/activar', requireAuth, async (req, res) => {
+  const { contrasena } = req.body || {};
+  if (!contrasena || typeof contrasena !== 'string') {
+    return res.status(400).json({ error: 'Escribe tu contraseña actual' });
+  }
+
+  const db = getDb();
+  const fila = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!fila || !bcrypt.compareSync(String(contrasena), fila.contrasena_hash)) {
+    return res.status(401).json({ error: 'Contraseña incorrecta' });
+  }
+  if (Number(fila.dos_factores) === 1) {
+    return res.status(400).json({ error: 'La verificación en dos pasos ya está activa' });
+  }
+
+  const codigo = crearCodigo2fa(db, fila.correo, 'activacion');
+  const resultado = await enviarCodigoCorreo(fila.correo, codigo, '2fa', { nombre: fila.nombre });
+  registrarAuditoria(fila.correo, '2fa_solicitar_activacion', null, req.ip);
+
+  const dev = process.env.NODE_ENV !== 'production' ? codigo : null;
+  return res.json({
+    ok: true,
+    demo: resultado.demo,
+    mensaje: 'Enviamos un código de confirmación a tu correo.',
+    ...(dev ? { codigo: dev } : {}),
+  });
+});
+
+/** POST /api/auth/2fa/confirmar — valida el código y activa el 2FA. */
+router.post('/2fa/confirmar', requireAuth, (req, res) => {
+  const { codigo } = req.body || {};
+  if (!codigo || !/^\d{6}$/.test(String(codigo))) {
+    return res.status(400).json({ error: 'El código debe tener 6 dígitos' });
+  }
+
+  const db = getDb();
+  const fila = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!fila) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const comprobacion = validarCodigo2fa(db, fila.correo, String(codigo), 'activacion');
+  if (!comprobacion.ok) {
+    return res.status(comprobacion.status).json({ error: comprobacion.error });
+  }
+
+  db.prepare(
+    "UPDATE users SET dos_factores = 1, actualizado_en = datetime('now') WHERE id = ?",
+  ).run(fila.id);
+  registrarAuditoria(fila.correo, '2fa_activar', null, req.ip);
+  return res.json({ ok: true, mensaje: 'Verificación en dos pasos activada.' });
+});
+
+/** POST /api/auth/2fa/desactivar — apaga el 2FA con la contraseña. */
+router.post('/2fa/desactivar', requireAuth, (req, res) => {
+  const { contrasena } = req.body || {};
+  if (!contrasena || typeof contrasena !== 'string') {
+    return res.status(400).json({ error: 'Escribe tu contraseña actual' });
+  }
+
+  const db = getDb();
+  const fila = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!fila || !bcrypt.compareSync(String(contrasena), fila.contrasena_hash)) {
+    return res.status(401).json({ error: 'Contraseña incorrecta' });
+  }
+
+  db.prepare(
+    "UPDATE users SET dos_factores = 0, actualizado_en = datetime('now') WHERE id = ?",
+  ).run(fila.id);
+  db.prepare('DELETE FROM two_factor WHERE correo = ?').run(fila.correo);
+  registrarAuditoria(fila.correo, '2fa_desactivar', null, req.ip);
+  return res.json({ ok: true, mensaje: 'Verificación en dos pasos desactivada.' });
 });
 
 export default router;

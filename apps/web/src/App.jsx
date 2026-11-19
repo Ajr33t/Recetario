@@ -4,6 +4,7 @@ import SkipLink from './components/layout/SkipLink.jsx';
 import AppHeader from './components/layout/AppHeader.jsx';
 import AppSidebar from './components/layout/AppSidebar.jsx';
 import AppFooter from './components/layout/AppFooter.jsx';
+import ChatFab from './components/layout/ChatFab.jsx';
 import ThemeSelector from './components/theme/ThemeSelector.jsx';
 import ToastHost from './components/ui/ToastHost.jsx';
 import Onboarding from './components/onboarding/Onboarding.jsx';
@@ -70,6 +71,9 @@ export default function App() {
       </div>
 
       <AppFooter />
+
+      {/* FAB del asistente: acceso visible al chatbot (Fase 11) */}
+      <ChatFab />
 
       {/* Selector de tema/modo (12 × 3 = 36 combinaciones) */}
       <ThemeSelector open={themeOpen} onClose={() => setThemeOpen(false)} />

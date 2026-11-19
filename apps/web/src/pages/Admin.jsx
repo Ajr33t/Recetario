@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
 import { exito, fracaso } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
+import CampoContrasena from '../components/ui/CampoContrasena.jsx';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -163,6 +164,31 @@ export default function Admin() {
     }
   }
 
+  /** Restablece la contraseña de una cuenta desde el panel (Fase 11). */
+  async function restablecerContrasena(u) {
+    const { value: contrasena } = await Swal.fire({
+      icon: 'question',
+      title: 'Restablecer contraseña',
+      html: `Escribe una contraseña nueva para <strong>${u.nombre}</strong> (${u.correo}). Se le pedirá que la use para entrar.`,
+      input: 'password',
+      inputLabel: 'Nueva contraseña (mínimo 8 caracteres)',
+      inputValidator: (valor) =>
+        !valor || valor.length < 8 ? 'La contraseña debe tener al menos 8 caracteres' : undefined,
+      showCancelButton: true,
+      confirmButtonText: 'Restablecer contraseña',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0ea5e9',
+    });
+    if (!contrasena) return;
+
+    try {
+      await api.post(`/admin/usuarios/${u.id}/restablecer-contrasena`, { contrasena });
+      exito(`Contraseña restablecida para ${u.nombre}`);
+    } catch (err) {
+      fracaso(err instanceof ApiError ? err.message : 'No se pudo restablecer la contraseña');
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <header>
@@ -209,17 +235,15 @@ export default function Admin() {
               required
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Contraseña (mín. 8 caracteres)
-            <input
-              type="password"
-              className="field"
-              value={form.contrasena}
-              onChange={(e) => setForm({ ...form, contrasena: e.target.value })}
-              autoComplete="new-password"
-              required
-            />
-          </label>
+          <CampoContrasena
+            label="Contraseña (mín. 8 caracteres)"
+            id="nueva-clave-admin"
+            type="password"
+            value={form.contrasena}
+            onChange={(e) => setForm({ ...form, contrasena: e.target.value })}
+            autoComplete="new-password"
+            required
+          />
           <label className="flex flex-col gap-1 text-sm">
             Rol
             <select
@@ -333,6 +357,15 @@ export default function Admin() {
                             <option value="usuario">Usuario</option>
                             <option value="admin">Administrador</option>
                           </select>
+                          <button
+                            type="button"
+                            className="btn-ghost !px-3 !text-xs"
+                            title="Restablecer la contraseña de esta cuenta"
+                            onClick={() => restablecerContrasena(u)}
+                          >
+                            <i className="fa-solid fa-key" aria-hidden="true" />
+                            {' '}Restablecer clave
+                          </button>
                           <button
                             type="button"
                             className={`btn-ghost !px-3 !text-xs ${

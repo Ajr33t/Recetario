@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
 import { exito, fracaso } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
+import CampoContrasena from '../components/ui/CampoContrasena.jsx';
 
 // Avatares disponibles (iconos de Font Awesome Free)
 const AVATARES = [
@@ -108,6 +109,7 @@ export default function Perfil() {
   const [passNueva, setPassNueva] = useState('');
   const [passAviso, setPassAviso] = useState('');
   const [passError, setPassError] = useState('');
+  const [dosFactores, setDosFactores] = useState(Boolean(usuario?.dos_factores));
 
   // Estadísticas de la cuenta (nº de recetas guardadas)
   useEffect(() => {
@@ -182,6 +184,78 @@ export default function Perfil() {
       setPassError(err instanceof ApiError ? err.message : 'No se pudo cambiar la contraseña');
     } finally {
       setGuardando(false);
+    }
+  }
+
+  /**
+   * Verificación en dos pasos (2FA por correo — Fase 11):
+   * activar pide contraseña → código al correo → confirmar;
+   * desactivar solo pide la contraseña.
+   */
+  async function activar2fa() {
+    const { value: contrasena } = await Swal.fire({
+      icon: 'question',
+      title: 'Activar verificación en dos pasos',
+      text: 'Te enviaremos un código de 6 dígitos a tu correo para confirmar que eres tú. Primero escribe tu contraseña actual.',
+      input: 'password',
+      inputLabel: 'Contraseña actual',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar código',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0ea5e9',
+      reverseButtons: true,
+    });
+    if (!contrasena) return;
+
+    try {
+      const r = await api.post('/auth/2fa/activar', { contrasena });
+      const { value: codigo } = await Swal.fire({
+        icon: 'info',
+        title: 'Código de confirmación',
+        text: `Enviamos un código de 6 dígitos a ${usuario.correo}. Escríbelo para activar la verificación.`,
+        input: 'text',
+        inputValue: r.codigo || '',
+        inputLabel: 'Código de 6 dígitos',
+        inputAttributes: { maxlength: 6, autocomplete: 'one-time-code', inputmode: 'numeric' },
+        inputValidator: (valor) =>
+          /^\d{6}$/.test(valor || '') ? null : 'El código debe tener 6 dígitos',
+        showCancelButton: true,
+        confirmButtonText: 'Activar ahora',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#0ea5e9',
+        reverseButtons: true,
+      });
+      if (!codigo) return;
+
+      const ok = await api.post('/auth/2fa/confirmar', { codigo });
+      setDosFactores(true);
+      exito(ok.mensaje || 'Verificación en dos pasos activada');
+    } catch (err) {
+      fracaso(err instanceof ApiError ? err.message : 'No se pudo activar la verificación');
+    }
+  }
+
+  async function desactivar2fa() {
+    const { value: contrasena } = await Swal.fire({
+      icon: 'warning',
+      title: 'Desactivar verificación en dos pasos',
+      text: 'A partir de entrarás solo con correo y contraseña. Escribe tu contraseña actual para confirmar.',
+      input: 'password',
+      inputLabel: 'Contraseña actual',
+      showCancelButton: true,
+      confirmButtonText: 'Desactivar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#b91c1c',
+      reverseButtons: true,
+    });
+    if (!contrasena) return;
+
+    try {
+      const ok = await api.post('/auth/2fa/desactivar', { contrasena });
+      setDosFactores(false);
+      exito(ok.mensaje || 'Verificación en dos pasos desactivada');
+    } catch (err) {
+      fracaso(err instanceof ApiError ? err.message : 'No se pudo desactivar la verificación');
     }
   }
 
@@ -484,35 +558,23 @@ export default function Perfil() {
         </p>
 
         <form onSubmit={cambiarContrasena} className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label htmlFor="pass-actual" className="mb-1 block text-sm font-medium">
-              Contraseña actual
-            </label>
-            <input
-              id="pass-actual"
-              type="password"
-              className="field"
-              autoComplete="current-password"
-              value={passActual}
-              onChange={(e) => setPassActual(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="pass-nueva" className="mb-1 block text-sm font-medium">
-              Nueva contraseña
-            </label>
-            <input
-              id="pass-nueva"
-              type="password"
-              className="field"
-              autoComplete="new-password"
-              minLength={8}
-              value={passNueva}
-              onChange={(e) => setPassNueva(e.target.value)}
-              required
-            />
-          </div>
+          <CampoContrasena
+            label="Contraseña actual"
+            id="pass-actual"
+            autoComplete="current-password"
+            value={passActual}
+            onChange={(e) => setPassActual(e.target.value)}
+            required
+          />
+          <CampoContrasena
+            label="Nueva contraseña"
+            id="pass-nueva"
+            autoComplete="new-password"
+            minLength={8}
+            value={passNueva}
+            onChange={(e) => setPassNueva(e.target.value)}
+            required
+          />
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
             <button type="submit" className="btn-secondary" disabled={guardando}>
               <i className="fa-solid fa-key" aria-hidden="true" /> Cambiar contraseña
@@ -529,6 +591,34 @@ export default function Perfil() {
             )}
           </div>
         </form>
+
+        {/* Verificación en dos pasos (2FA por correo) — Fase 11 */}
+        <div className="mt-5 rounded-xl border border-[rgb(var(--muted)/0.9)] bg-[rgb(var(--muted)/0.4)] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <i
+                  className={`fa-solid ${dosFactores ? 'fa-shield-halved text-primary' : 'fa-shield text-muted-foreground'}`}
+                  aria-hidden="true"
+                />
+                Verificación en dos pasos (2FA)
+              </p>
+              <p className="mt-1 max-w-prose text-sm text-muted-foreground">
+                {dosFactores
+                  ? 'Activada: cada vez que inicies sesión te enviaremos un código de 6 dígitos a tu correo. Vence en 5 minutos.'
+                  : 'Desactivada. Actívala y cada inicio de sesión pedirá además un código de 6 dígitos enviado a tu correo.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={dosFactores ? 'btn-ghost text-danger' : 'btn-secondary'}
+              onClick={dosFactores ? desactivar2fa : activar2fa}
+            >
+              <i className={`fa-solid ${dosFactores ? 'fa-toggle-off' : 'fa-toggle-on'}`} aria-hidden="true" />
+              {dosFactores ? 'Desactivar' : 'Activar 2FA'}
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Sesión */}

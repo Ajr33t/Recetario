@@ -129,6 +129,17 @@ CREATE TABLE IF NOT EXISTS password_reset (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Códigos de verificación en dos pasos / 2FA (login y activación)
+CREATE TABLE IF NOT EXISTS two_factor (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  correo TEXT NOT NULL,
+  codigo_hash TEXT NOT NULL,
+  uso TEXT NOT NULL DEFAULT 'login' CHECK (uso IN ('login', 'activacion')),
+  expira_en TEXT NOT NULL,
+  intentos INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Caché permanente de traducciones en/es (Fase 4)
 CREATE TABLE IF NOT EXISTS traducciones (
   clave TEXT PRIMARY KEY,
@@ -204,6 +215,21 @@ function migrarEsquema(db) {
   // Enlace de un clic para restablecer la contraseña (Fase 10)
   if (!columnasReset.includes('token_hash')) {
     db.exec('ALTER TABLE password_reset ADD COLUMN token_hash TEXT');
+  }
+  // Verificación en dos pasos por correo (2FA — Fase 11)
+  if (!columnas.includes('dos_factores')) {
+    db.exec('ALTER TABLE users ADD COLUMN dos_factores INTEGER NOT NULL DEFAULT 0');
+  }
+  // Consentimientos del registro: Ley 1581 de 2012 (tratamiento de datos y
+  // hábeas data) + cookies (Fase 11)
+  if (!columnas.includes('consentimiento_datos')) {
+    db.exec('ALTER TABLE users ADD COLUMN consentimiento_datos INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!columnas.includes('consentimiento_cookies')) {
+    db.exec('ALTER TABLE users ADD COLUMN consentimiento_cookies INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!columnas.includes('consentimiento_en')) {
+    db.exec('ALTER TABLE users ADD COLUMN consentimiento_en TEXT');
   }
 }
 

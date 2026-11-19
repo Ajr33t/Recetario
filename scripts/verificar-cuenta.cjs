@@ -40,6 +40,11 @@ async function esperar(fn, ms = 7000) {
 }
 
 async function llamar(metodo, ruta, { token, body } = {}) {
+  // Consentimientos del registro (Ley 1581 de 2012 / cookies)
+  if (ruta === '/auth/registro' && body && !('aceptaTratamiento' in body)) {
+    body.aceptaTratamiento = true;
+    body.aceptaCookies = true;
+  }
   const r = await fetch(`${API}${ruta}`, {
     method: metodo,
     headers: {

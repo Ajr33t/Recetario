@@ -167,7 +167,7 @@ export default function App() {
         </main>
         <footer className="glass border-t border-[var(--glass-border)]">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:justify-between">
-            <p>© 2026 SazónLab — SENA · Centro de Procesos Industriales y Construcción</p>
+            <p>© 2026 SazónLab — Recetario Inteligente</p>
             <nav aria-label="Enlaces del pie" className="flex gap-4">
               <a href="#/" className="hover:text-foreground">
                 Inicio
@@ -177,6 +177,13 @@ export default function App() {
               </a>
               <a href="#/terminos" className="hover:text-foreground">
                 Términos
+              </a>
+              <a
+                href="mailto:sazonlab2356@gmail.com"
+                className="hover:text-foreground"
+                title="Correo de soporte de SazónLab"
+              >
+                Soporte
               </a>
             </nav>
           </div>
@@ -357,7 +364,7 @@ export default function App() {
       {/* FOOTER */}
       <footer className="glass border-t border-[var(--glass-border)]">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:justify-between">
-          <p>© 2026 SazónLab — SENA · Centro de Procesos Industriales y Construcción</p>
+          <p>© 2026 SazónLab — Recetario Inteligente</p>
           <nav aria-label="Enlaces del pie" className="flex flex-wrap gap-4">
             <a href="#funciones" className="hover:text-foreground">
               Funciones
@@ -378,6 +385,13 @@ export default function App() {
             </a>
             <a href="#/terminos" className="hover:text-foreground">
               Términos
+            </a>
+            <a
+              href="mailto:sazonlab2356@gmail.com"
+              className="hover:text-foreground"
+              title="Correo de soporte de SazónLab"
+            >
+              Soporte
             </a>
           </nav>
         </div>

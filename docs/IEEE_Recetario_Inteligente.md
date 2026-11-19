@@ -4,10 +4,6 @@
 
 <span> JOSE GERMAN ESTRADA CLAVIJO</span>
 
-<span> SERVICIO NACIONAL DE APRENDIZAJE (SENA) </span>
-
-<span> CENTRO DE PROCESOS INDUSTRIALES Y CONSTRUCCIÓN </span>
-
 <span> ANÁLISIS Y DESARROLLO DE SOFTWARE </span>
 
 <span> PLANIFICACIÓN/ANÁLISIS </span>
@@ -31,6 +27,7 @@
 | 03/09/2026 | JOSE GERMAN ESTRADA CLAVIJO | ALEJANDRO RUA TORO |
 | 10/09/2026 | JOSE GERMAN ESTRADA CLAVIJO | ALEJANDRO RUA TORO |
 | 17/09/2026 | JOSE GERMAN ESTRADA CLAVIJO | ALEJANDRO RUA TORO |
+| 18/11/2026 | JOSE GERMAN ESTRADA CLAVIJO | ALEJANDRO RUA TORO |
 
 DOCUMENTO VALIDADO POR LAS PARTES EN FECHA: 01/10/2026
 
@@ -79,9 +76,55 @@ DOCUMENTO VALIDADO POR LAS PARTES EN FECHA: 01/10/2026
 | FECHA:17/09/2026            | FECHA:16/09/2026                 |
 | JOSE GERMAN ESTRADA         | ALEJANDRO RUA TORO               |
 
+| CLIENTE JOSE GERMAN ESTRADA | DESARROLLADOR ALEJANDRO RUA TORO |
+| --------------------------- | -------------------------------- |
+| FECHA:18/11/2026            | FECHA:18/11/2026                 |
+| JOSE GERMAN ESTRADA         | ALEJANDRO RUA TORO               |
+
 ---
 
 # CONTENIDO
+
+| SECCIÓN | TÍTULO | PÁGINA |
+| ------- | ------ | ------ |
+| — | **PORTADA · FICHA DEL DOCUMENTO** | 1 |
+| **1.** | **INTRODUCCIÓN** | 2 |
+| 1.1 | Objetivo general | 2 |
+| 1.2 | Objetivos específicos | 2 |
+| 1.3 | Propósito | 3 |
+| 1.4 | Alcance | 3 |
+| 1.5 | Personal involucrado | 3 |
+| 1.6 | Definiciones, acrónimos y abreviaturas | 4 |
+| 1.7 | Referencias | 5 |
+| 1.8 | Resumen | 5 |
+| **2.** | **DESCRIPCIÓN GENERAL** | 6 |
+| 2.1 | Perspectiva del producto | 6 |
+| 2.2 | Funcionalidades del producto | 6 |
+| — | Entrevista de elicitation (120 preguntas, Bloques 1–9) | 7 |
+| 2.3 | Características de los usuarios | 15 |
+| 2.4 | Restricciones | 15 |
+| **3.** | **REQUISITOS ESPECÍFICOS** | 16 |
+| 3.1 | Requisitos del sistema (RS-01 … RS-12) | 16 |
+| 3.2 | Requisitos funcionales (RF-01 … RF-31) | 16 |
+| 3.3 | Requisitos no funcionales (RNF-01 … RNF-10) | 18 |
+| **4.** | **VALIDACIÓN DE REQUISITOS** | 19 |
+| — | Checklist de verificación del proyecto (IEEE 830-1998) | 19 |
+| 4.1 | Construcción de prototipos | 24 |
+| 4.1.1 | Diagramas de actividades | 24 |
+| 4.1.2 | Diagrama de actividades: cambiar tema y modo | 26 |
+| 4.1.3 | Modelo de dominio | 26 |
+| 4.1.4 | Identificación de casos de uso (CU-01 … CU-63) | 29 |
+| 4.1.5 | Relación actores–casos de uso | 31 |
+| 4.1.6 | Contexto del sistema | 33 |
+| 4.1.7 | Diagrama de contexto del sistema (Mermaid) | 34 |
+| 4.1.8 | Diagrama de casos de uso general + 10 casos diligenciados | 35 |
+| 4.1.9 | Matriz de trazabilidad RF ↔ CU ↔ RS ↔ RNF | 45 |
+| 4.1.10 | Prototipo de baja fidelidad (wireframes) | 46 |
+| — | Tablas de cronograma, roles, ceremonias y horas por Sprint | 48 |
+| 4.2 | Formato de caso de prueba | 51 |
+| 4.3 | Ejemplo de caso de prueba diligenciado (búsqueda por ingredientes) | 51 |
+
+---
 
 ## 1. INTRODUCCIÓN
 
@@ -145,7 +188,6 @@ El sistema estará disponible para los actores Administrador, Usuario Registrado
 | --------------------------- | ----------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------- |
 | Carlos Andrés Ramírez       | Patrocinador del Proyecto (Sponsor)       | Ingeniero Industrial                           | Aprobar el presupuesto, definir los objetivos estratégicos del sistema y validar que la solución esté alineada con las necesidades del negocio. | carlos.ramirez@sazonlab.com               | Sí      |
 | Laura Marcela Gómez         | Gerente de Proyecto                       | Ingeniera de Sistemas                          | Planificar, coordinar y supervisar el desarrollo del proyecto, gestionar recursos, cronograma y comunicación entre stakeholders.                | laura.gomez@sazonlab.com                  | Sí      |
-| José Germán Estrada Clavijo | Analista de Requisitos / Instructor       | Ingeniero de Software                          | Elicitar, documentar y validar los requisitos funcionales y no funcionales, elaborar el SRS bajo IEEE 830 y verificar la trazabilidad.          | jose.estrada@sena.edu.co                  | Sí      |
 | Diana Carolina Pérez        | Diseñadora UX/UI                          | Diseñadora Gráfica                             | Diseñar la interfaz de usuario con estética Liquid Glass, elaborar prototipos y garantizar la accesibilidad y usabilidad del sistema.           | diana.perez@sazonlab.com                  | No      |
 | Andrés Felipe Torres        | Arquitecto de Software                    | Ingeniero de Software                          | Definir la arquitectura del sistema (web + Electron), seleccionar tecnologías y supervisar estándares técnicos y de calidad.                    | andres.torres@sazonlab.com                | Sí      |
 | Mónica Alejandra Ríos       | Líder Técnico de Desarrollo               | Ingeniera de Sistemas                          | Dirigir al equipo de desarrolladores, revisar el código, asegurar la implementación de los modelos UML y resolver aspectos técnicos.            | monica.rios@sazonlab.com                  | No      |
@@ -184,7 +226,6 @@ El sistema estará disponible para los actores Administrador, Usuario Registrado
 
 | ACRÓNIMO | SIGNIFICADO                                          |
 | -------- | ---------------------------------------------------- |
-| **SENA** | Servicio Nacional de Aprendizaje.                    |
 | **IEEE** | Instituto de Ingenieros Eléctricos y Electrónicos.   |
 | **UML**  | Lenguaje Unificado de Modelado.                      |
 | **RUP**  | Proceso Unificado Racional.                          |
@@ -223,7 +264,7 @@ El sistema estará disponible para los actores Administrador, Usuario Registrado
 
 ### 1.8. RESUMEN
 
-El "Recetario Inteligente — SazónLab" es una aplicación de recetario digital multiplataforma (web + escritorio `.exe`) que conecta al usuario con recetas sugeridas a partir de los ingredientes que tiene disponibles, mediante el uso de APIs externas e inteligencia artificial. Adicionalmente, permite al usuario crear, guardar, editar y compartir sus propias recetas, personalizar la apariencia con 12 temas en 3 modos (claro, oscuro, alto contraste) y ajustar la accesibilidad según sus necesidades. La interfaz sigue un estilo "Liquid Glass" (glassmorphism) que combina transparencias, desenfoques y microinteracciones fluidas. El proyecto se desarrolla bajo la metodología SCRUM en 12 Sprints y entrega cuatro artefactos: documento IEEE, demo web, página web oficial y aplicación `.exe`.
+El "Recetario Inteligente — SazónLab" es una aplicación de recetario digital multiplataforma (web + escritorio `.exe`) que conecta al usuario con recetas sugeridas a partir de los ingredientes que tiene disponibles, mediante el uso de APIs externas e inteligencia artificial. Adicionalmente, permite al usuario crear, guardar, editar y compartir sus propias recetas, personalizar la apariencia con 12 temas en 3 modos (claro, oscuro, alto contraste) y ajustar la accesibilidad según sus necesidades, incluido un **modo daltónico** para visión rojo–verde y tritanopia. La interfaz sigue un estilo "Liquid Glass" (glassmorphism) que combina transparencias, desenfoques y microinteracciones fluidas. En seguridad, el producto incorpora **consentimiento obligatorio de tratamiento de datos conforme a la Ley 1581 de 2012 (hábeas data) y de cookies en el registro**, **verificación en dos pasos (2FA) por correo**, **restablecimiento de contraseña desde el panel de administración** y un **correo de soporte con aviso de confidencialidad** en cada envío; el asistente conversacional es accesible desde un **botón flotante** en cualquier pantalla. El proyecto se desarrolla bajo la metodología SCRUM en 12 Sprints y entrega cuatro artefactos: documento IEEE, demo web, página web oficial y aplicación `.exe`.
 
 ---
 
@@ -235,7 +276,9 @@ El flujo principal es el siguiente: el usuario ingresa los ingredientes que tien
 
 En paralelo, el usuario puede crear su propia receta mediante un formulario (título, descripción, ingredientes, pasos, tiempo, dificultad, foto opcional) y guardarla en su recetario personal. Todas las operaciones quedan registradas en la base de datos local (SQLite en `.exe`) y/o remota (PostgreSQL/Firestore en web).
 
-El sistema cuenta con 12 temas visuales, cada uno con 3 modos (claro, oscuro, alto contraste), persistencia de preferencias, ajustes de accesibilidad (tamaño de fuente, reducción de movimiento, alto contraste) y una interfaz semántica (`<header>`, `<aside>`, `<main>`, `<footer>`) con landmarks ARIA.
+El sistema cuenta con 12 temas visuales, cada uno con 3 modos (claro, oscuro, alto contraste), persistencia de preferencias, ajustes de accesibilidad (tamaño de fuente, reducción de movimiento, alto contraste, **modo daltónico**) y una interfaz semántica (`<header>`, `<aside>`, `<main>`, `<footer>`) con landmarks ARIA.
+
+En cuanto a la seguridad y la relación con el usuario, el alta de cuenta exige la **autorización expresa del tratamiento de datos personales (Ley 1581 de 2012 — hábeas data) y la aceptación de cookies**, validada tanto en el cliente como en el servidor y archivada junto a la cuenta. El usuario puede activar la **verificación en dos pasos (2FA)**, que envía un código de 6 dígitos al correo en cada inicio de sesión; el administrador puede **restablecer la contraseña** de cualquier cuenta desde el panel, operación que invalida la clave anterior y queda registrada en auditoría. Todos los correos del sistema (recuperación, eliminación y verificación) se envían desde el **correo de soporte `sazonlab2356@gmail.com`** e incluyen el aviso de confidencialidad por el cual, si el mensaje llega a una persona distinta del destinatario, debe eliminarlo de inmediato. El asistente conversacional está disponible desde un **botón flotante** presente en todas las pantallas.
 
 ### 2.1. PERSPECTIVA DEL PRODUCTO
 
@@ -705,10 +748,10 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | **RS-03**      | Sugerencia inteligente           | El sistema debe conectarse a APIs externas y/o IA generativa para sugerir recetas a partir de los ingredientes ingresados.                                                      |
 | **RS-04**      | Gestión de favoritos             | El sistema debe permitir guardar, consultar y eliminar recetas favoritas.                                                                                                       |
 | **RS-05**      | Gestión de temas y modos         | El sistema debe ofrecer 12 temas, cada uno con 3 modos (claro, oscuro, alto contraste), con persistencia de preferencia.                                                         |
-| **RS-06**      | Accesibilidad                     | El sistema debe cumplir WCAG 2.1 AA, con alto contraste, navegación por teclado, lectores de pantalla y ajuste de tamaño de fuente.                                              |
+| **RS-06**      | Accesibilidad                     | El sistema debe cumplir WCAG 2.1 AA, con alto contraste, navegación por teclado, lectores de pantalla, ajuste de tamaño de fuente y modo daltónico (rojo–verde y tritanopia).                                              |
 | **RS-07**      | Estructura semántica              | El sistema debe implementar `<header>`, `<aside>`, `<main>`, `<footer>` con landmarks ARIA.                                                                                     |
 | **RS-08**      | Notificaciones y pop-ups          | El sistema debe mostrar notificaciones toast, pop-ups modales y alertas SweetAlert2 para acciones y confirmaciones.                                                              |
-| **RS-09**      | Autenticación y seguridad         | El sistema debe autenticar usuarios con contraseña cifrada y control de acceso por roles.                                                                                       |
+| **RS-09**      | Autenticación y seguridad         | El sistema debe autenticar usuarios con contraseña cifrada, control de acceso por roles, consentimiento Ley 1581 en el registro, verificación en dos pasos (2FA) por correo y restablecimiento asistido por el administrador. |
 | **RS-10**      | Auditoría de operaciones          | El sistema debe registrar en log las operaciones críticas con usuario, fecha y hora.                                                                                            |
 | **RS-11**      | Exportación e importación         | El sistema debe permitir exportar e importar recetas en formato JSON.                                                                                                           |
 | **RS-12**      | Multiplataforma                   | El sistema debe estar disponible como demo web, página web oficial y aplicación de escritorio `.exe` (Electron).                                                                |
@@ -744,6 +787,14 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | **RF-23**      | Auditoría de operaciones           | Registro de log          | El sistema debe registrar en log las operaciones críticas con usuario, fecha y hora.                                                                           | RNF-01 (Seguridad)         | ALTA      |
 | **RF-24**      | Buscador global                    | Búsqueda transversal     | El sistema debe permitir buscar recetas, ingredientes y etiquetas desde el header.                                                                             | RNF-05 (Usabilidad)        | MEDIA     |
 | **RF-25**      | Onboarding guiado                  | Tour inicial             | El sistema debe mostrar un tour guiado al primer uso, con opción de omitir.                                                                                    | RNF-05 (Usabilidad)        | BAJA      |
+| **RF-26**      | Consentimiento Ley 1581            | Hábeas data y cookies   | El sistema debe exigir en el registro la autorización del tratamiento de datos personales (Ley 1581 de 2012) y la aceptación de cookies, validándola en cliente y en servidor y archivarla con la cuenta. | RNF-01 (Seguridad)         | ALTA      |
+| **RF-27**      | Verificación en dos pasos (2FA)    | Código por correo        | El sistema debe permitir activar 2FA desde el perfil y exigir en cada inicio un código de 6 dígitos enviado al correo, con caducidad de 5 minutos y máximo 5 intentos. | RNF-01 (Seguridad)         | ALTA      |
+| **RF-28**      | Restablecer clave (Admin)          | Recuperación asistida   | El sistema debe permitir al Administrador restablecer la contraseña de cualquier cuenta desde el panel, invalidando la clave anterior y registrándolo en auditoría. | RNF-01 (Seguridad)         | MEDIA     |
+| **RF-29**      | Modo daltónico                     | Accesibilidad visual     | El sistema debe ofrecer ajustes de daltonismo (rojo–verde y tritanopia) que recolorean estados de error/éxito y acentos para que el significado no dependa del color. | RNF-07 (Accesibilidad)     | MEDIA     |
+| **RF-30**      | Acceso flotante al asistente       | Chatbot siempre visible  | El sistema debe mostrar un botón flotante (FAB) en todas las pantallas que abre el asistente conversacional, ocultándose dentro del propio chat.                | RNF-05 (Usabilidad)        | MEDIA     |
+| **RF-31**      | Correo de soporte y confidencialidad | Comunicación con el usuario | El sistema debe mostrar el correo de soporte en los pies de página y responder todos los envíos con ese remitente, incluyendo el aviso de confidencialidad obligatorio. | RNF-01 (Seguridad)         | MEDIA     |
+
+**Total: 31 requisitos funcionales documentados** (25 originales + 6 incorporados en la fase final de construcción)
 
 ---
 
@@ -773,13 +824,13 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | N° | CRITERIO DE VERIFICACIÓN | CUMPLE | OBSERVACIONES |
 |----|--------------------------|--------|---------------|
 | 1.1 | El documento incluye portada con título, autores e institución | ✅ | Presente |
-| 1.2 | Incluye ficha del documento con control de versiones | ✅ | 9 revisiones registradas |
-| 1.3 | Contiene tabla de contenido | ✅ | Presente |
+| 1.2 | Incluye ficha del documento con control de versiones | ✅ | 10 revisiones registradas |
+| 1.3 | Contiene tabla de contenido | ✅ | Sección CONTENIDO con 40 entradas |
 | 1.4 | Incluye sección de Introducción | ✅ | Sección 1 |
 | 1.5 | Define Objetivo General y Objetivos Específicos | ✅ | 1.1 y 1.2 |
 | 1.6 | Describe el Propósito del sistema | ✅ | 1.3 (8 atributos) |
 | 1.7 | Define el Alcance del proyecto | ✅ | 1.4 |
-| 1.8 | Lista el Personal Involucrado con roles y responsabilidades | ✅ | 1.5 (12 involucrados) |
+| 1.8 | Lista el Personal Involucrado con roles y responsabilidades | ✅ | 1.5 (11 involucrados) |
 | 1.9 | Incluye Definiciones, Acrónimos y Abreviaturas | ✅ | 1.6 |
 | 1.10 | Presenta Referencias bibliográficas | ✅ | 1.7 (8 referencias) |
 | 1.11 | Incluye Resumen del documento | ✅ | 1.8 |
@@ -843,8 +894,14 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | 3.23 | RF-23 | Auditoría de operaciones | ALTA | RNF-01 | ✅ |
 | 3.24 | RF-24 | Buscador global | MEDIA | RNF-05 | ✅ |
 | 3.25 | RF-25 | Onboarding guiado | BAJA | RNF-05 | ✅ |
+| 3.26 | RF-26 | Consentimiento Ley 1581 | ALTA | RNF-01 | ✅ |
+| 3.27 | RF-27 | Verificación en dos pasos (2FA) | ALTA | RNF-01 | ✅ |
+| 3.28 | RF-28 | Restablecer clave (Admin) | MEDIA | RNF-01 | ✅ |
+| 3.29 | RF-29 | Modo daltónico | MEDIA | RNF-07 | ✅ |
+| 3.30 | RF-30 | Acceso flotante al asistente | MEDIA | RNF-05 | ✅ |
+| 3.31 | RF-31 | Correo de soporte y confidencialidad | MEDIA | RNF-01 | ✅ |
 
-**Total: 25 requisitos funcionales documentados**
+**Total: 31 requisitos funcionales documentados (25 originales + 6 de la fase final)**
 
 ---
 
@@ -874,7 +931,7 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | 5.1 | Diagrama de Actividades – Buscar recetas por ingredientes (CU-03) | ✅ | Mermaid | Completo con decisiones |
 | 5.2 | Diagrama de Actividades – Crear receta propia (CU-06) | ✅ | Mermaid | Con validaciones |
 | 5.3 | Modelo de Dominio (Diagrama de Clases) | ✅ | Mermaid | 11 clases con atributos/métodos |
-| 5.4 | Identificación de Casos de Uso | ✅ | Tabla | 57 casos de uso (CU-01 a CU-57) |
+| 5.4 | Identificación de Casos de Uso | ✅ | Tabla | 63 casos de uso (CU-01 a CU-63) |
 | 5.5 | Relación Actores–Casos de Uso | ✅ | Tabla | Matriz completa |
 | 5.6 | Contexto del Sistema (límites) | ✅ | Texto | Incluye y NO incluye |
 | 5.7 | Diagrama de Contexto del Sistema | ✅ | Mermaid | Actores y sistemas externos |
@@ -929,7 +986,7 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | 8.1 | Construcción de prototipos | ✅ | 4.1 |
 | 8.2 | Diagramas de actividades UML | ✅ | 2 diagramas |
 | 8.3 | Modelo de dominio | ✅ | 4.1.3 |
-| 8.4 | Identificación de casos de uso | ✅ | 57 CU |
+| 8.4 | Identificación de casos de uso | ✅ | 63 CU |
 | 8.5 | Relación actores–casos de uso | ✅ | 4.1.5 |
 | 8.6 | Contexto del sistema | ✅ | 4.1.6 |
 | 8.7 | Diagrama de contexto | ✅ | 4.1.7 |
@@ -980,10 +1037,10 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 
 - Documento estructurado conforme a IEEE 830-1998
 - 120 preguntas de elicitación bien organizadas por bloques
-- 57 casos de uso identificados y 10 especificados en detalle
+- 63 casos de uso identificados (57 originales + 6 de la fase final) y 10 especificados en detalle
 - Diagramas Mermaid funcionales (actividades, dominio, contexto, casos de uso)
 - Cronograma SCRUM completo con 12 Sprints
-- 25 RF y 10 RNF claramente priorizados
+- 31 RF y 10 RNF claramente priorizados (25 originales + 6 incorporados en la fase final)
 - Modelo de dominio con 11 clases y relaciones
 - Checklist de verificación completo
 - Enfoque explícito en accesibilidad WCAG 2.1 AA y estilo Liquid Glass
@@ -995,14 +1052,14 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | ELEMENTO | CANTIDAD |
 |----------|----------|
 | Requisitos del Sistema (RS) | 12 |
-| Requisitos Funcionales (RF) | 25 |
+| Requisitos Funcionales (RF) | 31 (25 originales + 6 de fase final) |
 | Requisitos No Funcionales (RNF) | 10 |
-| Casos de Uso identificados | 57 |
+| Casos de Uso identificados | 63 (57 originales + 6 de fase final) |
 | Casos de Uso especificados | 10 |
 | Diagramas UML | 5 (2 actividades, 1 dominio, 1 contexto, 1 casos de uso general) |
 | Sprints planificados | 12 |
 | Preguntas de elicitación | 120 |
-| Personal involucrado | 12 |
+| Personal involucrado | 11 |
 | Secciones vacías por desarrollar | 0 |
 
 ---
@@ -1302,6 +1359,12 @@ A partir de las funcionalidades descritas en el informe de requisitos del "Recet
 | *CU-55* | Ver versión del sistema                       | Permite consultar la versión actual del sistema en el footer.                                                                |
 | *CU-56* | Ver modo offline (.exe)                       | Permite consultar recetas guardadas sin conexión a internet.                                                                 |
 | *CU-57* | Sincronizar datos (web ↔ .exe)                | Permite sincronizar recetas y preferencias entre la versión web y la de escritorio.                                          |
+| *CU-58* | Autorizar tratamiento de datos                | Permite al visitante aceptar el tratamiento de datos personales (Ley 1581 de 2012) y las cookies al crear su cuenta.         |
+| *CU-59* | Verificar identidad en dos pasos              | Permite activar/desactivar el 2FA desde el perfil y validar el código de 6 dígitos enviado al correo en cada inicio.         |
+| *CU-60* | Restablecer contraseña de un usuario (Admin)  | Permite al Administrador generar una contraseña nueva para una cuenta desde el panel de administración.                     |
+| *CU-61* | Activar modo daltónico                       | Permite elegir el ajuste de visión (rojo–verde o tritanopia) para recolorear estados y acentos.                              |
+| *CU-62* | Abrir el asistente desde el botón flotante    | Permite acceder al asistente conversacional desde cualquier pantalla mediante el botón flotante (FAB).                       |
+| *CU-63* | Contactar soporte                            | Permite escribir al correo de soporte desde el pie de página y consultar el aviso de confidencialidad de los correos.        |
 
 ---
 
@@ -1368,6 +1431,12 @@ A continuación se define qué actores participan en cada caso de uso del sistem
 | *CU-55* | Ver versión del sistema                       | Todos los actores                                      |
 | *CU-56* | Ver modo offline (.exe)                       | Usuario Registrado, Administrador                      |
 | *CU-57* | Sincronizar datos (web ↔ .exe)                | Usuario Registrado, Administrador                      |
+| *CU-58* | Autorizar tratamiento de datos                | Invitado                                               |
+| *CU-59* | Verificar identidad en dos pasos              | Administrador, Usuario Registrado                      |
+| *CU-60* | Restablecer contraseña de un usuario (Admin)  | Administrador                                          |
+| *CU-61* | Activar modo daltónico                       | Administrador, Usuario Registrado, Invitado            |
+| *CU-62* | Abrir el asistente desde el botón flotante    | Administrador, Usuario Registrado, Invitado            |
+| *CU-63* | Contactar soporte                            | Todos los actores                                      |
 
 ---
 
@@ -1382,13 +1451,16 @@ El sistema "Recetario Inteligente — SazónLab" *incluye* los siguientes proces
 - Sugerencia inteligente: integración con APIs de recetas e IA generativa.
 - Gestión de favoritos e historial de búsquedas.
 - Personalización visual: 12 temas × 3 modos con persistencia.
-- Accesibilidad: WCAG 2.1 AA, alto contraste, navegación por teclado, lectores de pantalla.
+- Accesibilidad: WCAG 2.1 AA, alto contraste, navegación por teclado, lectores de pantalla y modo daltónico.
 - Estructura semántica HTML5 con landmarks ARIA.
 - Notificaciones toast, pop-ups modales y alertas SweetAlert2.
 - Gestión de usuarios y roles (Administrador, Usuario Registrado, Invitado).
+- Seguridad de la cuenta: consentimiento Ley 1581 en el registro, verificación en dos pasos (2FA) por correo y restablecimiento de contraseña desde el panel de administración.
 - Auditoría de operaciones críticas.
 - Exportación e importación de recetas (JSON).
 - Compartir recetas (enlace y redes sociales).
+- Asistente conversacional con IA (Ollama local → OpenAI/Gemini → asistente local) y botón flotante de acceso.
+- Comunicación con el usuario: correo de soporte, aviso de confidencialidad en cada envío y plantillas de correo.
 - Modo offline básico en la versión `.exe`.
 - Sincronización web ↔ `.exe`.
 
@@ -1408,7 +1480,9 @@ El sistema *NO incluye*:
 | --------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------- |
 | *TheMealDB / Spoonacular API*                 | API REST            | Búsqueda de recetas por ingredientes, nombre, categoría y área.                            |
 | *OpenAI API / Gemini API*                     | API REST            | Generación de recetas personalizadas a partir de ingredientes libres.                     |
-| *Servidor de correo SMTP*                     | Protocolo SMTP      | Envío de recuperación de contraseña, notificaciones y reportes.                            |
+| *Servidor de correo SMTP*                     | Protocolo SMTP      | Envío de recuperación de contraseña, códigos 2FA, notificaciones y reportes.               |
+| *Resend (plantillas de correo)*               | API REST            | Plantillas publicadas de recuperación y eliminación, editables sin desplegar.              |
+| *Ollama (IA local, opcional)*                 | API local           | Ejecución de un modelo de lenguaje sin conexión para el asistente conversacional.          |
 | *Servicios de redes sociales*                 | API / Share intent  | Compartir recetas en redes sociales.                                                       |
 | *Sistema operativo Windows (.exe)*            | API nativa Electron | Notificaciones push, almacenamiento local y archivo de configuración.                     |
 | *Base de datos externa (respaldo)*            | Réplica / Backup    | Copias de seguridad diarias fuera del entorno principal.                                  |
@@ -1966,6 +2040,12 @@ flowchart TB
 | RF-23  | CU-23              | RS-10        | RNF-01        |
 | RF-24  | CU-11, CU-38       | RS-02        | RNF-05        |
 | RF-25  | CU-25, CU-47, CU-48 | RS-07       | RNF-05        |
+| RF-26  | CU-58, CU-02        | RS-09        | RNF-01        |
+| RF-27  | CU-59, CU-01        | RS-09        | RNF-01        |
+| RF-28  | CU-60, CU-22        | RS-09        | RNF-01        |
+| RF-29  | CU-61, CU-14        | RS-06        | RNF-07        |
+| RF-30  | CU-62               | RS-08        | RNF-05        |
+| RF-31  | CU-63, CU-26        | RS-09        | RNF-01        |
 
 ---
 

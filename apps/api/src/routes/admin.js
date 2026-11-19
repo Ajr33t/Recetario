@@ -9,6 +9,7 @@ import { requireRole } from '../middleware/auth.js';
  * - GET    /api/admin/usuarios        lista cuentas (rol, estado, recetas)
  * - POST   /api/admin/usuarios        crea una cuenta con el rol elegido
  * - PATCH  /api/admin/usuarios/:id    cambia rol y/o estado (inactivar)
+ * - POST   /api/admin/usuarios/:id/restablecer-contrasena  fija una clave nueva
  *
  * Todo exige sesión de administrador: 401 sin sesión, 403 sin el rol.
  * Además se revalida el rol contra la base de datos en cada petición:
@@ -142,6 +143,47 @@ router.patch('/usuarios/:id', (req, res) => {
   // Una cuenta desactivada pierde sus APIs de inmediato (requireAuth revalida)
   registrarAuditoria(req.user.correo, 'admin_cambiar_usuario', { id, ...cambios }, req.ip);
   return res.json({ usuario: actualizado, cambios });
+});
+
+/**
+ * POST /api/admin/usuarios/:id/restablecer-contrasena — el administrador
+ * fija una contraseña nueva para una cuenta (olvido de clave del usuario).
+ * El admin puede incluir también la propia cuenta (equivale a cambiarla).
+ */
+router.post('/usuarios/:id/restablecer-contrasena', (req, res) => {
+  const id = Number(req.params.id);
+  const { contrasena } = req.body || {};
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Identificador de usuario no válido' });
+  }
+  if (!contrasena || typeof contrasena !== 'string' || contrasena.length < 8) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  }
+
+  const db = getDb();
+  const usuario = db.prepare('SELECT id, nombre, correo FROM users WHERE id = ?').get(id);
+  if (!usuario) {
+    return res.status(404).json({ error: 'Usuario no encontrado' });
+  }
+
+  const hash = bcrypt.hashSync(contrasena, SALT_RONDS);
+  db.prepare(
+    `UPDATE users
+        SET contrasena_hash = ?, actualizado_en = datetime('now')
+      WHERE id = ?`,
+  ).run(hash, id);
+
+  registrarAuditoria(
+    req.user.correo,
+    'admin_restablecer_contrasena',
+    { id, correo: usuario.correo },
+    req.ip,
+  );
+  return res.json({
+    ok: true,
+    mensaje: `Contraseña restablecida para ${usuario.nombre}`,
+  });
 });
 
 export default router;

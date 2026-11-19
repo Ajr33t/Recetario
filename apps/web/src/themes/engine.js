@@ -40,6 +40,11 @@ export function applyA11y(a11y = {}) {
   html.dataset.reduceMotion = String(Boolean(a11y.reduceMotion));
   html.dataset.dyslexia = String(Boolean(a11y.dyslexia));
   html.dataset.underlineLinks = String(Boolean(a11y.underlineLinks));
+  // Modo daltónico: recolorea los estados (ver 'rojo-verde'/'tritanopia' en CSS)
+  const daltonismo = ['rojo-verde', 'tritanopia'].includes(a11y.colorBlind)
+    ? a11y.colorBlind
+    : 'ninguno';
+  html.dataset.daltonismo = daltonismo;
 }
 
 /** Devuelve los metadatos de los 12 temas (id, nombre, icono). */

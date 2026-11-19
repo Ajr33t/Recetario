@@ -50,6 +50,8 @@ app.whenReady().then(async () => {
       nombre: 'Movil Tester',
       correo: `movil-${Date.now()}@sazonlab.test`,
       contrasena: 'clave-movil-123',
+      aceptaTratamiento: true,
+      aceptaCookies: true,
     }),
   }).then((r) => r.json());
   const auth = JSON.stringify({ state: { token: reg.token, usuario: reg.usuario }, version: 0 });

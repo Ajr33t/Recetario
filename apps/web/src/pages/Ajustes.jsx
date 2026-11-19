@@ -5,6 +5,7 @@ import { useThemeStore } from '../store/themeStore.js';
 import { useAuthStore } from '../store/authStore.js';
 import { api, ApiError } from '../services/api.js';
 import { exito, fracaso, informar } from '../services/toast.js';
+import CampoContrasena from '../components/ui/CampoContrasena.jsx';
 import { MANUAL_URL, ES_ESCRITORIO } from '../services/enlaces.js';
 import { THEMES } from '../themes/palettes.js';
 import ThemeSelector from '../components/theme/ThemeSelector.jsx';
@@ -18,6 +19,13 @@ const TAMANOS = [
   { id: 'normal', label: 'Normal (16px)' },
   { id: 'grande', label: 'Grande (18px)' },
   { id: 'extra', label: 'Extra grande (20px)' },
+];
+
+// Modos daltónicos (Fase 11): recolorean estados y acentos en CSS
+const VISIONES = [
+  { id: 'ninguno', label: 'Sin ajuste' },
+  { id: 'rojo-verde', label: 'Rojo–verde' },
+  { id: 'tritanopia', label: 'Tritanopia' },
 ];
 
 /** Interruptor accesible (checkbox nativo + visual). */
@@ -318,6 +326,31 @@ export default function Ajustes() {
           </div>
         </fieldset>
 
+        <fieldset className="mt-4">
+          <legend className="mb-2 text-sm font-semibold">
+            <i className="fa-solid fa-eye" aria-hidden="true" /> Visión y daltonismo
+          </legend>
+          <p className="mb-2 text-sm text-muted-foreground">
+            Recolorea los estados de error/éxito y los botones para que no dependan de distinguir
+            rojo de verde ni azul de ámbar.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {VISIONES.map(({ id, label }) => (
+              <label key={id} className="glass-card flex cursor-pointer items-center gap-2 !p-3">
+                <input
+                  type="radio"
+                  name="daltonismo"
+                  value={id}
+                  checked={(a11y.colorBlind || 'ninguno') === id}
+                  onChange={() => setA11y({ colorBlind: id })}
+                  className="accent-[rgb(var(--primary))] text-sm"
+                />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Switch
             checked={a11y.dyslexia}
@@ -353,6 +386,10 @@ export default function Ajustes() {
           <span className="chip">
             <i className="fa-solid fa-brain" aria-hidden="true" /> Dislexia:{' '}
             {a11y.dyslexia ? 'activada' : 'desactivada'}
+          </span>
+          <span className="chip">
+            <i className="fa-solid fa-eye" aria-hidden="true" /> Daltonismo:{' '}
+            {VISIONES.find((v) => v.id === (a11y.colorBlind || 'ninguno'))?.label}
           </span>
         </div>
 
@@ -446,7 +483,7 @@ export default function Ajustes() {
             <p className="mt-1 text-muted-foreground">
               {sistema?.correo?.activo
                 ? `Envío real por ${sistema.correo.transporte.toUpperCase()}: la recuperación de contraseña llega al correo.`
-                : 'Modo demo: el código de recuperación se muestra en pantalla (configura SMTP o Resend para enviarlo de verdad).'}
+                : 'Aún no hay servidor de correo: configura SMTP o Resend en «Correo de recuperación» para enviar el código de verdad.'}
             </p>
           </li>
           <li className="rounded-xl bg-[rgb(var(--muted)/0.5)] p-3 text-sm">
@@ -527,7 +564,7 @@ export default function Ajustes() {
             />
             {correo?.activo
               ? `Activo (${correo.transporte.toUpperCase()})`
-              : 'Modo demo: el código se muestra en pantalla'}
+              : 'Sin proveedor de correo configurado todavía'}
           </span>
         </p>
 
@@ -595,16 +632,13 @@ export default function Ajustes() {
                     autoComplete="username"
                   />
                 </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  Contraseña de aplicación
-                  <input
-                    type="password"
-                    className="field"
-                    value={formCorreo.clave}
-                    onChange={(e) => setFormCorreo({ ...formCorreo, clave: e.target.value })}
-                    autoComplete="current-password"
-                  />
-                </label>
+                <CampoContrasena
+                  label="Contraseña de aplicación"
+                  id="smtp-clave"
+                  value={formCorreo.clave}
+                  onChange={(e) => setFormCorreo({ ...formCorreo, clave: e.target.value })}
+                  autoComplete="current-password"
+                />
                 <label className="flex items-center gap-2 text-sm sm:col-span-2">
                   <input
                     type="checkbox"
@@ -618,16 +652,14 @@ export default function Ajustes() {
             )}
 
             {formCorreo.proveedor === 'resend' && (
-              <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-                Clave API de Resend
-                <input
-                  type="password"
-                  className="field"
-                  value={formCorreo.clave}
-                  onChange={(e) => setFormCorreo({ ...formCorreo, clave: e.target.value })}
-                  placeholder="re_..."
-                />
-              </label>
+              <CampoContrasena
+                label="Clave API de Resend"
+                id="resend-clave"
+                className="sm:col-span-2"
+                value={formCorreo.clave}
+                onChange={(e) => setFormCorreo({ ...formCorreo, clave: e.target.value })}
+                placeholder="re_..."
+              />
             )}
 
             <label className="flex flex-col gap-1 text-sm sm:col-span-2">

@@ -82,9 +82,12 @@ La primera visita muestra el **tour de bienvenida** (6 pasos). Puedes omitirlo c
 ### 4.1 Registrarse e iniciar sesión
 
 - **Crear cuenta**: en el menú «Ingresar» (arriba a la derecha) → «Crear una cuenta nueva».
+  - Al crear la cuenta debes **autorizar el tratamiento de tus datos personales (Ley 1581 de 2012 — hábeas data)** y **aceptar las cookies**; ambos son obligatorios y quedan archivados con la cuenta (más detalles en Privacidad y Términos).
 - **Iniciar sesión**: con correo y contraseña. La sesión dura 7 días (JWT) y se
   guarda en el equipo, pero tus recetas viven en el servidor: las ves desde cualquier
   dispositivo.
+- **Verificación en dos pasos (2FA)**: si la activaste (sección 4.3), cada inicio de
+  sesión pide además un **código de 6 dígitos enviado a tu correo** (vence en 5 minutos).
 - **Invitado**: puedes usar el buscador, explorar el catálogo, ver recetas y usar el
   asistente sin crear cuenta.
 
@@ -112,7 +115,14 @@ Si olvidaste tu contraseña:
 - **Avatar**: elige un icono (Font Awesome) que sustituye la foto si no hay ninguna.
 - **Color**: elige el color de tu avatar.
 - **Nombre y biografía**.
-- **Cambiar contraseña**: introduce la actual y la nueva (8+ caracteres).
+- **Cambiar contraseña**: introduce la actual y la nueva (8+ caracteres). Todos los
+  campos de contraseña tienen el **ojo** para mostrar u ocultar lo que escribes.
+- **Verificación en dos pasos (2FA)**: en la sección **Seguridad** → **«Activar 2FA»**.
+  1. Escribe tu contraseña actual.
+  2. Recibe un **código de 6 dígitos** en tu correo y confírmalo.
+  3. A partir de cada inicio de sesión pedirá ese código además de la contraseña.
+  - Para apagarla: **«Desactivar»** + contraseña. ⚠️ Requiere que el administrador
+    haya configurado un correo funcionando (sección 11).
 - **Zona de peligro**: **eliminar tu cuenta** con un código de 6 dígitos enviado a tu correo.
 
 ---
@@ -157,7 +167,8 @@ repetirla con un clic, o **«Vaciar historial»** para borrarlas.
 
 ## 6. El Asistente (IA y chatbot) 🤖
 
-En el menú lateral → **Asistente**.
+En el menú lateral → **Asistente** (o el **botón flotante** 💬 abajo a la derecha,
+visible en cualquier pantalla).
 
 - **Pregunta en lenguaje natural**: «¿Qué puedo cocinar con pollo y arroz?».
 - El asistente usa, en este orden:
@@ -251,6 +262,9 @@ Ejemplo: 2 tazas = 473,176 ml.
 - **Tamaño de fuente**: normal, grande, extra grande (o `Ctrl/Cmd + +/-`).
 - **Reducir movimiento**: desactiva las animaciones.
 - **Subrayar enlaces**, **modo dislexia**.
+- **Visión y daltonismo**: recolorea los estados de error/éxito y los botones para
+  que no dependan de distinguir rojo de verde ni azul de ámbar
+  (opciones: sin ajuste, rojo–verde, tritanopia).
 - Navegación completa por teclado, *SkipLink* al contenido y `aria-live` en los avisos.
 
 ### 10.3 Atajos de teclado
@@ -329,6 +343,8 @@ Visible solo con rol **administrador** (menú de cuenta → Administración):
 - **Cambiar el rol** de cualquier cuenta.
 - **Inactivar/Activar** cuentas: la sesión se cierra al instante y no puede volver
   a entrar hasta reactivarla.
+- **Restablecer la contraseña** de cualquier cuenta (botón «Restablecer clave»):
+  útil cuando un usuario la olvida; la clave anterior deja de servir al instante.
 - Todo queda registrado en la **auditoría** del sistema.
 
 ---
@@ -364,6 +380,10 @@ recetas necesitas cuenta.
 **¿Se puede usar en el celular?**
 Sí: la web es responsiva (probada a 390×844 y 768×1024) y el instalador también.
 
+**¿Necesito ayuda o quiero reportar un problema?**
+Escríbenos a **sazonlab2356@gmail.com** (también desde «Soporte» en el pie de página).
+Si un correo tuyo llega por error a otra persona, esa persona debe eliminarlo de inmediato.
+
 ---
 
 ## 16. Accesos rápidos
@@ -378,6 +398,10 @@ Sí: la web es responsiva (probada a 390×844 y 768×1024) y el instalador tambi
 | Cambiar el tema/modo | Barra superior → paleta / sol-luna |
 | Ajustes y accesibilidad | Menú lateral → Ajustes |
 | Mi perfil y contraseña | Menú de cuenta (avatar) → Mi perfil |
+| Activar la verificación en dos pasos | Mi perfil → Seguridad → Activar 2FA |
+| Habilitar el modo daltónico | Ajustes → Accesibilidad → Visión y daltonismo |
+| Hablar con el asistente | Botón flotante 💬 (abajo a la derecha) o menú lateral |
+| Soporte / ayuda | Pie de página → Soporte (sazonlab2356@gmail.com) |
 | Descargar la app de escritorio | Inicio (CTA) o pie de página |
 
 ---

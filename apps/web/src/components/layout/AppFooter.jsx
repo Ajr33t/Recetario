@@ -55,6 +55,14 @@ export default function AppFooter() {
           >
             Privacidad
           </button>
+          <span aria-hidden="true">·</span>
+          <a
+            href="mailto:sazonlab2356@gmail.com"
+            className="hover:text-foreground hover:underline"
+            title="Correo de soporte de SazónLab"
+          >
+            Soporte
+          </a>
           {!ES_ESCRITORIO && (
             <>
               <span aria-hidden="true">·</span>

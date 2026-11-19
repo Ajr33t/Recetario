@@ -325,4 +325,30 @@ Registro de cambios por fase. Formato basado en [Keep a Changelog](https://keepa
 
 ---
 
-*(Proyecto cerrado — Fase 10 completa.)*
+## [Fase 11] — 18/11/2026 — Consentimiento Ley 1581, 2FA, panel admin, daltonismo y acabados
+
+### Agregado
+- **Consentimiento obligatorio en el registro (Ley 1581 de 2012)**: dos casillas en el formulario (tratamiento de datos/hábeas data con enlace a Privacidad y cookies con enlace a Términos), **validación en cliente y en API** (`400` si falta cualquiera) y columnas `consentimiento_datos`, `consentimiento_cookies`, `consentimiento_en` archivadas junto a la cuenta.
+- **Verificación en dos pasos (2FA por correo)**: tabla `two_factor` (código hasheado con SHA-256, uso `login`/`activacion`, TTL de 5 minutos, máximo 5 intentos), flujo de login `requiere2fa` → `/auth/verificar-2fa`, activación desde **Perfil → Seguridad** (contraseña → código al correo → confirmar) y desactivación con contraseña; en desarrollo el código se devuelve solo si no está en producción.
+- **Restablecer contraseña desde el panel de administración**: `POST /api/admin/usuarios/:id/restablecer-contrasena` (bcrypt + auditoría) y botón «Restablecer clave» en cada fila de Admin con SweetAlert.
+- **Ojo mostrar/ocultar contraseña**: componente reutilizable `CampoContrasena.jsx` (`aria-pressed`, etiquetas en español) usado en Login, Admin, Recuperar, Perfil y Ajustes (SMTP/Resend).
+- **Modo daltónico** (Accesibilidad): `a11y.colorBlind` = `ninguno` | `rojo-verde` | `tritanopia` → `html[data-daltonismo]` + CSS que recolorea `--danger/--success` (rojo→ámbar, verde→azul) y `--primary` en tritanopia; selector de radio en Ajustes con chip de estado.
+- **Botón flotante del asistente** (`ChatFab`): FAB visible en todas las pantallas que abre `/chat` (se oculta dentro del propio chat) — resuelve «no me aparece el chatbot en el navegador».
+- **Correo de soporte `sazonlab2356@gmail.com`**: enlace «Soporte» en los pies de la app y de la landing, y `replyTo` en todos los envíos (SMTP y Resend).
+- **Suite `verificar:auth` ampliada**: 7 checks nuevos (consentimiento, 2FA completo con código incorrecto y restablecimiento desde el panel con clave corta/rol usuario/clave anterior inválida).
+
+### Cambiado
+- **Correos con tonos tierra + Liquid Glass**: plantillas de Resend (recuperación y eliminación) rediseñadas en café/ámbar con tarjeta de cristal, degradado dorado y **aviso de confidencialidad** («este correo fue enviado únicamente a X; si tú no eres esa persona, elimínalo de inmediato») también en el texto plano; el HTML propio de `mailer.js` replica el mismo estilo y la cadena de envío añade `replyTo`.
+- Variable de plantilla `EMAIL` → **`DESTINATARIO`** (nombre reservado por Resend).
+- Los textos «modo demostración» se muestran solo si la respuesta lo indica (`respuesta.demo`).
+- **Marca y créditos desinstitutionalizados**: se retira toda mención a SENA / Centro de Procesos Industriales y Construcción — pies de página (app, landing y correos), plantillas de Resend, `meta author` y JSON-LD de la landing, portada y glosario del documento IEEE, Acta de Cierre y páginas legales (privacidad y términos), así como los créditos del README.
+- **`docs/IEEE_Recetario_Inteligente.md` actualizado al producto final**: se rellena la tabla de **CONTENIDO** (estaba vacía), se añaden **RF-26…RF-31** (consentimiento Ley 1581, 2FA, restablecer clave desde panel, modo daltónico, FAB del asistente y correo de soporte con confidencialidad) y **CU-58…CU-63**, se amplían la matriz de trazabilidad, la relación actores–casos de uso, el checklist y el resumen cuantitativo (31 RF, 63 CU, 10 revisiones de ficha), se actualizan RS-06/RS-09, §1.8, §2 y el contexto del sistema, y se registra la revisión del 18/11/2026.
+
+### Resuelto
+- **«En el navegador no me aparece el chatbot»**: acceso flotante permanente al asistente.
+- **Bug de envío bloqueado**: la validación de consentimientos dejaba el botón en «Un momento…» sin liberarlo (`setEnviando(false)` en el retorno temprano).
+- **Recuperación en producción**: el paso de código ahora avanza siempre (antes se quedaba pegado si el correo estaba configurado).
+
+---
+
+*(Proyecto en evolución — Fase 11 completa.)*

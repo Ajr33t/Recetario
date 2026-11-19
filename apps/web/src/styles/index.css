@@ -270,6 +270,30 @@ html[data-underline-links='true'] a:hover {
   text-decoration-thickness: 2px;
 }
 
+/* Daltonismo (Fase 11): recolorea los semáforos de estado para que el
+   significado no dependa de distinguir rojo/verde ni azul/ámbar.
+   El selector html[data-...] gana por especificidad a las variables
+   inyectadas por el tema ([data-theme=...]). */
+html[data-daltonismo='rojo-verde'] {
+  --danger: 146 64 14; /* marrón-ámbar en lugar de rojo */
+  --success: 3 105 161; /* azul en lugar de verde */
+}
+html[data-daltonismo='rojo-verde'][data-mode='oscuro'],
+html[data-daltonismo='rojo-verde'][data-mode='alto-contraste'] {
+  --danger: 251 146 60;
+  --success: 56 189 248;
+}
+html[data-daltonismo='tritanopia'] {
+  --primary: 190 24 93; /* rosa fuerte en lugar de azul */
+  --accent: 219 39 119;
+  --primary-foreground: 255 255 255;
+}
+html[data-daltonismo='tritanopia'][data-mode='oscuro'],
+html[data-daltonismo='tritanopia'][data-mode='alto-contraste'] {
+  --primary: 244 114 182;
+  --primary-foreground: 50 10 30;
+}
+
 /* Anillo de foco de alto contraste en modo alto contraste (Fase 2 lo activa) */
 html[data-mode='alto-contraste'] *:focus-visible {
   outline: 4px solid #ffff00;
