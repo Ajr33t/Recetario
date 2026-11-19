@@ -1,7 +1,7 @@
 # Acta de Cierre — Recetario Inteligente «SazónLab»
 
 **Proyecto:** Recetario Inteligente — SazónLab
-**Especificación:** [`docs/IEEE_Recetario_Inteligente.md`](IEEE_Recetario_Inteligente.md) (25 RF, 12 Sprints, Hito 12)
+**Especificación:** [`docs/IEEE_Recetario_Inteligente.md`](IEEE_Recetario_Inteligente.md) (31 RF, 12 Sprints, Hito 12)
 **Fecha de cierre:** 2026-11-11
 **Estado:** ✅ **CERRADO Y APROBADO**
 
@@ -11,7 +11,7 @@
 
 | Rol | Nombre | Aprobación |
 |-----|--------|-----------|
-| Product Owner / Cliente | Alejandro Rua Toro | ✅ APROBADO (Fases 0–9) |
+| Product Owner / Cliente | José Germán Estrada Clavijo | ✅ APROBADO (Fases 0–9) |
 | Producto / Desarrollo | Alejandro Rua Toro | ✅ Entregado |
 
 **Alcance aprobado:** las 9 fases del plan (Fases 0 a 9), con entrega total de los 4 productos del
@@ -76,6 +76,20 @@ Tras el cierre, el cliente solicitó una ampliación que quedó **integrada y ve
 | **Organizar las carpetas** | ✅ Raíz limpia: `apps/{web,api,desktop,landing}` + `docs/`, `scripts/`, `assets/`, `legal/` |
 | Menús del navbar con **cierre automático** | ✅ Scroll, redimensionado, cambio de ruta, foco y `Esc` |
 | Credenciales de administrador más cortas | ✅ `admin@sazonlab.test` / `admin1234` |
+
+### Ampliación posterior (Fase 11)
+
+Nueva ampliación solicitada por el cliente, integrada y verificada, que añade **6 requisitos
+funcionales (RF-26 a RF-31)** a la especificación IEEE:
+
+| Petición | Estado | RF |
+|----------|--------|----|
+| Consentimiento de datos **(Ley 1581 de 2012)** obligatorio en el registro | ✅ Validado en cliente y servidor, archivado con la cuenta | RF-26 |
+| **Verificación en dos pasos (2FA)** por correo | ✅ Código de 6 dígitos, 5 min, 5 intentos; alta desde el perfil | RF-27 |
+| **Restablecer la contraseña** de un usuario desde el panel admin | ✅ Con auditoría; la clave anterior deja de servir | RF-28 |
+| **Modo daltónico** (rojo–verde y tritanopia) | ✅ En Ajustes → Accesibilidad | RF-29 |
+| **Botón flotante** del asistente en todas las pantallas | ✅ Se oculta dentro del propio chat | RF-30 |
+| **Correo de soporte** y aviso de confidencialidad | ✅ `sazonlab2356@gmail.com` en pies y `replyTo` | RF-31 |
 
 ---
 
