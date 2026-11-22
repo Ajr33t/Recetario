@@ -327,11 +327,15 @@ html[data-mode='alto-contraste'] .glass {
 
   html,
   body {
-    /* Degradado tierra a sangre: el cristal solo se ve cristal con color
-       detrás. Si el usuario desactiva «Gráficos de fondo» en el diálogo,
-       los bordes y textos de cada tarjeta siguen imprimiéndose. */
-    background: linear-gradient(150deg, #047857 0%, #065f46 40%, #7c2d12 76%, #b45309 100%) !important;
-    color: #2f2a22 !important;
+    /* Café oscuro a sangre con luz de cocina cálida y foco esmeralda:
+       el vidrio solo se ve vidrio con color detrás. `print-color-adjust`
+       pide los fondos aunque venga desactivado «Gráficos de fondo» y el
+       diálogo de compartir recuerda activarlo. */
+    background:
+      radial-gradient(ellipse 90% 55% at 25% -8%, rgba(245, 158, 11, 0.28), transparent 62%),
+      radial-gradient(ellipse 75% 55% at 95% 105%, rgba(16, 185, 129, 0.16), transparent 60%),
+      linear-gradient(155deg, #3a2a1d 0%, #271b12 55%, #170f0a 100%) !important;
+    color: #d9cfc0 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -361,7 +365,7 @@ html[data-mode='alto-contraste'] .glass {
   }
 
   .libro a {
-    color: #0f172a;
+    color: #fcd34d;
     text-decoration: none;
   }
 
@@ -375,15 +379,16 @@ html[data-mode='alto-contraste'] .glass {
     padding: 30mm 20mm;
   }
 
-  /* Página = tarjeta de vidrio sobre el degradado tierra */
+  /* Página = texto directo sobre el café oscuro con vidrio muy sutil
+     (sin tarjeta clara detrás de las letras) */
   .libro-pagina {
     page-break-after: always;
     break-after: page;
     padding: 1.3rem 1.5rem;
-    border: 1px solid rgba(6, 95, 70, 0.35);
-    border-top: 4px solid #047857;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-top: 4px solid rgba(245, 158, 11, 0.6);
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.84) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -395,55 +400,61 @@ html[data-mode='alto-contraste'] .glass {
 
   .libro-imagen {
     max-height: 6cm;
+    border: 3px solid rgba(255, 255, 255, 0.9); /* marco de cristal */
     object-fit: cover;
   }
 
-  /* Colores de marca fijos en el PDF (tonos tierra, sin depender del tema) */
+  /* Colores de marca fijos en el PDF: ámbar sobre café oscuro */
   .libro-cols h3,
   .libro-medidas-titulo,
   .libro-indice-num,
   .libro-valor,
-  .libro-portada > i {
-    color: #047857 !important; /* esmeralda */
+  .libro-portada > i,
+  .libro-seccion-titulo {
+    color: #f59e0b !important; /* ámbar */
   }
 
-  .libro-cabecera h2 {
-    color: #2f2a22 !important;
+  .libro-cabecera h2,
+  .libro-titulo {
+    color: #f7f1e8 !important; /* crema */
   }
 
   .libro-sello {
-    color: #b45309 !important; /* ámbar */
+    color: #fcd34d !important; /* ámbar claro */
   }
 
-  /* Numeración: píldora blanca con borde esmeralda (legible con y sin
-     «Gráficos de fondo» activados) */
+  /* Numeración: píldora de vidrio (Liquid Glass) */
   .libro-numero {
-    background: #ffffff !important;
-    color: #047857 !important;
-    border: 2px solid #047857 !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
   }
 
-  /* Vidrio blanco para la marca y los chips */
+  /* Vidrio translúcido para la marca: el texto va sobre el color */
   .libro-marca {
-    background: rgba(255, 255, 255, 0.75) !important;
-    color: #065f46 !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    color: #f7f1e8 !important;
   }
 
-  .libro-marca-ico {
-    background: transparent !important;
-    color: #b45309 !important;
+  /* Chips de vidrio tintado (mismo lenguaje que el PNG) */
+  .libro-chip-verde {
+    background: rgba(52, 211, 153, 0.14) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    color: #6ee7b7 !important;
   }
 
-  .libro-chip-verde,
   .libro-chip-ambar {
-    background: rgba(255, 255, 255, 0.78) !important;
+    background: rgba(245, 158, 11, 0.16) !important;
+    border-color: rgba(245, 158, 11, 0.55) !important;
+    color: #fcd34d !important;
   }
 
-  /* Pasos: numeración en píldora blanca con número esmeralda */
+  /* Pasos: numeración en píldora de vidrio con número blanco */
   .libro-cols ol li::before {
-    background: #ffffff !important;
-    color: #047857 !important;
-    border: 1.5px solid #047857 !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
   }
 
   /* Texto secundario con contraste fijo en el PDF (tema independiente) */
@@ -452,41 +463,41 @@ html[data-mode='alto-contraste'] .glass {
   .libro-meta,
   .libro-pie,
   .libro-tabla th {
-    color: #5b5145 !important;
+    color: #cfc3b2 !important;
   }
 
   .libro-tabla th,
   .libro-tabla td {
-    border-color: #e3d9c6 !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
   }
 
   .libro-pie {
-    border-top-color: #e3d9c6 !important;
+    border-top-color: rgba(255, 255, 255, 0.28) !important;
   }
 
   .libro-indice-puntos {
-    border-bottom-color: #b9ab93 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.35) !important;
   }
 
-  /* Portada del libro: papel crema con filete esmeralda y detalle ámbar */
+  /* Portada: cristal oscuro con filete ámbar sobre el café */
   .libro-portada {
-    border-color: #047857 !important;
-    background: rgba(255, 255, 255, 0.86) !important;
+    border-color: rgba(245, 158, 11, 0.6) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
   }
 
   .libro-portada::after {
-    border-color: rgba(180, 83, 9, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
   }
 
   .glass-card,
   .surface-section,
   .glass {
-    background: #fff !important;
+    background: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #d9cfc0 !important;
   }
 
   /* Receta suelta desde el detalle: se oculta la app y la receta

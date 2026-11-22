@@ -1,10 +1,10 @@
 /**
  * Exportación de recetas sin dependencias (Fase 5 — solicitud del cliente).
  *
- * Rediseño visual (petición del cliente): **tonos tierra** (esmeralda +
- * ámbar sobre papel crema) y estética **Liquid Glass** — tarjeta de vidrio
- * con sombra suave, foto con marco claro, chips de meta e ingredientes y
- * pasos con numeración.
+ * Rediseño visual (petición del cliente): fondo **café oscuro a sangre**
+ * con luz de cocina cálida, estética **Liquid Glass** (cabecera y chips de
+ * vidrio translúcido) y el texto claro **directamente sobre el color** —
+ * sin tarjeta clara detrás de las letras.
  *
  * - `descargarImagenReceta`: tarjeta PNG dibujada en <canvas>.
  * - `imprimirReceta`: vista imprimible con el mismo lenguaje visual; el
@@ -19,22 +19,18 @@ const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
 /** Tipografía del lienzo (system-ui resuelve a Segoe UI en Windows). */
 const FUENTE = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-/* ── Paleta de marca: tonos tierra ── */
-const T = {
-  crema: '#fbf7f0',
-  esmeralda: '#047857',
-  esmeraldaOsc: '#065f46',
-  esmeraldaViva: '#10b981',
-  esmeraldaNube: '#e6f6ef',
-  ambar: '#b45309',
-  ambarVivo: '#f59e0b',
-  ambarNube: '#fdf1de',
-  tinta: '#2f2a22',
-  cuerpo: '#4a4237',
-  tenue: '#8a7c68',
-  linea: '#e8dfcd',
-  vidrio: 'rgba(255,255,255,0.74)',
-  vidrioBorde: 'rgba(255,255,255,0.95)',
+/* ── Sobre fondo café oscuro (v3): texto claro encima del color ── */
+const D = {
+  fondo1: '#3a2a1d',
+  fondo2: '#271b12',
+  fondo3: '#170f0a',
+  titulo: '#f7f1e8',
+  cuerpo: '#d9cfc0',
+  lista: '#ece3d6',
+  tenue: '#a8988a',
+  ambar: '#f59e0b',
+  ambarSuave: '#fcd34d',
+  esmeraldaClara: '#6ee7b7',
 };
 
 /** Geometría de la cabecera flotante de vidrio. */
@@ -177,50 +173,58 @@ function dibujarMarca(ctx, x, y, tam) {
 /* ─────────────────────────── Capas de la tarjeta ─────────────────────────── */
 
 /**
- * Fondo: degradado tierra protagonista (esmeralda → café → ámbar) con
- * destellos luminosos. Es la base que hace que el vidrio se vea vidrio:
- * sin color detrás, el cristal no se nota.
+ * Fondo: café oscuro a sangre con luz de cocina cálida arriba, un foco
+ * esmeralda muy tenue abajo y viñeta en los bordes (estilo iPhone).
  */
 function dibujarFondo(ctx, ancho, alto) {
-  const base = ctx.createLinearGradient(0, 0, ancho, alto);
-  base.addColorStop(0, '#047857');
-  base.addColorStop(0.42, '#065f46');
-  base.addColorStop(0.74, '#7c2d12');
-  base.addColorStop(1, '#b45309');
+  const base = ctx.createLinearGradient(0, 0, ancho * 0.35, alto);
+  base.addColorStop(0, D.fondo1);
+  base.addColorStop(0.55, D.fondo2);
+  base.addColorStop(1, D.fondo3);
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, ancho, alto);
 
-  const verde = ctx.createRadialGradient(
-    ancho * 0.12,
-    alto * 0.06,
+  // Luz cálida superior (la lámpara de la cocina)
+  const luz = ctx.createRadialGradient(
+    ancho * 0.22,
+    -alto * 0.04,
     0,
-    ancho * 0.12,
-    alto * 0.06,
-    ancho * 0.9,
+    ancho * 0.22,
+    -alto * 0.04,
+    ancho * 0.95,
   );
-  verde.addColorStop(0, 'rgba(16,185,129,0.55)');
+  luz.addColorStop(0, 'rgba(245,158,11,0.30)');
+  luz.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = luz;
+  ctx.fillRect(0, 0, ancho, alto);
+
+  // Foco esmeralda muy tenue (el toque tierra)
+  const verde = ctx.createRadialGradient(
+    ancho * 0.92,
+    alto * 0.88,
+    0,
+    ancho * 0.92,
+    alto * 0.88,
+    ancho * 0.8,
+  );
+  verde.addColorStop(0, 'rgba(16,185,129,0.16)');
   verde.addColorStop(1, 'rgba(16,185,129,0)');
   ctx.fillStyle = verde;
   ctx.fillRect(0, 0, ancho, alto);
 
-  const ambar = ctx.createRadialGradient(
-    ancho * 0.9,
-    alto * 0.94,
-    0,
-    ancho * 0.9,
-    alto * 0.94,
-    ancho * 0.95,
+  // Viñeta oscura: centra la mirada en el contenido
+  const vin = ctx.createRadialGradient(
+    ancho / 2,
+    alto / 2,
+    Math.min(ancho, alto) * 0.38,
+    ancho / 2,
+    alto / 2,
+    Math.max(ancho, alto) * 0.8,
   );
-  ambar.addColorStop(0, 'rgba(245,158,11,0.55)');
-  ambar.addColorStop(1, 'rgba(245,158,11,0)');
-  ctx.fillStyle = ambar;
+  vin.addColorStop(0, 'rgba(0,0,0,0)');
+  vin.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = vin;
   ctx.fillRect(0, 0, ancho, alto);
-
-  const brillo = ctx.createLinearGradient(0, 0, 0, alto * 0.55);
-  brillo.addColorStop(0, 'rgba(255,255,255,0.16)');
-  brillo.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = brillo;
-  ctx.fillRect(0, 0, ancho, alto * 0.55);
 }
 
 /**
@@ -228,21 +232,24 @@ function dibujarFondo(ctx, ancho, alto) {
  * translúcida con borde de luz sobre el degradado.
  */
 function dibujarCabecera(ctx, ancho) {
-  const margen = 48;
+  const margen = 64;
   const { y, alto: h } = CAB;
   const w = ancho - margen * 2;
 
   ctx.save();
-  ctx.shadowColor = 'rgba(10,20,16,0.3)';
-  ctx.shadowBlur = 36;
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = 34;
   ctx.shadowOffsetY = 12;
-  ctx.fillStyle = 'rgba(255,255,255,0.26)';
+  const vidrio = ctx.createLinearGradient(0, y, 0, y + h);
+  vidrio.addColorStop(0, 'rgba(255,255,255,0.26)');
+  vidrio.addColorStop(1, 'rgba(255,255,255,0.10)');
+  ctx.fillStyle = vidrio;
   rutaRedonda(ctx, margen, y, w, h, h / 2);
   ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.62)';
-  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = 2;
   rutaRedonda(ctx, margen, y, w, h, h / 2);
   ctx.stroke();
 
@@ -260,45 +267,17 @@ function dibujarCabecera(ctx, ancho) {
   ctx.textBaseline = 'top';
 }
 
-/**
- * Tarjeta de vidrio (Liquid Glass) situada detrás del contenido: relleno
- * translúcido, brillo interior superior y borde de luz.
- */
-function dibujarPanel(ctx, x, y, w, h) {
-  ctx.save();
-  ctx.shadowColor = 'rgba(10,20,16,0.38)';
-  ctx.shadowBlur = 48;
-  ctx.shadowOffsetY = 20;
-  ctx.fillStyle = 'rgba(255,255,255,0.68)';
-  rutaRedonda(ctx, x, y, w, h, 40);
-  ctx.fill();
-  ctx.restore();
-
-  // Reflejo interior en el borde superior (el truco del cristal)
-  ctx.save();
-  rutaRedonda(ctx, x, y, w, h, 40);
-  ctx.clip();
-  const brillo = ctx.createLinearGradient(0, y, 0, y + 160);
-  brillo.addColorStop(0, 'rgba(255,255,255,0.5)');
-  brillo.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = brillo;
-  ctx.fillRect(x, y, w, 160);
-  ctx.restore();
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-  ctx.lineWidth = 3;
-  rutaRedonda(ctx, x, y, w, h, 40);
-  ctx.stroke();
-}
-
-/** Título de sección en ámbar con subrayado esmeralda. Devuelve la y libre. */
+/** Título de sección en ámbar claro con subrayado tierra. Devuelve la y libre. */
 function tituloSeccion(ctx, texto, x, y) {
   ctx.textBaseline = 'top';
   ctx.font = `800 32px ${FUENTE}`;
-  ctx.fillStyle = T.ambar;
+  ctx.fillStyle = D.ambar;
   ctx.fillText(texto, x, y);
   const ancho = Math.min(76, ctx.measureText(texto).width);
-  ctx.fillStyle = T.esmeraldaViva;
+  const sub = ctx.createLinearGradient(x, y + 46, x + ancho, y + 46);
+  sub.addColorStop(0, D.ambar);
+  sub.addColorStop(1, '#34d399');
+  ctx.fillStyle = sub;
   rutaRedonda(ctx, x, y + 46, ancho, 6, 3);
   ctx.fill();
   return y + 74;
@@ -309,15 +288,16 @@ function tituloSeccion(ctx, texto, x, y) {
 /**
  * Dibuja el contenido de la receta y devuelve la y en la que termina.
  * Se dibuja sobre un lienzo transparente: después se colocan detrás la
- * tarjeta de vidrio y el fondo (ver `dibujarTarjeta`).
+ * cabecera de vidrio y el fondo café oscuro (ver `dibujarTarjeta`).
+ * El texto va directo sobre el color: sin tarjeta detrás.
  */
 function dibujarContenido(ctx, receta, foto, geo) {
   const { x, util } = geo;
   let y = geo.y;
   ctx.textBaseline = 'top';
 
-  // Título
-  ctx.fillStyle = T.tinta;
+  // Título (claro, directo sobre el café oscuro)
+  ctx.fillStyle = D.titulo;
   ctx.font = `800 54px ${FUENTE}`;
   for (const linea of partirLineas(ctx, receta.titulo || 'Sin título', util)) {
     ctx.fillText(linea, x, y);
@@ -339,14 +319,14 @@ function dibujarContenido(ctx, receta, foto, geo) {
     const altoChip = 54;
     for (const chip of chips) {
       const w = Math.ceil(ctx.measureText(chip.txt).width) + 44;
-      ctx.fillStyle = 'rgba(255,255,255,0.74)';
+      ctx.fillStyle = 'rgba(255,255,255,0.14)';
       rutaRedonda(ctx, cx, y, w, altoChip, 27);
       ctx.fill();
-      ctx.strokeStyle = chip.ambar ? 'rgba(180,83,9,0.5)' : 'rgba(4,120,87,0.5)';
+      ctx.strokeStyle = chip.ambar ? 'rgba(245,158,11,0.55)' : 'rgba(52,211,153,0.55)';
       ctx.lineWidth = 1.75;
       rutaRedonda(ctx, cx, y, w, altoChip, 27);
       ctx.stroke();
-      ctx.fillStyle = chip.ambar ? '#92400e' : '#065f46';
+      ctx.fillStyle = chip.ambar ? D.ambarSuave : D.esmeraldaClara;
       ctx.fillText(chip.txt, cx + 22, y + altoChip / 2 + 1);
       cx += w + 14;
     }
@@ -359,10 +339,10 @@ function dibujarContenido(ctx, receta, foto, geo) {
     const altoFoto = 420;
     const r = 26;
     ctx.save();
-    ctx.shadowColor = 'rgba(60,45,20,0.2)';
-    ctx.shadowBlur = 32;
-    ctx.shadowOffsetY = 12;
-    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 36;
+    ctx.shadowOffsetY = 14;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
     rutaRedonda(ctx, x - 9, y - 9, util + 18, altoFoto + 18, r + 9);
     ctx.fill();
     ctx.restore();
@@ -386,7 +366,7 @@ function dibujarContenido(ctx, receta, foto, geo) {
 
   // Descripción
   if (receta.descripcion) {
-    ctx.fillStyle = T.cuerpo;
+    ctx.fillStyle = D.cuerpo;
     ctx.font = `400 30px ${FUENTE}`;
     for (const linea of partirLineas(ctx, receta.descripcion, util)) {
       ctx.fillText(linea, x, y);
@@ -402,11 +382,11 @@ function dibujarContenido(ctx, receta, foto, geo) {
   for (const ing of receta.ingredientes || []) {
     const texto = `${ing.nombre}${ing.cantidad ? ` — ${ing.cantidad}` : ''}`;
     const lineas = partirLineas(ctx, texto, util - 34);
-    ctx.fillStyle = T.esmeraldaViva;
+    ctx.fillStyle = D.esmeraldaClara;
     ctx.beginPath();
     ctx.arc(x + 8, y + 19, 7, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = T.cuerpo;
+    ctx.fillStyle = D.lista;
     for (const linea of lineas) {
       ctx.fillText(linea, x + 34, y);
       y += 44;
@@ -414,7 +394,7 @@ function dibujarContenido(ctx, receta, foto, geo) {
     y += 10;
   }
   if (!(receta.ingredientes || []).length) {
-    ctx.fillStyle = T.tenue;
+    ctx.fillStyle = D.tenue;
     ctx.fillText('Sin ingredientes registrados', x, y);
     y += 50;
   }
@@ -428,13 +408,14 @@ function dibujarContenido(ctx, receta, foto, geo) {
     const lineas = partirLineas(ctx, paso, util - 66);
     const lado = 40;
 
-    // Numeración en píldora esmeralda
-    const grad = ctx.createLinearGradient(x, y, x + lado, y + lado);
-    grad.addColorStop(0, T.esmeraldaViva);
-    grad.addColorStop(1, T.esmeralda);
-    ctx.fillStyle = grad;
-    rutaRedonda(ctx, x, y + 2, lado, lado, 13);
+    // Numeración en píldora de vidrio (Liquid Glass)
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    rutaRedonda(ctx, x, y + 2, lado, lado, lado / 2);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+    ctx.lineWidth = 1.75;
+    rutaRedonda(ctx, x, y + 2, lado, lado, lado / 2);
+    ctx.stroke();
     ctx.fillStyle = '#ffffff';
     ctx.font = `700 23px ${FUENTE}`;
     ctx.textBaseline = 'middle';
@@ -444,7 +425,7 @@ function dibujarContenido(ctx, receta, foto, geo) {
     ctx.textBaseline = 'top';
 
     ctx.font = `400 30px ${FUENTE}`;
-    ctx.fillStyle = T.cuerpo;
+    ctx.fillStyle = D.cuerpo;
     for (const linea of lineas) {
       ctx.fillText(linea, x + 66, y);
       y += 44;
@@ -452,7 +433,7 @@ function dibujarContenido(ctx, receta, foto, geo) {
     y += 18;
   });
   if (!(receta.pasos || []).length) {
-    ctx.fillStyle = T.tenue;
+    ctx.fillStyle = D.tenue;
     ctx.font = `400 30px ${FUENTE}`;
     ctx.fillText('Sin pasos de preparación', x, y);
     y += 50;
@@ -460,13 +441,13 @@ function dibujarContenido(ctx, receta, foto, geo) {
 
   // Pie
   y += 30;
-  ctx.fillStyle = T.linea;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
   rutaRedonda(ctx, x, y, util, 2, 1);
   ctx.fill();
   y += 28;
   ctx.textBaseline = 'top';
   ctx.font = `500 26px ${FUENTE}`;
-  ctx.fillStyle = T.tenue;
+  ctx.fillStyle = D.tenue;
   ctx.fillText(`Receta de SazónLab · ${new Date().toLocaleDateString('es-ES')}`, x, y);
   y += 46;
 
@@ -475,33 +456,29 @@ function dibujarContenido(ctx, receta, foto, geo) {
 
 /**
  * Compone la tarjeta completa: primero el contenido (sobre lienzo
- * transparente), después la tarjeta de vidrio y por último el fondo, ambos
- * con `destination-over` para que queden por detrás.
+ * transparente, directo sobre el color), después la cabecera de vidrio y
+ * por último el fondo café oscuro, ambos con `destination-over` para que
+ * queden por detrás.
  */
 function dibujarTarjeta(receta, foto, altoBase) {
   const ancho = 1080;
-  const margen = 48;
-  const pad = 56;
-  const panelX = margen;
-  const panelW = ancho - margen * 2;
-  const x = panelX + pad;
-  const util = panelW - pad * 2;
-  const panelY = CAB.y + CAB.alto + 36;
+  const margen = 64; // alineado con la cabecera de vidrio
+  const x = margen;
+  const util = ancho - margen * 2;
+  const yInicio = CAB.y + CAB.alto + 56;
 
   const lienzo = document.createElement('canvas');
   lienzo.width = ancho;
   lienzo.height = altoBase;
   const ctx = lienzo.getContext('2d');
 
-  // 1) Contenido
-  const yFin = dibujarContenido(ctx, receta, foto, { x, util, y: panelY + pad });
-  const panelH = yFin - panelY + pad;
-  const altoUsado = Math.min(Math.ceil(panelY + panelH + 72), 16000);
+  // 1) Contenido (texto claro encima del café oscuro, sin panel)
+  const yFin = dibujarContenido(ctx, receta, foto, { x, util, y: yInicio });
+  const altoUsado = Math.min(Math.ceil(yFin + 72), 16000);
 
   // 2) Capas por detrás (el orden inverso de destination-over las apila):
-  //    tarjeta de vidrio → cabecera de vidrio → degradado de fondo
+  //    cabecera de vidrio → degradado café oscuro
   ctx.globalCompositeOperation = 'destination-over';
-  dibujarPanel(ctx, panelX, panelY, panelW, panelH);
   dibujarCabecera(ctx, ancho);
   const fondo = document.createElement('canvas');
   fondo.width = ancho;
