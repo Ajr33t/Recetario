@@ -276,6 +276,11 @@ export default function RecetaDetalle() {
             <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Exportar a PDF
           </button>
         </div>
+        <p class="mt-3 text-xs leading-relaxed" style="color: rgb(var(--muted-foreground))">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          Para que el PDF salga con los colores, activa «Gráficos de fondo» en el
+          diálogo de impresión.
+        </p>
       `,
       showCancelButton: true,
       cancelButtonText: 'Cerrar',

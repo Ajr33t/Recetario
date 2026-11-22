@@ -37,8 +37,8 @@ const T = {
   vidrioBorde: 'rgba(255,255,255,0.95)',
 };
 
-/** Alto de la barra de marca superior. */
-const BARRA = 116;
+/** Geometría de la cabecera flotante de vidrio. */
+const CAB = { y: 40, alto: 104 };
 
 /** Escapa HTML para contenido inyectado en el diálogo de compartir. */
 export function escaparHtml(texto) {
@@ -176,79 +176,118 @@ function dibujarMarca(ctx, x, y, tam) {
 
 /* ─────────────────────────── Capas de la tarjeta ─────────────────────────── */
 
-/** Fondo: papel crema, destellos tierra y barra de marca. */
+/**
+ * Fondo: degradado tierra protagonista (esmeralda → café → ámbar) con
+ * destellos luminosos. Es la base que hace que el vidrio se vea vidrio:
+ * sin color detrás, el cristal no se nota.
+ */
 function dibujarFondo(ctx, ancho, alto) {
-  ctx.fillStyle = T.crema;
+  const base = ctx.createLinearGradient(0, 0, ancho, alto);
+  base.addColorStop(0, '#047857');
+  base.addColorStop(0.42, '#065f46');
+  base.addColorStop(0.74, '#7c2d12');
+  base.addColorStop(1, '#b45309');
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, ancho, alto);
 
   const verde = ctx.createRadialGradient(
-    ancho * 0.1,
-    alto * 0.08,
+    ancho * 0.12,
+    alto * 0.06,
     0,
-    ancho * 0.1,
-    alto * 0.08,
+    ancho * 0.12,
+    alto * 0.06,
     ancho * 0.9,
   );
-  verde.addColorStop(0, 'rgba(16,185,129,0.22)');
+  verde.addColorStop(0, 'rgba(16,185,129,0.55)');
   verde.addColorStop(1, 'rgba(16,185,129,0)');
   ctx.fillStyle = verde;
   ctx.fillRect(0, 0, ancho, alto);
 
   const ambar = ctx.createRadialGradient(
-    ancho * 0.94,
-    alto * 0.92,
+    ancho * 0.9,
+    alto * 0.94,
     0,
-    ancho * 0.94,
-    alto * 0.92,
+    ancho * 0.9,
+    alto * 0.94,
     ancho * 0.95,
   );
-  ambar.addColorStop(0, 'rgba(245,158,11,0.26)');
+  ambar.addColorStop(0, 'rgba(245,158,11,0.55)');
   ambar.addColorStop(1, 'rgba(245,158,11,0)');
   ctx.fillStyle = ambar;
   ctx.fillRect(0, 0, ancho, alto);
 
-  // Barra de marca: ámbar → esmeralda
-  const barra = ctx.createLinearGradient(0, 0, ancho, 0);
-  barra.addColorStop(0, '#b45309');
-  barra.addColorStop(0.5, '#d97706');
-  barra.addColorStop(1, '#047857');
-  ctx.fillStyle = barra;
-  ctx.fillRect(0, 0, ancho, BARRA);
-
-  const brillo = ctx.createLinearGradient(0, 0, 0, BARRA);
-  brillo.addColorStop(0, 'rgba(255,255,255,0.3)');
+  const brillo = ctx.createLinearGradient(0, 0, 0, alto * 0.55);
+  brillo.addColorStop(0, 'rgba(255,255,255,0.16)');
   brillo.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = brillo;
-  ctx.fillRect(0, 0, ancho, BARRA);
-
-  const marca = 64;
-  dibujarMarca(ctx, 48, (BARRA - marca) / 2, marca);
-
-  const tx = 48 + marca + 22;
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `800 30px ${FUENTE}`;
-  ctx.fillText('SAZÓNLAB', tx, BARRA / 2 - 15);
-  ctx.fillStyle = 'rgba(255,255,255,0.88)';
-  ctx.font = `500 22px ${FUENTE}`;
-  ctx.fillText('RECETARIO INTELIGENTE', tx, BARRA / 2 + 18);
-  ctx.textBaseline = 'top';
+  ctx.fillRect(0, 0, ancho, alto * 0.55);
 }
 
-/** Tarjeta de vidrio (Liquid Glass) situada detrás del contenido. */
-function dibujarPanel(ctx, x, y, w, h) {
+/**
+ * Cabecera flotante de vidrio con la marca (estilo Liquid Glass): píldora
+ * translúcida con borde de luz sobre el degradado.
+ */
+function dibujarCabecera(ctx, ancho) {
+  const margen = 48;
+  const { y, alto: h } = CAB;
+  const w = ancho - margen * 2;
+
   ctx.save();
-  ctx.shadowColor = 'rgba(70,52,26,0.16)';
-  ctx.shadowBlur = 44;
-  ctx.shadowOffsetY = 16;
-  ctx.fillStyle = T.vidrio;
-  rutaRedonda(ctx, x, y, w, h, 36);
+  ctx.shadowColor = 'rgba(10,20,16,0.3)';
+  ctx.shadowBlur = 36;
+  ctx.shadowOffsetY = 12;
+  ctx.fillStyle = 'rgba(255,255,255,0.26)';
+  rutaRedonda(ctx, margen, y, w, h, h / 2);
   ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = T.vidrioBorde;
+  ctx.strokeStyle = 'rgba(255,255,255,0.62)';
   ctx.lineWidth = 2.5;
-  rutaRedonda(ctx, x, y, w, h, 36);
+  rutaRedonda(ctx, margen, y, w, h, h / 2);
+  ctx.stroke();
+
+  const marca = 68;
+  dibujarMarca(ctx, margen + 18, y + (h - marca) / 2, marca);
+
+  const tx = margen + 18 + marca + 22;
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `800 34px ${FUENTE}`;
+  ctx.fillText('SAZÓNLAB', tx, y + h / 2 - 16);
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.font = `600 21px ${FUENTE}`;
+  ctx.fillText('RECETARIO INTELIGENTE', tx, y + h / 2 + 20);
+  ctx.textBaseline = 'top';
+}
+
+/**
+ * Tarjeta de vidrio (Liquid Glass) situada detrás del contenido: relleno
+ * translúcido, brillo interior superior y borde de luz.
+ */
+function dibujarPanel(ctx, x, y, w, h) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(10,20,16,0.38)';
+  ctx.shadowBlur = 48;
+  ctx.shadowOffsetY = 20;
+  ctx.fillStyle = 'rgba(255,255,255,0.68)';
+  rutaRedonda(ctx, x, y, w, h, 40);
+  ctx.fill();
+  ctx.restore();
+
+  // Reflejo interior en el borde superior (el truco del cristal)
+  ctx.save();
+  rutaRedonda(ctx, x, y, w, h, 40);
+  ctx.clip();
+  const brillo = ctx.createLinearGradient(0, y, 0, y + 160);
+  brillo.addColorStop(0, 'rgba(255,255,255,0.5)');
+  brillo.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = brillo;
+  ctx.fillRect(x, y, w, 160);
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+  ctx.lineWidth = 3;
+  rutaRedonda(ctx, x, y, w, h, 40);
   ctx.stroke();
 }
 
@@ -300,14 +339,14 @@ function dibujarContenido(ctx, receta, foto, geo) {
     const altoChip = 54;
     for (const chip of chips) {
       const w = Math.ceil(ctx.measureText(chip.txt).width) + 44;
-      ctx.fillStyle = chip.ambar ? T.ambarNube : T.esmeraldaNube;
+      ctx.fillStyle = 'rgba(255,255,255,0.74)';
       rutaRedonda(ctx, cx, y, w, altoChip, 27);
       ctx.fill();
-      ctx.strokeStyle = chip.ambar ? 'rgba(180,83,9,0.28)' : 'rgba(4,120,87,0.28)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = chip.ambar ? 'rgba(180,83,9,0.5)' : 'rgba(4,120,87,0.5)';
+      ctx.lineWidth = 1.75;
       rutaRedonda(ctx, cx, y, w, altoChip, 27);
       ctx.stroke();
-      ctx.fillStyle = chip.ambar ? T.ambar : T.esmeraldaOsc;
+      ctx.fillStyle = chip.ambar ? '#92400e' : '#065f46';
       ctx.fillText(chip.txt, cx + 22, y + altoChip / 2 + 1);
       cx += w + 14;
     }
@@ -442,12 +481,12 @@ function dibujarContenido(ctx, receta, foto, geo) {
 function dibujarTarjeta(receta, foto, altoBase) {
   const ancho = 1080;
   const margen = 48;
-  const pad = 52;
+  const pad = 56;
   const panelX = margen;
   const panelW = ancho - margen * 2;
   const x = panelX + pad;
   const util = panelW - pad * 2;
-  const panelY = BARRA + 40;
+  const panelY = CAB.y + CAB.alto + 36;
 
   const lienzo = document.createElement('canvas');
   lienzo.width = ancho;
@@ -457,17 +496,17 @@ function dibujarTarjeta(receta, foto, altoBase) {
   // 1) Contenido
   const yFin = dibujarContenido(ctx, receta, foto, { x, util, y: panelY + pad });
   const panelH = yFin - panelY + pad;
-  const altoUsado = Math.min(Math.ceil(panelY + panelH + 56), 16000);
+  const altoUsado = Math.min(Math.ceil(panelY + panelH + 72), 16000);
 
-  // 2) Tarjeta de vidrio por detrás del contenido
+  // 2) Capas por detrás (el orden inverso de destination-over las apila):
+  //    tarjeta de vidrio → cabecera de vidrio → degradado de fondo
   ctx.globalCompositeOperation = 'destination-over';
   dibujarPanel(ctx, panelX, panelY, panelW, panelH);
-
-  // 3) Fondo (crema + destellos + barra) por detrás de todo
+  dibujarCabecera(ctx, ancho);
   const fondo = document.createElement('canvas');
   fondo.width = ancho;
-  fondo.height = altoBase;
-  dibujarFondo(fondo.getContext('2d'), ancho, altoBase);
+  fondo.height = altoUsado;
+  dibujarFondo(fondo.getContext('2d'), ancho, altoUsado);
   ctx.drawImage(fondo, 0, 0);
   ctx.globalCompositeOperation = 'source-over';
 

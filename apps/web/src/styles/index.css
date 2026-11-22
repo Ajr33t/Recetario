@@ -327,8 +327,13 @@ html[data-mode='alto-contraste'] .glass {
 
   html,
   body {
-    background: #fff !important;
-    color: #2f2a22 !important; /* tinta cálida (tonos tierra) */
+    /* Degradado tierra a sangre: el cristal solo se ve cristal con color
+       detrás. Si el usuario desactiva «Gráficos de fondo» en el diálogo,
+       los bordes y textos de cada tarjeta siguen imprimiéndose. */
+    background: linear-gradient(150deg, #047857 0%, #065f46 40%, #7c2d12 76%, #b45309 100%) !important;
+    color: #2f2a22 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body * {
@@ -352,7 +357,7 @@ html[data-mode='alto-contraste'] .glass {
     margin: 0;
     padding: 0;
     gap: 0; /* sin separación entre secciones: cada una es su página */
-    background: #fff;
+    background: transparent !important;
   }
 
   .libro a {
@@ -370,15 +375,15 @@ html[data-mode='alto-contraste'] .glass {
     padding: 30mm 20mm;
   }
 
-  /* Página de receta como tarjeta de vidrio sobre papel crema */
+  /* Página = tarjeta de vidrio sobre el degradado tierra */
   .libro-pagina {
     page-break-after: always;
     break-after: page;
-    padding: 1.1rem 1.3rem;
-    border: 1px solid #e8dfcd;
+    padding: 1.3rem 1.5rem;
+    border: 1px solid rgba(6, 95, 70, 0.35);
     border-top: 4px solid #047857;
-    border-radius: 0.9rem;
-    background: linear-gradient(180deg, #ffffff 0%, #fbf7f0 100%);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.84) !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -410,10 +415,35 @@ html[data-mode='alto-contraste'] .glass {
     color: #b45309 !important; /* ámbar */
   }
 
-  /* Numeración de la receta: píldora esmeralda en el PDF */
+  /* Numeración: píldora blanca con borde esmeralda (legible con y sin
+     «Gráficos de fondo» activados) */
   .libro-numero {
-    background: linear-gradient(135deg, #10b981, #047857) !important;
-    color: #ffffff !important;
+    background: #ffffff !important;
+    color: #047857 !important;
+    border: 2px solid #047857 !important;
+  }
+
+  /* Vidrio blanco para la marca y los chips */
+  .libro-marca {
+    background: rgba(255, 255, 255, 0.75) !important;
+    color: #065f46 !important;
+  }
+
+  .libro-marca-ico {
+    background: transparent !important;
+    color: #b45309 !important;
+  }
+
+  .libro-chip-verde,
+  .libro-chip-ambar {
+    background: rgba(255, 255, 255, 0.78) !important;
+  }
+
+  /* Pasos: numeración en píldora blanca con número esmeralda */
+  .libro-cols ol li::before {
+    background: #ffffff !important;
+    color: #047857 !important;
+    border: 1.5px solid #047857 !important;
   }
 
   /* Texto secundario con contraste fijo en el PDF (tema independiente) */
@@ -441,9 +471,7 @@ html[data-mode='alto-contraste'] .glass {
   /* Portada del libro: papel crema con filete esmeralda y detalle ámbar */
   .libro-portada {
     border-color: #047857 !important;
-    background:
-      radial-gradient(ellipse at top, rgba(4, 120, 87, 0.14), transparent 60%),
-      linear-gradient(160deg, #ffffff 0%, #fbf7f0 100%) !important;
+    background: rgba(255, 255, 255, 0.86) !important;
   }
 
   .libro-portada::after {
