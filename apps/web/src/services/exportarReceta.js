@@ -30,7 +30,6 @@ const D = {
   tenue: '#a8988a',
   ambar: '#f59e0b',
   ambarSuave: '#fcd34d',
-  esmeraldaClara: '#6ee7b7',
 };
 
 /** Geometría de la cabecera flotante de vidrio. */
@@ -174,7 +173,7 @@ function dibujarMarca(ctx, x, y, tam) {
 
 /**
  * Fondo: café oscuro a sangre con luz de cocina cálida arriba, un foco
- * esmeralda muy tenue abajo y viñeta en los bordes (estilo iPhone).
+ * dorado muy tenue abajo y viñeta en los bordes (estilo iPhone).
  */
 function dibujarFondo(ctx, ancho, alto) {
   const base = ctx.createLinearGradient(0, 0, ancho * 0.35, alto);
@@ -198,8 +197,8 @@ function dibujarFondo(ctx, ancho, alto) {
   ctx.fillStyle = luz;
   ctx.fillRect(0, 0, ancho, alto);
 
-  // Foco esmeralda muy tenue (el toque tierra)
-  const verde = ctx.createRadialGradient(
+  // Foco dorado (la brasa): el café se difumina en ámbar, sin verdes
+  const dorado = ctx.createRadialGradient(
     ancho * 0.92,
     alto * 0.88,
     0,
@@ -207,9 +206,9 @@ function dibujarFondo(ctx, ancho, alto) {
     alto * 0.88,
     ancho * 0.8,
   );
-  verde.addColorStop(0, 'rgba(16,185,129,0.16)');
-  verde.addColorStop(1, 'rgba(16,185,129,0)');
-  ctx.fillStyle = verde;
+  dorado.addColorStop(0, 'rgba(245,158,11,0.22)');
+  dorado.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = dorado;
   ctx.fillRect(0, 0, ancho, alto);
 
   // Viñeta oscura: centra la mirada en el contenido
@@ -276,7 +275,7 @@ function tituloSeccion(ctx, texto, x, y) {
   const ancho = Math.min(76, ctx.measureText(texto).width);
   const sub = ctx.createLinearGradient(x, y + 46, x + ancho, y + 46);
   sub.addColorStop(0, D.ambar);
-  sub.addColorStop(1, '#34d399');
+  sub.addColorStop(1, '#fcd34d');
   ctx.fillStyle = sub;
   rutaRedonda(ctx, x, y + 46, ancho, 6, 3);
   ctx.fill();
@@ -322,11 +321,11 @@ function dibujarContenido(ctx, receta, foto, geo) {
       ctx.fillStyle = 'rgba(255,255,255,0.14)';
       rutaRedonda(ctx, cx, y, w, altoChip, 27);
       ctx.fill();
-      ctx.strokeStyle = chip.ambar ? 'rgba(245,158,11,0.55)' : 'rgba(52,211,153,0.55)';
+      ctx.strokeStyle = chip.ambar ? 'rgba(245,158,11,0.55)' : 'rgba(255,255,255,0.38)';
       ctx.lineWidth = 1.75;
       rutaRedonda(ctx, cx, y, w, altoChip, 27);
       ctx.stroke();
-      ctx.fillStyle = chip.ambar ? D.ambarSuave : D.esmeraldaClara;
+      ctx.fillStyle = chip.ambar ? D.ambarSuave : D.lista;
       ctx.fillText(chip.txt, cx + 22, y + altoChip / 2 + 1);
       cx += w + 14;
     }
@@ -334,32 +333,29 @@ function dibujarContenido(ctx, receta, foto, geo) {
     y += altoChip + 40;
   }
 
-  // Foto con marco de cristal
+  // Foto directamente sobre el color (sin borde blanco), con sombra suave
   if (foto && foto.width > 0 && foto.height > 0) {
     const altoFoto = 420;
     const r = 26;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur = 36;
-    ctx.shadowOffsetY = 14;
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    rutaRedonda(ctx, x - 9, y - 9, util + 18, altoFoto + 18, r + 9);
-    ctx.fill();
-    ctx.restore();
-
     const escala = Math.max(util / foto.width, altoFoto / foto.height);
     const dw = foto.width * escala;
     const dh = foto.height * escala;
+
+    // Sombra exterior de la forma redondeada (la foto la cubre por dentro)
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 34;
+    ctx.shadowOffsetY = 14;
+    ctx.fillStyle = '#000000';
+    rutaRedonda(ctx, x, y, util, altoFoto, r);
+    ctx.fill();
+    ctx.restore();
+
     ctx.save();
     rutaRedonda(ctx, x, y, util, altoFoto, r);
     ctx.clip();
     ctx.drawImage(foto, x + (util - dw) / 2, y + (altoFoto - dh) / 2, dw, dh);
     ctx.restore();
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 3;
-    rutaRedonda(ctx, x, y, util, altoFoto, r);
-    ctx.stroke();
 
     y += altoFoto + 46;
   }
@@ -382,7 +378,7 @@ function dibujarContenido(ctx, receta, foto, geo) {
   for (const ing of receta.ingredientes || []) {
     const texto = `${ing.nombre}${ing.cantidad ? ` — ${ing.cantidad}` : ''}`;
     const lineas = partirLineas(ctx, texto, util - 34);
-    ctx.fillStyle = D.esmeraldaClara;
+    ctx.fillStyle = D.ambar;
     ctx.beginPath();
     ctx.arc(x + 8, y + 19, 7, 0, Math.PI * 2);
     ctx.fill();

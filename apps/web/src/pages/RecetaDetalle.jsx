@@ -278,8 +278,10 @@ export default function RecetaDetalle() {
         </div>
         <p class="mt-3 text-xs leading-relaxed" style="color: rgb(var(--muted-foreground))">
           <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-          Para que el PDF salga con los colores, activa «Gráficos de fondo» en el
-          diálogo de impresión.
+          En el diálogo de impresión: activa «Gráficos de fondo» (para los
+          colores) y desactiva «Encabezados y pies de página» (para que no
+          salgan la URL arriba ni la fecha abajo). Chrome recuerda ambos
+          ajustes.
         </p>
       `,
       showCancelButton: true,

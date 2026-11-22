@@ -333,7 +333,7 @@ html[data-mode='alto-contraste'] .glass {
        diálogo de compartir recuerda activarlo. */
     background:
       radial-gradient(ellipse 90% 55% at 25% -8%, rgba(245, 158, 11, 0.28), transparent 62%),
-      radial-gradient(ellipse 75% 55% at 95% 105%, rgba(16, 185, 129, 0.16), transparent 60%),
+      radial-gradient(ellipse 75% 55% at 95% 105%, rgba(245, 158, 11, 0.22), transparent 60%),
       linear-gradient(155deg, #3a2a1d 0%, #271b12 55%, #170f0a 100%) !important;
     color: #d9cfc0 !important;
     -webkit-print-color-adjust: exact !important;
@@ -400,7 +400,6 @@ html[data-mode='alto-contraste'] .glass {
 
   .libro-imagen {
     max-height: 6cm;
-    border: 3px solid rgba(255, 255, 255, 0.9); /* marco de cristal */
     object-fit: cover;
   }
 
@@ -439,9 +438,9 @@ html[data-mode='alto-contraste'] .glass {
 
   /* Chips de vidrio tintado (mismo lenguaje que el PNG) */
   .libro-chip-verde {
-    background: rgba(52, 211, 153, 0.14) !important;
-    border-color: rgba(52, 211, 153, 0.5) !important;
-    color: #6ee7b7 !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.38) !important;
+    color: #ece3d6 !important;
   }
 
   .libro-chip-ambar {
@@ -455,6 +454,11 @@ html[data-mode='alto-contraste'] .glass {
     background: rgba(255, 255, 255, 0.16) !important;
     color: #ffffff !important;
     border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  }
+
+  /* Puntos de ingredientes en ámbar (sin verdes) */
+  .libro-cols ul li::before {
+    background: #f59e0b !important;
   }
 
   /* Texto secundario con contraste fijo en el PDF (tema independiente) */
