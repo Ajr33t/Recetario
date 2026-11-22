@@ -328,7 +328,7 @@ html[data-mode='alto-contraste'] .glass {
   html,
   body {
     background: #fff !important;
-    color: #0f172a !important;
+    color: #2f2a22 !important; /* tinta cálida (tonos tierra) */
   }
 
   body * {
@@ -370,11 +370,17 @@ html[data-mode='alto-contraste'] .glass {
     padding: 30mm 20mm;
   }
 
+  /* Página de receta como tarjeta de vidrio sobre papel crema */
   .libro-pagina {
     page-break-after: always;
     break-after: page;
-    padding: 0;
-    border-top: none;
+    padding: 1.1rem 1.3rem;
+    border: 1px solid #e8dfcd;
+    border-top: 4px solid #047857;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #ffffff 0%, #fbf7f0 100%);
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .libro-pagina:last-child {
@@ -387,14 +393,27 @@ html[data-mode='alto-contraste'] .glass {
     object-fit: cover;
   }
 
-  /* Colores de marca fijos en el PDF (independientes del tema activo) */
+  /* Colores de marca fijos en el PDF (tonos tierra, sin depender del tema) */
   .libro-cols h3,
   .libro-medidas-titulo,
   .libro-indice-num,
   .libro-valor,
-  .libro-sello,
   .libro-portada > i {
-    color: #0284c7 !important;
+    color: #047857 !important; /* esmeralda */
+  }
+
+  .libro-cabecera h2 {
+    color: #2f2a22 !important;
+  }
+
+  .libro-sello {
+    color: #b45309 !important; /* ámbar */
+  }
+
+  /* Numeración de la receta: píldora esmeralda en el PDF */
+  .libro-numero {
+    background: linear-gradient(135deg, #10b981, #047857) !important;
+    color: #ffffff !important;
   }
 
   /* Texto secundario con contraste fijo en el PDF (tema independiente) */
@@ -403,16 +422,32 @@ html[data-mode='alto-contraste'] .glass {
   .libro-meta,
   .libro-pie,
   .libro-tabla th {
-    color: #475569 !important;
+    color: #5b5145 !important;
   }
 
   .libro-tabla th,
   .libro-tabla td {
-    border-color: #cbd5e1 !important;
+    border-color: #e3d9c6 !important;
+  }
+
+  .libro-pie {
+    border-top-color: #e3d9c6 !important;
   }
 
   .libro-indice-puntos {
-    border-bottom-color: #94a3b8 !important;
+    border-bottom-color: #b9ab93 !important;
+  }
+
+  /* Portada del libro: papel crema con filete esmeralda y detalle ámbar */
+  .libro-portada {
+    border-color: #047857 !important;
+    background:
+      radial-gradient(ellipse at top, rgba(4, 120, 87, 0.14), transparent 60%),
+      linear-gradient(160deg, #ffffff 0%, #fbf7f0 100%) !important;
+  }
+
+  .libro-portada::after {
+    border-color: rgba(180, 83, 9, 0.45) !important;
   }
 
   .glass-card,
@@ -670,13 +705,64 @@ html[data-mode='alto-contraste'] .glass {
   color: rgb(var(--primary));
 }
 
+/* Preflight de Tailwind quita los marcadores de las listas: se devuelven
+   con diseño propio (punto esmeralda y numeración en píldora) para que
+   la impresión/PDF muestre ingredientes y pasos correctamente. */
 .libro-cols ul,
 .libro-cols ol {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
   font-size: 0.95rem;
-  padding-left: 1.25rem;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: paso;
+}
+
+.libro-cols li {
+  position: relative;
+  padding-left: 1.7rem;
+}
+
+.libro-cols ul li::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.55em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #10b981;
+}
+
+.libro-cols ol li {
+  counter-increment: paso;
+}
+
+.libro-cols ol li::before {
+  content: counter(paso);
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #047857, #065f46);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Sin marcador en los textos alternativos («Sin ingredientes», etc.) */
+.libro-cols li.italic {
+  padding-left: 0;
+}
+
+.libro-cols li.italic::before {
+  display: none;
 }
 
 .libro-pie {
@@ -685,6 +771,62 @@ html[data-mode='alto-contraste'] .glass {
   border-top: 1px dashed rgb(var(--border));
   font-size: 0.75rem;
   color: rgb(var(--muted-foreground));
+}
+
+/* Barra de marca de la receta exportada (tonos tierra, Liquid Glass) */
+.libro-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  padding: 0.3rem 0.9rem 0.3rem 0.35rem;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(180, 83, 9, 0.12), rgba(4, 120, 87, 0.14));
+  color: #065f46;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.libro-marca-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #c2410c);
+  color: #ffffff;
+  font-size: 0.7rem;
+}
+
+/* Chips de meta (tiempo · dificultad · porciones) */
+.libro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.libro-chip i {
+  font-size: 0.8em;
+}
+
+.libro-chip-verde {
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  background: #e6f6ef;
+  color: #065f46;
+}
+
+.libro-chip-ambar {
+  border: 1px solid rgba(180, 83, 9, 0.3);
+  background: #fdf1de;
+  color: #92400e;
 }
 
 /* Receta suelta (detalle): fuera de pantalla solo en pantalla.
