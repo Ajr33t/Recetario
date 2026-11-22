@@ -327,10 +327,9 @@ html[data-mode='alto-contraste'] .glass {
 
   html,
   body {
-    /* Café oscuro a sangre con luz de cocina cálida y foco esmeralda:
-       el vidrio solo se ve vidrio con color detrás. `print-color-adjust`
-       pide los fondos aunque venga desactivado «Gráficos de fondo» y el
-       diálogo de compartir recuerda activarlo. */
+    /* Café oscuro a sangre con foco dorado/ámbar abajo y viñeta — sin verdes.
+       `print-color-adjust: exact` pide los fondos aunque venga desactivado
+       «Gráficos de fondo»; el diálogo de compartir recuerda activarlo. */
     background:
       radial-gradient(ellipse 90% 55% at 25% -8%, rgba(245, 158, 11, 0.28), transparent 62%),
       radial-gradient(ellipse 75% 55% at 95% 105%, rgba(245, 158, 11, 0.22), transparent 60%),
@@ -388,7 +387,8 @@ html[data-mode='alto-contraste'] .glass {
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-top: 4px solid rgba(245, 158, 11, 0.6);
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.06) !important;
+    /* Texto directamente sobre el café — sin tarjeta blanca detrás */
+    background: transparent !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
