@@ -183,11 +183,11 @@ export default function AppHeader({ sidebarOpen, onToggleSidebar, onOpenTheme })
           aria-label="SazónLab, ir al inicio"
         >
           <img
-            src="logo.svg"
+            src="logo2.png"
             alt=""
-            width="36"
-            height="36"
-            className="h-9 w-9 rounded-xl shadow-sm"
+            width="48"
+            height="48"
+            className="h-12 w-12 rounded-xl shadow-sm"
             aria-hidden="true"
           />
           <span className="hidden text-lg sm:inline">

@@ -143,7 +143,7 @@ export default function App() {
               aria-label="SazónLab — inicio"
             >
               <img
-                src="logo.svg"
+                src="logo2.png"
                 alt=""
                 width="36"
                 height="36"
@@ -203,7 +203,7 @@ export default function App() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
           <span className="flex items-center gap-2 text-lg font-bold" aria-label="SazónLab">
             <img
-              src="logo.svg"
+              src="logo2.png"
               alt=""
               width="36"
               height="36"
