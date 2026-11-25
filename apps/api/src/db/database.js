@@ -15,10 +15,10 @@ import bcrypt from 'bcryptjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // En el .exe empaquetado la BD vive en el directorio de datos del usuario
-// (%APPDATA%/SazonLab); en desarrollo, en server/data (ver Fase 8).
+// (%APPDATA%/SazonLab); en desarrollo, en apps/api/data (ver Fase 8).
 const DATA_DIR = process.env.SAZONLAB_DATA_DIR
   ? path.resolve(process.env.SAZONLAB_DATA_DIR)
-  : path.resolve(__dirname, '../../data');
+  : path.resolve(__dirname, '..', '..', 'data');
 const DB_PATH = path.join(DATA_DIR, 'sazonlab.db');
 
 let db = null;
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   nombre TEXT NOT NULL,
   correo TEXT NOT NULL UNIQUE,
   contrasena_hash TEXT NOT NULL,
-  rol TEXT NOT NULL DEFAULT 'usuario' CHECK (rol IN ('admin', 'usuario')),
+  rol TEXT NOT NULL DEFAULT 'usuario' CHECK (rol IN ('admin', 'usuario', 'chef')),
   estado TEXT NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   modo TEXT NOT NULL DEFAULT 'claro' CHECK (modo IN ('claro', 'oscuro', 'alto-contraste')),
   tamano_fuente TEXT NOT NULL DEFAULT 'normal' CHECK (tamano_fuente IN ('normal', 'grande', 'extra')),
   reducir_movimiento INTEGER NOT NULL DEFAULT 0 CHECK (reducir_movimiento IN (0, 1)),
+  preferences_json TEXT,
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS recipes (
   origen TEXT NOT NULL DEFAULT 'propia' CHECK (origen IN ('propia', 'sugerida')),
   estado TEXT NOT NULL DEFAULT 'activa' CHECK (estado IN ('activa', 'papelera')),
   etiquetas TEXT NOT NULL DEFAULT '[]',
+  alergenos TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(alergenos)),
   deleted_at TEXT,
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
   actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
@@ -169,6 +171,41 @@ CREATE TABLE IF NOT EXISTS sync_state (
   ultima_sync TEXT NOT NULL,
   detalle TEXT
 );
+
+CREATE TABLE IF NOT EXISTS pedidos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  total REAL NOT NULL DEFAULT 0,
+  metodo_pago TEXT NOT NULL DEFAULT 'efectivo',
+  estado TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'completado', 'cancelado')),
+  notas TEXT,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS pedido_detalle (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pedido_id INTEGER NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
+  receta_id INTEGER NOT NULL,
+  cantidad INTEGER NOT NULL DEFAULT 1,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Carta del rol Chef/Restaurante (Fase 3): platos con precio propios.
+CREATE TABLE IF NOT EXISTS carta_platos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receta_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+  precio REAL NOT NULL DEFAULT 0,
+  categoria TEXT,
+  alergenos TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(alergenos)),
+  composicion TEXT,
+  activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+  orden INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (user_id, receta_id)
+);
 `;
 
 /**
@@ -230,6 +267,65 @@ function migrarEsquema(db) {
   }
   if (!columnas.includes('consentimiento_en')) {
     db.exec('ALTER TABLE users ADD COLUMN consentimiento_en TEXT');
+  }
+  // Tablas de pedidos: si faltan (bases antiguas), las crea el esquema principal
+  // con CREATE TABLE IF NOT EXISTS; solo se garantiza la columna de notas.
+  const columnasPedidos = db.prepare('PRAGMA table_info(pedidos)').all().map((c) => c.name);
+  if (columnasPedidos.length > 0 && !columnasPedidos.includes('notas')) {
+    db.exec('ALTER TABLE pedidos ADD COLUMN notas TEXT');
+  }
+  // Agregar campo alergenos a recipes en bases existentes (Fase 4)
+  const columnasRecetasFase4 = db.prepare('PRAGMA table_info(recipes)').all().map(c => c.name);
+  if (!columnasRecetasFase4.includes('alergenos')) {
+    db.exec("ALTER TABLE recipes ADD COLUMN alergenos TEXT NOT NULL DEFAULT '[]'");
+  }
+  // Preferencias de personalización de carta en bases existentes (Fase 6)
+  const columnasPrefs = db.prepare('PRAGMA table_info(user_preferences)').all().map(c => c.name);
+  if (!columnasPrefs.includes('preferences_json')) {
+    db.exec('ALTER TABLE user_preferences ADD COLUMN preferences_json TEXT');
+  }
+  // Añadir 'chef' al CHECK de rol en bases antiguas (SQLite no admite ALTER COLUMN).
+  // Se detecta leyendo el SQL original de la tabla en sqlite_master: un SELECT
+  // jamás dispara el CHECK, así que probarlo con una consulta no serviría.
+  const sqlUsers = db
+    .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'")
+    .get()?.sql;
+  if (sqlUsers && !sqlUsers.includes("'chef'")) {
+    const sqlConChef = sqlUsers.replace(
+      /CHECK\s*\(\s*rol\s+IN\s*\([^)]*\)\s*\)/i,
+      "CHECK (rol IN ('admin', 'usuario', 'chef'))",
+    );
+    // Solo se recrea si el CHECK original mencionaba la lista de roles.
+    if (sqlConChef !== sqlUsers) {
+      const columnas = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+      const lista = columnas.map((nombre) => `"${nombre}"`).join(', ');
+      // foreign_keys OFF evita que el DROP borre en cascada user_preferences;
+      // los id se conservan, así que las filas hijas siguen siendo válidas.
+      db.pragma('foreign_keys = OFF');
+      try {
+        db.exec('BEGIN');
+        db.exec(
+          sqlConChef.replace(
+            /CREATE\s+TABLE(\s+IF\s+NOT\s+EXISTS)?\s+users/i,
+            'CREATE TABLE users_new',
+          ),
+        );
+        db.prepare(`INSERT INTO users_new (${lista}) SELECT ${lista} FROM users`).run();
+        db.exec('DROP TABLE users');
+        db.exec('ALTER TABLE users_new RENAME TO users');
+        db.exec('COMMIT');
+        console.log('[SazónLab] Migración aplicada: CHECK de rol ampliado con "chef".');
+      } catch (err) {
+        try {
+          db.exec('ROLLBACK');
+        } catch {
+          /* sin transacción activa: se conserva el error original */
+        }
+        throw err;
+      } finally {
+        db.pragma('foreign_keys = ON');
+      }
+    }
   }
 }
 

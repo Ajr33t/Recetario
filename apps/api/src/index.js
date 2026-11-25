@@ -11,6 +11,8 @@ import adminRouter from './routes/admin.js';
 import chatRouter from './routes/chat.js';
 import nubeRouter from './routes/nube.js';
 import correoRouter from './routes/correo.js';
+import pedidosRouter from './routes/pedidos.js';
+import cartaRouter from './routes/carta.js';
 import { sondearCobertura } from './services/coberturaAreas.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -29,6 +31,8 @@ app.use('/api/admin', adminRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/nube', nubeRouter);
 app.use('/api/correo', correoRouter);
+app.use('/api/pedidos', pedidosRouter);
+app.use('/api/carta', cartaRouter);
 
 // 404 y manejo de errores centralizado
 app.use(notFound);

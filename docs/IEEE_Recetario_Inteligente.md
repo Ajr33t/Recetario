@@ -160,7 +160,7 @@ Desarrollar la especificación de requisitos de software para el sistema "Receta
 
 1. **Rendimiento:** El sistema debe garantizar tiempos de respuesta inferiores a 3 segundos en la consulta de recetas por ingredientes, soportar al menos 100 usuarios concurrentes sin degradación perceptible y gestionar un volumen de 10.000 recetas y 50.000 búsquedas mensuales sin pérdida de eficiencia.
 
-2. **Seguridad:** El acceso al sistema debe realizarse mediante autenticación con usuario y contraseña cifrada, con control de permisos basado en roles (Administrador, Usuario Registrado, Invitado) y registro de auditoría para las operaciones críticas.
+2. **Seguridad:** El acceso al sistema debe realizarse mediante autenticación con usuario y contraseña cifrada, con control de permisos basado en roles (Administrador, Usuario Registrado, Invitado y Chef/Restaurante) y registro de auditoría para las operaciones críticas.
 
 3. **Usabilidad:** La interfaz debe ser intuitiva, con estética "Liquid Glass" (glassmorphism), permitiendo que un usuario nuevo complete tareas básicas como buscar recetas por ingredientes o crear su primera receta en menos de 15 minutos, con el mínimo número de clics.
 
@@ -180,7 +180,7 @@ El alcance del proyecto comprende el desarrollo de un recetario digital que perm
 
 Los entregables serán: (A) documento IEEE; (B) demo web funcional; (C) página web oficial del producto (landing); y (D) aplicación de escritorio empaquetada como `.exe` mediante Electron.
 
-El sistema estará disponible para los actores Administrador, Usuario Registrado e Invitado. No incluye: pasarela de pago real, red social culinaria, reconocimiento de imágenes por cámara, ni aplicación móvil nativa (aunque el diseño será responsive).
+El sistema estará disponible para los actores Administrador, Usuario Registrado, Invitado y Chef/Restaurante. El rol Chef/Restaurante es adicional y no modifica los permisos de los roles existentes. No incluye: pasarela de pago real, red social culinaria, reconocimiento de imágenes por cámara, ni aplicación móvil nativa (aunque el diseño será responsive).
 
 ### 1.5. PERSONAL INVOLUCRADO
 
@@ -590,7 +590,7 @@ R/: Sí, por correo.
 R/: Sí, desde el perfil.
 
 **85. ¿Qué roles tendrá el sistema?**
-R/: Administrador, Usuario Registrado, Invitado.
+R/: Administrador, Usuario Registrado, Invitado y Chef/Restaurante. El rol Chef/Restaurante es adicional y no modifica los permisos de los roles existentes.
 
 **86. ¿Debe permitir modo invitado?**
 R/: Sí, con funcionalidades limitadas.
@@ -683,7 +683,7 @@ R/: Sí, con APIs de recetas e IA generativa.
 R/: No debe mostrar recetas sin conexión (excepto las guardadas en `.exe`), no debe permitir modificar recetas de otros usuarios, no debe eliminar registros sin confirmación.
 
 **112. ¿Qué roles tendrá el sistema?**
-R/: Administrador, Usuario Registrado e Invitado.
+R/: Administrador, Usuario Registrado e Invitado y Chef/Restaurante. El rol Chef/Restaurante es adicional y no modifica los permisos de los roles existentes.
 
 **113. ¿Qué puede hacer el Administrador?**
 R/: Todo: gestionar usuarios, contenido destacado, configuración global y auditoría.
@@ -716,6 +716,7 @@ R/: El patrocinador, el gerente de proyecto y el representante del cliente.
 | **Administrador**       | Persona encargada de la operación y mantenimiento del sistema. Perfil técnico medio-alto.                  | Alto          | Diaria            | Gestionar usuarios, contenido destacado, configuración de temas globales, auditoría y reportes.             |
 | **Usuario Registrado**  | Persona que cocina en casa y busca optimizar ingredientes. Perfil técnico básico-intermedio.               | Medio         | Semanal           | Buscar recetas por ingredientes, crear/editar/eliminar recetas propias, gestionar favoritos y preferencias. |
 | **Invitado**            | Persona que explora el sistema sin registrarse. Perfil técnico básico.                                     | Bajo          | Ocasional         | Explorar recetas, usar el buscador por ingredientes, ver detalle de recetas.                                |
+| **Chef/Restaurante**    | Dueño o chef de un restaurante que gestiona su carta, asigna precios a platos y genera código QR de la carta. Técnico medio-alto. | Medio-Alto    | Semanal/Diario    | Crear y gestionar recetas propias, administrar carta con precios, generar y mostrar código QR, filtrar platos por alérgenos. |
 
 ### 2.4. RESTRICCIONES
 
@@ -763,7 +764,7 @@ Los requisitos específicos del "Recetario Inteligente — SazónLab" se enumera
 | IDENTIFICACIÓN | NOMBRE DEL REQUERIMIENTO           | CARACTERÍSTICAS           | DESCRIPCIÓN DEL REQUERIMIENTO                                                                                                                                 | REQUERIMIENTO NO FUNCIONAL | PRIORIDAD |
 | -------------- | ---------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | --------- |
 | **RF-01**      | Autenticación de usuarios          | Inicio de sesión seguro   | El sistema debe permitir el acceso mediante usuario y contraseña cifrada, validando credenciales contra la base de datos.                                     | RNF-01 (Seguridad)         | ALTA      |
-| **RF-02**      | Gestión de roles y permisos        | Control de acceso por rol | El sistema debe asignar permisos diferenciados según el rol: Administrador, Usuario Registrado o Invitado.                                                    | RNF-01 (Seguridad)         | ALTA      |
+| **RF-02**      | Gestión de roles y permisos        | Control de acceso por rol | El sistema debe asignar permisos diferenciados según el rol: Administrador, Usuario Registrado, Invitado y Chef/Restaurante. El rol Chef/Restaurante es adicional y no modifica los permisos de los roles existentes.                                                    | RNF-01 (Seguridad)         | ALTA      |
 | **RF-03**      | Búsqueda por ingredientes          | Búsqueda inteligente      | El sistema debe permitir ingresar ingredientes (texto libre + chips) y devolver recetas ordenadas por ingredientes faltantes.                                  | RNF-02 (Rendimiento)       | ALTA      |
 | **RF-04**      | Sugerencia inteligente de recetas  | Integración API/IA        | El sistema debe conectarse a APIs externas y/o IA generativa para sugerir recetas a partir de los ingredientes ingresados.                                     | RNF-02 (Rendimiento)       | ALTA      |
 | **RF-05**      | Detalle de receta                  | Vista detallada          | El sistema debe mostrar ingredientes, pasos, tiempo, dificultad, porciones, imagen y etiquetas de cada receta.                                                 | RNF-05 (Usabilidad)        | ALTA      |
