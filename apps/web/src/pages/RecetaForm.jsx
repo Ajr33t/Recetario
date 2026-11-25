@@ -569,7 +569,7 @@ export default function RecetaForm() {
               </span>
             </legend>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Alérgenos de la receta">
-              {ALERGENOS.map(({ clave, etiqueta, icono }) => {
+              {ALERGENOS.map(({ clave, etiqueta }) => {
                 const marcado = f.alergenos.includes(clave);
                 return (
                   <label
@@ -589,7 +589,7 @@ export default function RecetaForm() {
                         }))
                       }
                     />
-                    <span aria-hidden="true">{icono}</span> {etiqueta}
+                    {etiqueta}
                   </label>
                 );
               })}

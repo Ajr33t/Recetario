@@ -32,7 +32,7 @@
 
 ## 4. Alérgenos
 
-- En **Crear/Editar receta** y en **Agregar/editar plato** hay casillas con iconos (🌾 gluten, 🥛 lácteos, 🥚 huevo…).
+- En **Crear/Editar receta** y en **Agregar/editar plato** hay casillas de texto con los alérgenos (Gluten, Lácteos, Huevo…).
 - La API precarga los alérgenos detectados en los ingredientes; se pueden marcar o desmarcar.
 - La ficha de la receta y las exportaciones PDF/imagen muestran la leyenda de alérgenos.
 - En la **carta digital**, el comensal marca sus alérgenos en «Mis alergias» y los platos que los contienen desaparecen. «Quitar filtro» los restaura.

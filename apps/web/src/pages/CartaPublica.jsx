@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, ApiError } from '../services/api.js';
-import { ALERGENOS, iconoAlergeno, etiquetaAlergeno } from '../data/alergenos.js';
+import { ALERGENOS, etiquetaAlergeno } from '../data/alergenos.js';
 import { descargarCartaComoImagen, imprimirCarta, organizarPlatos } from '../services/exportarCarta.js';
 
 /**
@@ -88,7 +88,7 @@ export default function CartaPublica() {
           Marca tus alérgenos: ocultaremos los platos que los contengan.
         </p>
         <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Alérgenos a evitar">
-          {ALERGENOS.map(({ clave, etiqueta, icono }) => {
+          {ALERGENOS.map(({ clave, etiqueta }) => {
             const marcado = excluidos.includes(clave);
             return (
               <label
@@ -101,7 +101,7 @@ export default function CartaPublica() {
                   checked={marcado}
                   onChange={() => alternarAlergeno(clave)}
                 />
-                <span aria-hidden="true">{icono}</span> {etiqueta}
+                {etiqueta}
               </label>
             );
           })}
@@ -193,7 +193,7 @@ export default function CartaPublica() {
                     <ul className="flex flex-wrap gap-1.5" role="list" aria-label={`Alérgenos de ${plato.titulo}`}>
                       {plato.alergenos.map((a) => (
                         <li key={a} className="chip !px-2 !py-0.5 !text-[11px]">
-                          <span aria-hidden="true">{iconoAlergeno(a)}</span> {etiquetaAlergeno(a)}
+                          {etiquetaAlergeno(a)}
                         </li>
                       ))}
                     </ul>
@@ -212,7 +212,7 @@ export default function CartaPublica() {
               <ul className="mt-2 flex flex-wrap gap-2" role="list">
                 {presentes.map((a) => (
                   <li key={a} className="chip !px-2 !py-0.5 !text-[11px]">
-                    <span aria-hidden="true">{iconoAlergeno(a)}</span> {etiquetaAlergeno(a)}
+                    {etiquetaAlergeno(a)}
                   </li>
                 ))}
               </ul>

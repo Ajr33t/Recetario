@@ -5,7 +5,7 @@ import { api, ApiError } from '../services/api.js';
 import { exito, fracaso } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 import Modal from '../components/ui/Modal.jsx';
-import { ALERGENOS, detectarAlergenos, etiquetaAlergeno, iconoAlergeno } from '../data/alergenos.js';
+import { ALERGENOS, detectarAlergenos, etiquetaAlergeno } from '../data/alergenos.js';
 import PersonalizarCarta from '../components/carta/PersonalizarCarta.jsx';
 import GenerarQR from '../components/carta/GenerarQR.jsx';
 
@@ -306,7 +306,7 @@ export default function ChefPanel() {
                   <ul className="flex flex-wrap gap-1.5" aria-label="Alérgenos del plato" role="list">
                     {plato.alergenos.map((a) => (
                       <li key={a} className="chip !px-2 !py-0.5 !text-[11px]" title={etiquetaAlergeno(a)}>
-                        <span aria-hidden="true">{iconoAlergeno(a)}</span> {etiquetaAlergeno(a)}
+                        {etiquetaAlergeno(a)}
                       </li>
                     ))}
                   </ul>
@@ -402,7 +402,7 @@ export default function ChefPanel() {
               Alérgenos <span className="font-normal text-muted-foreground">(precargados desde la receta, editable)</span>
             </legend>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Alérgenos del plato">
-              {ALERGENOS.map(({ clave, etiqueta, icono }) => {
+              {ALERGENOS.map(({ clave, etiqueta }) => {
                 const marcado = form.alergenos.includes(clave);
                 return (
                   <label
@@ -415,7 +415,7 @@ export default function ChefPanel() {
                       checked={marcado}
                       onChange={() => alternarAlergeno(clave)}
                     />
-                    <span aria-hidden="true">{icono}</span> {etiqueta}
+                    {etiqueta}
                   </label>
                 );
               })}

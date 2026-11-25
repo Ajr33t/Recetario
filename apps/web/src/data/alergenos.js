@@ -4,30 +4,26 @@
  * de exportes y filtro del comensal.
  * Los valores son las claves que se guardan en `recipes.alergenos` y en
  * `carta_platos.alergenos` (JSON en la base de datos).
+ * Se muestran solo etiquetas de texto, sin emojis.
  */
 export const ALERGENOS = [
-  { clave: 'gluten', etiqueta: 'Gluten', icono: '🌾' },
-  { clave: 'lactosa', etiqueta: 'Lácteos / lactosa', icono: '🥛' },
-  { clave: 'huevo', etiqueta: 'Huevo', icono: '🥚' },
-  { clave: 'pescado', etiqueta: 'Pescado', icono: '🐟' },
-  { clave: 'mariscos', etiqueta: 'Mariscos / crustáceos', icono: '🦐' },
-  { clave: 'frutos_secos', etiqueta: 'Frutos secos', icono: '🌰' },
-  { clave: 'cacahuetes', etiqueta: 'Cacahuetes', icono: '🥜' },
-  { clave: 'soja', etiqueta: 'Soja', icono: '🫘' },
-  { clave: 'apio', etiqueta: 'Apio', icono: '🌿' },
-  { clave: 'mostaza', etiqueta: 'Mostaza', icono: '🧂' },
-  { clave: 'sesamo', etiqueta: 'Sésamo', icono: '⚪' },
-  { clave: 'sulfitos', etiqueta: 'Sulfitos', icono: '🍷' },
+  { clave: 'gluten', etiqueta: 'Gluten' },
+  { clave: 'lactosa', etiqueta: 'Lácteos / lactosa' },
+  { clave: 'huevo', etiqueta: 'Huevo' },
+  { clave: 'pescado', etiqueta: 'Pescado' },
+  { clave: 'mariscos', etiqueta: 'Mariscos / crustáceos' },
+  { clave: 'frutos_secos', etiqueta: 'Frutos secos' },
+  { clave: 'cacahuetes', etiqueta: 'Cacahuetes' },
+  { clave: 'soja', etiqueta: 'Soja' },
+  { clave: 'apio', etiqueta: 'Apio' },
+  { clave: 'mostaza', etiqueta: 'Mostaza' },
+  { clave: 'sesamo', etiqueta: 'Sésamo' },
+  { clave: 'sulfitos', etiqueta: 'Sulfitos' },
 ];
 
 /** Busca la etiqueta legible de una clave (la clave si no está en el catálogo). */
 export function etiquetaAlergeno(clave) {
   return ALERGENOS.find((a) => a.clave === clave)?.etiqueta || String(clave);
-}
-
-/** Busca el emoji representativo de una clave (uno genérico si no existe). */
-export function iconoAlergeno(clave) {
-  return ALERGENOS.find((a) => a.clave === clave)?.icono || '⚠️';
 }
 
 /** Normaliza una lista venida de la BD (JSON/string/array) a array de claves. */

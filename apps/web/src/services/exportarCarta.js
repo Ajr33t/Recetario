@@ -5,7 +5,7 @@
  * Respeta color, tipografía, orientación, tamaño, versión con/sin precio,
  * visibilidad de alérgenos/composición y logo.
  */
-import { etiquetaAlergeno, iconoAlergeno } from '../data/alergenos.js';
+import { etiquetaAlergeno } from '../data/alergenos.js';
 
 const TAMANOS = {
   A4: [1240, 1754],
@@ -66,7 +66,7 @@ export function imprimirCarta(datos) {
           : '';
       const alerg = preferencias.mostrar_alergenos && p.alergenos?.length
         ? `<p style="font-size:8pt;color:#6b7280;margin:2pt 0">Alérgenos: ${p.alergenos
-            .map((a) => `${iconoAlergeno(a)} ${escapar(etiquetaAlergeno(a))}`)
+            .map((a) => escapar(etiquetaAlergeno(a)))
             .join(' · ')}</p>`
         : '';
       const comp = preferencias.mostrar_composicion && p.composicion

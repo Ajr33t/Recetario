@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError } from '../../services/api.js';
 import { exito } from '../../services/toast.js';
 import Modal from '../ui/Modal.jsx';
-import { iconoAlergeno, etiquetaAlergeno } from '../../data/alergenos.js';
+import { etiquetaAlergeno } from '../../data/alergenos.js';
 import { descargarCartaComoImagen, imprimirCarta, organizarPlatos } from '../../services/exportarCarta.js';
 
 /** Preferencias por defecto (la carta se ve bien sin configurar nada). */
@@ -282,7 +282,7 @@ export default function PersonalizarCarta({ open, onClose }) {
                   )}
                   {form.mostrar_alergenos && p.alergenos?.length > 0 && (
                     <p className="text-[11px] opacity-70">
-                      {p.alergenos.map((a) => `${iconoAlergeno(a)} ${etiquetaAlergeno(a)}`).join(' · ')}
+                      {p.alergenos.map(etiquetaAlergeno).join(' · ')}
                     </p>
                   )}
                 </div>
