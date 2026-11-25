@@ -153,6 +153,19 @@
     @apply glass rounded-2xl;
   }
 
+  /* Punto 9: Liquid Glass se puede desactivar desde Ajustes > Apariencia.
+     Sin desenfoque ni transparencia: superficies sólidas y contraste AA. */
+  html[data-glass='off'] .glass,
+  html[data-glass='off'] .glass-card,
+  html[data-glass='off'] .glass-panel {
+    background: rgb(var(--card)) !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: rgb(var(--border)) !important;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08) !important;
+  }
+
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline focus-visible:outline-2 disabled:cursor-not-allowed disabled:opacity-60;
   }

@@ -10,17 +10,22 @@ const NAV_ITEMS_SESION = [
   { to: '/buscar', label: 'Buscar por ingredientes', icon: 'fa-magnifying-glass' },
   { to: '/chat', label: 'Asistente', icon: 'fa-robot' },
   { to: '/mis-recetas', label: 'Mis recetas', icon: 'fa-book-open' },
+  { to: '/medidas', label: 'Medidas y equivalencias', icon: 'fa-ruler-combined' },
   { to: '/favoritos', label: 'Favoritos', icon: 'fa-heart' },
   { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
 ];
 
-// Pedidos: exclusivo del rol chef/restaurante (ni admin ni usuario)
-const NAV_ITEM_PEDIDOS = { to: '/pedidos', label: 'Pedidos', icon: 'fa-receipt', contador: true };
+// Pedidos y panel propio: exclusivos del rol chef/restaurante (ni admin).
+const NAV_ITEMS_CHEF = [
+  { to: '/chef', label: 'Panel del chef', icon: 'fa-user-tie' },
+  { to: '/pedidos', label: 'Pedidos', icon: 'fa-receipt', contador: true },
+];
 
 // Menú de invitado: solo lo esencial (inicio, asistente, ajustes y acceso)
 const NAV_ITEMS_INVITADO = [
   { to: '/', label: 'Inicio', icon: 'fa-house' },
   { to: '/chat', label: 'Asistente', icon: 'fa-robot' },
+  { to: '/medidas', label: 'Medidas y equivalencias', icon: 'fa-ruler-combined' },
   { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
 ];
 
@@ -52,7 +57,7 @@ export default function AppSidebar({ open, onClose }) {
     ? NAV_ITEMS_INVITADO
     : [
         ...NAV_ITEMS_SESION,
-        ...(esChef ? [NAV_ITEM_PEDIDOS] : []),
+        ...(esChef ? NAV_ITEMS_CHEF : []),
         ...(usuario.rol === 'admin' ? [NAV_ITEM_ADMIN] : []),
       ];
 

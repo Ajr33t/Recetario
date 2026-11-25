@@ -13,6 +13,12 @@
  * Ambos aceptan la receta normalizada de RecetaDetalle.jsx
  * ({ titulo, descripcion, imagen, ingredientes, pasos, tiempo, ... }).
  */
+import { etiquetaAlergeno, normalizarAlergenos } from '../data/alergenos.js';
+
+/** Alérgenos de la receta (pueden venir como array o como JSON string). */
+function alergenosDeReceta(receta) {
+  return normalizarAlergenos(receta?.alergenos).map(etiquetaAlergeno);
+}
 
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
 
@@ -371,6 +377,18 @@ function dibujarContenido(ctx, receta, foto, geo) {
     y += 36;
   }
 
+  // Alérgenos (leyenda en la exportación)
+  const alergenos = alergenosDeReceta(receta);
+  if (alergenos.length) {
+    ctx.fillStyle = D.ambarSuave;
+    ctx.font = `600 28px ${FUENTE}`;
+    for (const linea of partirLineas(ctx, `Alérgenos: ${alergenos.join(' · ')}`, util)) {
+      ctx.fillText(linea, x, y);
+      y += 40;
+    }
+    y += 26;
+  }
+
   // Ingredientes
   y = tituloSeccion(ctx, 'Ingredientes', x, y);
   ctx.font = `400 30px ${FUENTE}`;
@@ -565,6 +583,10 @@ export async function imprimirReceta(receta) {
     .join('');
   const pasos = (receta.pasos || []).map((p) => `<li>${escaparHtml(p)}</li>`).join('');
   const meta = metaReceta(receta);
+  const alergenos = alergenosDeReceta(receta);
+  const leyendaAlergenos = alergenos.length
+    ? `<p class="libro-meta"><strong>Alérgenos:</strong> ${escaparHtml(alergenos.join(' · '))}</p>`
+    : '';
 
   const chips = [];
   if (receta.tiempo) {
@@ -596,6 +618,7 @@ export async function imprimirReceta(receta) {
       ${receta.imagen ? `<img class="libro-imagen" src="${escaparHtml(receta.imagen)}" alt="">` : ''}
       ${receta.descripcion ? `<p class="libro-desc">${escaparHtml(receta.descripcion)}</p>` : ''}
       ${chips.length ? `<p class="libro-meta">${chips.join('')}</p>` : meta ? `<p class="libro-meta">${escaparHtml(meta)}</p>` : ''}
+      ${leyendaAlergenos}
       <div class="libro-cols">
         <div>
           <h3>Ingredientes</h3>

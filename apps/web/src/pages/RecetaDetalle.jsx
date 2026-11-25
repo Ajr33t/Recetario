@@ -5,6 +5,8 @@ import { api, ApiError } from '../services/api.js';
 import { exito, informar } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
 import { descargarImagenReceta, imprimirReceta, escaparHtml } from '../services/exportarReceta.js';
+import { detectarAlergenos, etiquetaAlergeno } from '../data/alergenos.js';
+import MenuDescargas from '../components/ui/MenuDescargas.jsx';
 
 const DIFICULTADES = { facil: 'Fácil', media: 'Media', dificil: 'Difícil' };
 
@@ -17,6 +19,7 @@ function normalizarPropia(r, usuario) {
     categoria: null,
     area: null,
     etiquetas: r.etiquetas || [],
+    alergenos: r.alergenos || [],
     ingredientes: (r.ingredientes || []).map((i) => ({
       nombre: i.nombre,
       cantidad: [i.cantidad, i.unidad].filter((v) => v != null && v !== '').join(' ') || null,
@@ -44,6 +47,8 @@ function normalizarExterna(r) {
     categoria: r.categoria,
     area: r.area,
     etiquetas: r.etiquetas || [],
+    // Recetas importadas/IA: alérgenos orientativos desde los ingredientes.
+    alergenos: r.alergenos?.length ? r.alergenos : detectarAlergenos(r.ingredientes),
     ingredientes: (r.ingredientes || []).map((i) => ({
       nombre: i.nombre,
       cantidad: i.cantidad || null,
@@ -469,6 +474,12 @@ export default function RecetaDetalle() {
                   <i className="fa-solid fa-tag" aria-hidden="true" /> {et}
                 </span>
               ))}
+              {receta.alergenos?.length > 0 && (
+                <span className="chip !border-amber-500/40 !bg-amber-500/10" role="listitem" title="Alérgenos de la receta">
+                  <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> Alérgenos:{' '}
+                  {receta.alergenos.map(etiquetaAlergeno).join(', ')}
+                </span>
+              )}
               <span className="chip" role="listitem">
                 <i
                   className={`fa-solid ${receta.fuenteDatos === 'themealdb' ? 'fa-database' : 'fa-pen'}`}
@@ -508,6 +519,7 @@ export default function RecetaDetalle() {
               <button type="button" className="btn-secondary !px-3" onClick={compartir}>
                 <i className="fa-solid fa-share-nodes" aria-hidden="true" /> Compartir
               </button>
+              <MenuDescargas receta={receta} />
               {receta.esMia && (
                 <>
                   <Link to={`/recetas/${id}/editar`} className="btn-ghost !px-3">

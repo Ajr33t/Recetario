@@ -171,9 +171,11 @@ export default function Ajustes() {
   const theme = useThemeStore((s) => s.theme);
   const mode = useThemeStore((s) => s.mode);
   const highContrast = useThemeStore((s) => s.highContrast);
+  const liquidGlass = useThemeStore((s) => s.liquidGlass);
   const a11y = useThemeStore((s) => s.a11y);
   const setMode = useThemeStore((s) => s.setMode);
   const setHighContrast = useThemeStore((s) => s.setHighContrast);
+  const setLiquidGlass = useThemeStore((s) => s.setLiquidGlass);
   const setA11y = useThemeStore((s) => s.setA11y);
   const temaActual = THEMES.find((t) => t.id === theme) || THEMES[0];
   const usuario = useAuthStore((s) => s.usuario);
@@ -288,6 +290,17 @@ export default function Ajustes() {
             icon="fa-circle-half-stroke"
             label="Alto contraste (AAA)"
             description="Se activa por separado del modo claro/oscuro y prevalece sobre él: texto ≥ 7:1, bordes gruesos y foco amarillo."
+          />
+        </div>
+
+        {/* Liquid Glass: activo por defecto, persistente y accesible al apagarlo */}
+        <div className="mt-4 max-w-md">
+          <Switch
+            checked={liquidGlass}
+            onChange={setLiquidGlass}
+            icon="fa-water"
+            label="Liquid Glass (efecto vidrio)"
+            description="Activado por defecto. Al desactivarlo, las tarjetas y barras pasan a superficies sólidas sin desenfoque, más legibles y con el mismo contraste."
           />
         </div>
 

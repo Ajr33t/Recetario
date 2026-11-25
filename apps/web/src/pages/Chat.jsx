@@ -212,7 +212,7 @@ export default function Chat() {
         </label>
         <textarea
           id="chat-mensaje"
-          className="field max-h-32 min-h-[2.75rem] flex-1 resize-y py-2"
+          className="field max-h-32 min-h-[2.75rem] flex-1 resize-y py-2 !min-h-11"
           rows={1}
           placeholder="Escribe tu pregunta…"
           value={texto}
@@ -224,7 +224,7 @@ export default function Chat() {
             }
           }}
         />
-        <button type="submit" className="btn-primary !px-4" disabled={enviando || !texto.trim()}>
+        <button type="submit" className="btn-primary !px-4 !min-h-10" disabled={enviando || !texto.trim()}>
           <i
             className={`fa-solid ${enviando ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}
             aria-hidden="true"

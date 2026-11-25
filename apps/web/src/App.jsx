@@ -24,6 +24,8 @@ import Chat from './pages/Chat.jsx';
 import Perfil from './pages/Perfil.jsx';
 import Admin from './pages/Admin.jsx';
 import Pedidos from './pages/Pedidos.jsx';
+import ChefPanel from './pages/ChefPanel.jsx';
+import CartaPublica from './pages/CartaPublica.jsx';
 import Legal from './pages/Legal.jsx';
 
 export default function App() {
@@ -54,8 +56,11 @@ export default function App() {
             <Route path="/papelera" element={<Papelera />} />
             <Route path="/libro" element={<LibroCocina />} />
             <Route path="/medidas" element={<Medidas />} />
-            {/* Lista de pedidos con filtros y contador (punto 1 del encargo) */}
+            {/* Pedidos: exclusivo del rol chef/restaurante */}
             <Route path="/pedidos" element={<Pedidos />} />
+            {/* Panel del chef y carta digital pública (QR) */}
+            <Route path="/chef" element={<ChefPanel />} />
+            <Route path="/carta/:userId" element={<CartaPublica />} />
             <Route path="/ajustes" element={<Ajustes />} />
             <Route path="/login" element={<Login />} />
             {/* Recuperación de contraseña por enlace del correo (Fase 10) */}

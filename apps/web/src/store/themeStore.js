@@ -7,6 +7,7 @@ import { applyTheme, applyA11y } from '../themes/engine.js';
  * - theme: id del tema (12 disponibles)
  * - mode: 'claro' | 'oscuro' (los 2 modos base)
  * - highContrast: interruptor INDEPENDIENTE; activo prevalece sobre el modo
+ * - liquidGlass: efecto de vidrio (activado por defecto, se puede apagar)
  * - a11y: { fontSize, reduceMotion, dyslexia, underlineLinks, colorBlind }
  * Persistencia: localStorage en web; en Electron se replica vía
  * archivo de configuración en la Fase 8.
@@ -25,9 +26,11 @@ const A11Y_POR_DEFECTO = {
 
 /** Aplica tema + modo + alto contraste + accesibilidad juntos. */
 function aplicar(preferencias) {
-  const { theme, mode, highContrast, a11y } = preferencias;
+  const { theme, mode, highContrast, liquidGlass, a11y } = preferencias;
   applyTheme(theme, mode, highContrast);
   applyA11y(a11y);
+  // Punto 9: apagar el vidrio deja superficies sólidas, sin desenfoque.
+  document.documentElement.dataset.glass = liquidGlass === false ? 'off' : 'on';
 }
 
 export const useThemeStore = create(
@@ -36,6 +39,7 @@ export const useThemeStore = create(
       theme: 'oceano',
       mode: 'claro',
       highContrast: false,
+      liquidGlass: true, // activado por defecto (punto 9)
       a11y: { ...A11Y_POR_DEFECTO },
 
       setTheme: (theme) => {
@@ -55,6 +59,13 @@ export const useThemeStore = create(
         const actual = useThemeStore.getState();
         aplicar({ ...actual, highContrast });
         set({ highContrast });
+      },
+
+      /** Activa/desactiva el efecto Liquid Glass (persistente). */
+      setLiquidGlass: (liquidGlass) => {
+        const actual = useThemeStore.getState();
+        aplicar({ ...actual, liquidGlass });
+        set({ liquidGlass });
       },
 
       /** Actualiza una o varias claves de a11y ({ dyslexia: true }). */
@@ -79,6 +90,7 @@ export const useThemeStore = create(
         const s = { ...actual, ...p };
         s.mode = p.mode === 'oscuro' ? 'oscuro' : 'claro';
         s.highContrast = Boolean(p.highContrast || p.mode === 'alto-contraste');
+        s.liquidGlass = p.liquidGlass !== false; // activo por defecto si no viene en storage
         s.a11y = { ...A11Y_POR_DEFECTO, ...(p.a11y || {}) };
         return s;
       },

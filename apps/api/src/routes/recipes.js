@@ -18,6 +18,32 @@ const router = Router();
 const DIFICULTADES = new Set(['facil', 'media', 'dificil']);
 const VISIBILIDADES = new Set(['privada', 'publica']);
 
+/**
+ * Precarga orientativa de alérgenos desde los nombres de ingredientes
+ * (punto 4 del encargo). El usuario puede editar la lista después.
+ */
+function detectarAlergenos(ingredientes = []) {
+  const señales = {
+    gluten: ['harina', 'trigo', 'pan', 'pasta', 'cuscús', 'cebada', 'centeno', 'avena'],
+    lactosa: ['leche', 'queso', 'yogur', 'mantequilla', 'crema', 'nata'],
+    huevo: ['huevo', 'clara', 'yema', 'mayonesa'],
+    pescado: ['pescado', 'salmón', 'atún', 'bacalao', 'merluza', 'anchoa'],
+    mariscos: ['camarón', 'gamba', 'langostino', 'cangrejo', 'mejillón', 'almeja', 'pulpo'],
+    frutos_secos: ['almendra', 'nueces', 'avellana', 'pistacho', 'anacardo'],
+    cacahuetes: ['cacahuete', 'maní', 'peanut'],
+    soja: ['soja', 'tofu', 'tempeh'],
+    apio: ['apio'],
+    mostaza: ['mostaza'],
+    sesamo: ['sésamo', 'ajonjolí', 'tahini'],
+    sulfitos: ['vino', 'vinagre', 'sulfito'],
+  };
+  const texto = ingredientes
+    .map((i) => (typeof i === 'string' ? i : i?.nombre || ''))
+    .join(' ')
+    .toLowerCase();
+  return Object.keys(señales).filter((clave) => señales[clave].some((s) => texto.includes(s)));
+}
+
 /** Añade ingredientes y pasos anidados a una receta. */
 function conDetalles(receta, userId = null) {
   const db = getDb();
@@ -31,6 +57,7 @@ function conDetalles(receta, userId = null) {
   return {
     ...receta,
     etiquetas: JSON.parse(receta.etiquetas || '[]'),
+    alergenos: JSON.parse(receta.alergenos || '[]'),
     ingredientes: db
       .prepare(
         'SELECT nombre, cantidad, unidad FROM recipe_ingredients WHERE recipe_id = ? ORDER BY orden',
@@ -306,13 +333,16 @@ router.post('/', requireAuth, (req, res) => {
   const db = getDb();
   const b = req.body;
   const etiquetas = Array.isArray(b.etiquetas) ? b.etiquetas.slice(0, 10).map(String) : [];
+  const alergenos = Array.isArray(b.alergenos)
+    ? b.alergenos.slice(0, 20).map(String)
+    : detectarAlergenos(b.ingredientes);
 
   const resultado = db
     .prepare(
       `INSERT INTO recipes
          (user_id, titulo, descripcion, tiempo_min, dificultad, porciones, imagen_url,
-          visibilidad, origen, etiquetas)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'propia', ?)`,
+          visibilidad, origen, etiquetas, alergenos)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'propia', ?, ?)`,
     )
     .run(
       req.user.id,
@@ -324,6 +354,7 @@ router.post('/', requireAuth, (req, res) => {
       b.imagen_url ?? null,
       b.visibilidad || 'privada',
       JSON.stringify(etiquetas),
+      JSON.stringify(alergenos),
     );
 
   const id = Number(resultado.lastInsertRowid);
@@ -349,6 +380,11 @@ router.put('/:id', requireAuth, (req, res) => {
   const etiquetas = Array.isArray(b.etiquetas)
     ? b.etiquetas.slice(0, 10).map(String)
     : fila.etiquetas;
+  const alergenos = Array.isArray(b.alergenos)
+    ? b.alergenos.slice(0, 20).map(String)
+    : b.ingredientes !== undefined
+      ? detectarAlergenos(b.ingredientes)
+      : JSON.parse(fila.alergenos || '[]');
 
   // Snapshot completo (receta + ingredientes + pasos) antes de editar (RF-07)
   db.prepare('INSERT INTO recipe_versions (recipe_id, version, datos) VALUES (?, ?, ?)').run(
@@ -362,7 +398,8 @@ router.put('/:id', requireAuth, (req, res) => {
   db.prepare(
     `UPDATE recipes SET
        titulo = ?, descripcion = ?, tiempo_min = ?, dificultad = ?, porciones = ?,
-       imagen_url = ?, visibilidad = ?, etiquetas = ?, actualizado_en = datetime('now')
+       imagen_url = ?, visibilidad = ?, etiquetas = ?, alergenos = ?,
+       actualizado_en = datetime('now')
      WHERE id = ?`,
   ).run(
     b.titulo !== undefined ? String(b.titulo).trim() : fila.titulo,
@@ -373,6 +410,7 @@ router.put('/:id', requireAuth, (req, res) => {
     b.imagen_url !== undefined ? b.imagen_url : fila.imagen_url,
     b.visibilidad !== undefined ? b.visibilidad : fila.visibilidad,
     JSON.stringify(etiquetas),
+    JSON.stringify(alergenos),
     fila.id,
   );
 

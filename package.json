@@ -42,6 +42,8 @@
     "capturas": "electron scripts/capturas.cjs",
     "logo": "electron scripts/generar-logo.cjs",
     "verificar:pedidos": "electron scripts/verificar-pedidos.cjs",
+    "verificar:carta": "electron scripts/verificar-carta.cjs",
+    "verificar:glass": "electron scripts/verificar-glass.cjs",
     "verificar:movil": "electron scripts/verificar-movil.cjs",
     "manual:pdf": "electron scripts/generar-manual-pdf.cjs"
   },

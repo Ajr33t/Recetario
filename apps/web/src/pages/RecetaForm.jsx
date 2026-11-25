@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { api, ApiError } from '../services/api.js';
 import { exito } from '../services/toast.js';
 import { useAuthStore } from '../store/authStore.js';
+import { ALERGENOS } from '../data/alergenos.js';
 
 const DIFICULTADES = [
   { valor: 'facil', texto: 'Fácil' },
@@ -20,6 +21,7 @@ const VACIO = {
   imagen_url: '',
   visibilidad: 'privada',
   etiquetas: [],
+  alergenos: [],
 };
 
 /** Convierte un archivo de imagen en data URL redimensionado (canvas, sin librerías). */
@@ -89,6 +91,7 @@ export default function RecetaForm() {
             imagen_url: r.imagen_url || '',
             visibilidad: r.visibilidad || 'privada',
             etiquetas: r.etiquetas || [],
+            alergenos: r.alergenos || [],
           });
           setIngredientes(
             r.ingredientes?.length
@@ -185,6 +188,7 @@ export default function RecetaForm() {
       imagen_url: f.imagen_url || null,
       visibilidad: f.visibilidad,
       etiquetas: f.etiquetas,
+      alergenos: f.alergenos,
       ingredientes: ingValidos.map((i) => ({
         nombre: i.nombre.trim(),
         cantidad: i.cantidad === '' ? null : i.cantidad,
@@ -249,6 +253,7 @@ export default function RecetaForm() {
         imagen_url: datos.receta.imagen_url || '',
         visibilidad: datos.receta.visibilidad,
         etiquetas: datos.receta.etiquetas || [],
+        alergenos: datos.receta.alergenos || [],
       }));
       setIngredientes(
         datos.receta.ingredientes?.length
@@ -554,6 +559,42 @@ export default function RecetaForm() {
               </ul>
             )}
           </div>
+
+          {/* Alérgenos (punto 4): precargados desde ingredientes en la API, editables */}
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium">
+              Alérgenos{' '}
+              <span className="font-normal text-muted-foreground">
+                (precargados desde los ingredientes; márcalos o desmárcalos)
+              </span>
+            </legend>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Alérgenos de la receta">
+              {ALERGENOS.map(({ clave, etiqueta, icono }) => {
+                const marcado = f.alergenos.includes(clave);
+                return (
+                  <label
+                    key={clave}
+                    className={`chip cursor-pointer !px-2 !py-1 !text-[11px] ${marcado ? '!border-primary !bg-primary/15 !text-primary' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={marcado}
+                      onChange={() =>
+                        setF((prev) => ({
+                          ...prev,
+                          alergenos: marcado
+                            ? prev.alergenos.filter((a) => a !== clave)
+                            : [...prev.alergenos, clave],
+                        }))
+                      }
+                    />
+                    <span aria-hidden="true">{icono}</span> {etiqueta}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
           {/* Visibilidad (RF-12 compartir) */}
           <fieldset>
