@@ -118,12 +118,16 @@ export default function Admin() {
     const confirmar = await Swal.fire({
       icon: 'warning',
       title:
-        nuevoRol === 'admin' ? '¿Promover a administrador?' : '¿Quitar el rol de administrador?',
+        nuevoRol === 'admin'
+          ? '¿Promover a administrador?'
+          : nuevoRol === 'chef'
+            ? '¿Asignar como Chef/Restaurante?'
+            : '¿Quitar el rol de administrador?',
       html: `<strong>${u.nombre}</strong> pasará a tener el rol <strong>${nuevoRol}</strong>.`,
       showCancelButton: true,
       confirmButtonText: 'Sí, cambiar rol',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: nuevoRol === 'admin' ? '#0ea5e9' : '#dc2626',
+      confirmButtonColor: nuevoRol === 'usuario' ? '#dc2626' : '#0ea5e9',
     });
     if (!confirmar.isConfirmed) {
       cargar(); // revierte el select visual
@@ -252,6 +256,7 @@ export default function Admin() {
               onChange={(e) => setForm({ ...form, rol: e.target.value })}
             >
               <option value="usuario">Usuario registrado</option>
+              <option value="chef">Chef / Restaurante</option>
               <option value="admin">Administrador</option>
             </select>
           </label>
@@ -355,6 +360,7 @@ export default function Admin() {
                             onChange={(e) => cambiarRol(u, e.target.value)}
                           >
                             <option value="usuario">Usuario</option>
+                            <option value="chef">Chef / Restaurante</option>
                             <option value="admin">Administrador</option>
                           </select>
                           <button

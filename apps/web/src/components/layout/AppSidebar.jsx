@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore.js';
+import { usePedidosStore } from '../../store/pedidosStore.js';
 
 // Menú completo: disponible cuando hay sesión iniciada
 // («Mi perfil» vive en el menú de cuenta del navbar, no aquí)
@@ -11,6 +13,9 @@ const NAV_ITEMS_SESION = [
   { to: '/favoritos', label: 'Favoritos', icon: 'fa-heart' },
   { to: '/ajustes', label: 'Ajustes', icon: 'fa-gear' },
 ];
+
+// Pedidos: exclusivo del rol chef/restaurante (ni admin ni usuario)
+const NAV_ITEM_PEDIDOS = { to: '/pedidos', label: 'Pedidos', icon: 'fa-receipt', contador: true };
 
 // Menú de invitado: solo lo esencial (inicio, asistente, ajustes y acceso)
 const NAV_ITEMS_INVITADO = [
@@ -32,11 +37,24 @@ const NAV_ITEM_ADMIN = { to: '/admin', label: 'Administración', icon: 'fa-user-
  */
 export default function AppSidebar({ open, onClose }) {
   const usuario = useAuthStore((s) => s.usuario);
-  const items = usuario
-    ? usuario.rol === 'admin'
-      ? [...NAV_ITEMS_SESION, NAV_ITEM_ADMIN]
-      : NAV_ITEMS_SESION
-    : NAV_ITEMS_INVITADO;
+  const activos = usePedidosStore((s) => s.activos);
+  const refetchPedidos = usePedidosStore((s) => s.refetch);
+  const esChef = usuario?.rol === 'chef';
+
+  // Carga el contador de pedidos activos para el badge del menú (solo chef)
+  useEffect(() => {
+    if (esChef) refetchPedidos();
+  }, [esChef, refetchPedidos]);
+
+  // Pedidos solo aparece en el menú del chef/restaurante; el resto de roles
+  // (incluido admin) no ven la entrada.
+  const items = !usuario
+    ? NAV_ITEMS_INVITADO
+    : [
+        ...NAV_ITEMS_SESION,
+        ...(esChef ? [NAV_ITEM_PEDIDOS] : []),
+        ...(usuario.rol === 'admin' ? [NAV_ITEM_ADMIN] : []),
+      ];
 
   return (
     <>
@@ -61,7 +79,7 @@ export default function AppSidebar({ open, onClose }) {
           <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {usuario ? 'Menú' : 'Invitado'}
           </p>
-          {items.map(({ to, label, icon }) => (
+          {items.map(({ to, label, icon, contador }) => (
             <NavLink
               key={to}
               to={to}
@@ -71,6 +89,14 @@ export default function AppSidebar({ open, onClose }) {
             >
               <i className={`fa-solid ${icon} w-5 text-center`} aria-hidden="true" />
               {label}
+              {contador && activos > 0 && (
+                <span
+                  className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-foreground"
+                  aria-label={`${activos} pedidos activos`}
+                >
+                  {activos > 99 ? '99+' : activos}
+                </span>
+              )}
             </NavLink>
           ))}
 

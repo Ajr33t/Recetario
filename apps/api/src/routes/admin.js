@@ -19,7 +19,7 @@ const router = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_RONDS = 10;
-const ROLES = ['admin', 'usuario'];
+const ROLES = ['admin', 'usuario', 'chef'];
 const ESTADOS = ['activo', 'inactivo'];
 
 /** requireRole('admin') + revalidación del rol/estado en la BD. */

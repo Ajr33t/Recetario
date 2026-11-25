@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDb, registrarAuditoria } from '../db/database.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/auth.js';
 
 /**
  * Lista de pedidos (nueva funcionalidad — punto 1 del encargo).
@@ -9,8 +9,9 @@ import { requireAuth } from '../middleware/auth.js';
  * filtros por estado y fechas, y un contador de pedidos activos para la UI.
  *
  * Reglas de acceso:
- * - Cualquier usuario con sesión ve y gestiona **sus** pedidos.
- * - El administrador ve y gestiona **todos** los pedidos.
+ * - Solo el rol 'chef' (chef/restaurante) puede usar los pedidos. Ni los
+ *   usuarios normales ni el administrador ven esta sección en la interfaz.
+ * - Cada chef ve y gestiona **sus** pedidos.
  *
  * Endpoints:
  * - GET    /api/pedidos/contador  → conteo por estado (para el badge de la UI)
@@ -22,24 +23,25 @@ import { requireAuth } from '../middleware/auth.js';
  * - DELETE /api/pedidos/:id       → eliminar (dueño solo si no está completado)
  */
 const router = Router();
-router.use(requireAuth);
+// Fase 2 (ajuste del encargo): exclusivo de chef/restaurante. Ni admin.
+router.use(requireRole('chef'));
 
 /** Estados válidos de un pedido (deben coincidir con el CHECK de la BD). */
 const ESTADOS = new Set(['pendiente', 'completado', 'cancelado']);
 
-/** ¿Puede gestionar este pedido el usuario de la petición? */
+/** Un chef solo puede gestionar sus propios pedidos. */
 function puedeGestionar(req, pedido) {
-  return req.user.rol === 'admin' || pedido.user_id === req.user.id;
+  return pedido.user_id === req.user.id;
 }
 
-/** Cláusula WHERE según el rol: admin ve todos, el resto los suyos. */
-function whereSegunRol(req) {
-  return req.user.rol === 'admin' ? '' : ' AND p.user_id = ?';
+/** Los chefs solo ven sus pedidos (el admin no usa esta sección). */
+function whereSegunRol() {
+  return ' AND p.user_id = ?';
 }
 
-/** Parámetros WHERE según el rol (coinciden con los `?` de la consulta). */
+/** Parámetros WHERE (coinciden con los `?` de la consulta). */
 function paramsSegunRol(req) {
-  return req.user.rol === 'admin' ? [] : [req.user.id];
+  return [req.user.id];
 }
 
 /** GET /api/pedidos/contador — pedidos por estado para el contador de la UI. */
@@ -260,10 +262,7 @@ router.delete('/:id', (req, res) => {
   if (!puedeGestionar(req, pedido)) {
     return res.status(403).json({ error: 'No tienes permiso para eliminar este pedido' });
   }
-  if (pedido.estado === 'completado' && req.user.rol !== 'admin') {
-    return res.status(400).json({ error: 'No se puede eliminar un pedido completado' });
-  }
-
+  // El chef dueño puede eliminar cualquier pedido suyo (CRUD completo).
   // pedido_detalle se elimina en cascada (ON DELETE CASCADE).
   db.prepare('DELETE FROM pedidos WHERE id = ?').run(pedido.id);
 

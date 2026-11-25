@@ -23,6 +23,7 @@ import Recuperar from './pages/Recuperar.jsx';
 import Chat from './pages/Chat.jsx';
 import Perfil from './pages/Perfil.jsx';
 import Admin from './pages/Admin.jsx';
+import Pedidos from './pages/Pedidos.jsx';
 import Legal from './pages/Legal.jsx';
 
 export default function App() {
@@ -53,6 +54,8 @@ export default function App() {
             <Route path="/papelera" element={<Papelera />} />
             <Route path="/libro" element={<LibroCocina />} />
             <Route path="/medidas" element={<Medidas />} />
+            {/* Lista de pedidos con filtros y contador (punto 1 del encargo) */}
+            <Route path="/pedidos" element={<Pedidos />} />
             <Route path="/ajustes" element={<Ajustes />} />
             <Route path="/login" element={<Login />} />
             {/* Recuperación de contraseña por enlace del correo (Fase 10) */}

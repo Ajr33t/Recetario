@@ -41,6 +41,7 @@
     "verificar:a11y": "electron scripts/verificar-a11y.cjs",
     "capturas": "electron scripts/capturas.cjs",
     "logo": "electron scripts/generar-logo.cjs",
+    "verificar:pedidos": "electron scripts/verificar-pedidos.cjs",
     "verificar:movil": "electron scripts/verificar-movil.cjs",
     "manual:pdf": "electron scripts/generar-manual-pdf.cjs"
   },
